@@ -1,3 +1,6 @@
+import jax.numpy as jnp
+from jax import lax
+
 import numpy as np
 
 def smoothing_func(batch: np.ndarray, vocab_size: int, smoothing_ratio: float):
@@ -9,3 +12,10 @@ def smoothing_func(batch: np.ndarray, vocab_size: int, smoothing_ratio: float):
 #     x = jnp.ones((N,)) * smoothing_ratio / N
 #     x = x.at[K].set(1 - smoothing_ratio + smoothing_ratio / N)
     return x
+
+
+# copy from flax.training.common_utils.onehot
+def onehot(seq, vocab_size, on_value=1.0, off_value=0.0):
+    x = (seq[..., None] == jnp.arange(vocab_size).reshape((1,) * seq.ndim + (-1,)))
+    x = lax.select(x, jnp.full(x.shape, on_value), jnp.full(x.shape, off_value))
+    return x.astype(jnp.float32)
