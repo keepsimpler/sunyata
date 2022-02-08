@@ -16,7 +16,8 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=[
         "jax",
-        "numpy"
+        "numpy",
+        "sentencepiece"
         # "torch >=1.8",
         # "einops >=0.3",
         # "pytorch_lightning",
