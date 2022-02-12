@@ -1,1 +1,2 @@
-from .linear import (Linear, LinearWithMask)
+from .linear import (Linear, LinearWithMask, LinearMixer)
+from .bayesian import BayesianLayer

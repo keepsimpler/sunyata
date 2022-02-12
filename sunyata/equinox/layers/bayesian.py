@@ -5,6 +5,7 @@ class BayesianLayer(eqx.Module):
     positive_method: str = 'none'
     
     def __init__(self, positive_method:str = 'none'):
+        super().__init__()
         self.positive_method = positive_method
 
     def __call__(self, priors, evidence):

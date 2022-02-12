@@ -50,10 +50,10 @@ class LinearMixer(eqx.Module):
     linear_seq: LinearWithMask
     
     def __call__(self, x):
-        x_vocab = linear_vocab(x)
+        x_vocab = self.linear_vocab(x)
         x_vocab_transpose = jnp.transpose(x_vocab, (0, 2, 1))
 
-        x_vocab_transpose_seq = linear_seq(x_vocab_transpose)
+        x_vocab_transpose_seq = self.linear_seq(x_vocab_transpose)
         x_vocab_transpose_seq_transpose = jnp.transpose(x_vocab_transpose_seq, (0, 2, 1))
         
         return x_vocab_transpose_seq_transpose
