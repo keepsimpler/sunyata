@@ -65,6 +65,7 @@ def data_loader(key, input_ids, seq_len, batch_size, vocab_size,
 if __name__ == '__main__':
     key = random.PRNGKey(1)
     text, tokenizer, ids = get_crime_and_punishment('resources/')
+    vocab_size = tokenizer.vocab_size()
     train_loader = data_loader(key, ids, seq_len=6, batch_size=2,
                            vocab_size=tokenizer.vocab_size(), 
                            inputs_smoothing_ratio=0., 
