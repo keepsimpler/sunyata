@@ -43,3 +43,32 @@ class LinearWithMask(Linear):
             x = x + self.bias
             
         return x
+
+
+class LinearMixer(eqx.Module):
+    linear_vocab: Linear
+    linear_seq: LinearWithMask
+    
+    def __call__(self, x):
+        x_vocab = linear_vocab(x)
+        x_vocab_transpose = jnp.transpose(x_vocab, (0, 2, 1))
+
+        x_vocab_transpose_seq = linear_seq(x_vocab_transpose)
+        x_vocab_transpose_seq_transpose = jnp.transpose(x_vocab_transpose_seq, (0, 2, 1))
+        
+        return x_vocab_transpose_seq_transpose
+
+if __name__ == '__main__':
+    key = random.PRNGKey(1)
+    linear_vocab_key, linear_seq_key = random.split(key, num=2)
+    vocab_size = 15
+    seq_len = 6
+    linear_vocab = Linear(key=linear_vocab_key, in_features=vocab_size, out_features=vocab_size,
+                      use_bias=False)
+    linear_seq = LinearWithMask(key=linear_seq_key, in_features=seq_len, out_features=seq_len,
+                        use_bias=False)
+    linear_mixer = LinearMixer(linear_vocab, linear_seq)
+
+    data = jnp.ones((2, seq_len, vocab_size))
+    output = linear_mixer(data)
+    print(output.shape)
