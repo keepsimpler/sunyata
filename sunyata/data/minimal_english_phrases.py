@@ -28,10 +28,14 @@ def tensor_to_phrase(phrase, vocab):
 def get_minimal_english_phrases():
     vocab = get_vocab(phrases)
     data = jnp.stack([phrase_to_tensor(phrase, vocab) for phrase in phrases])
+    batch_size = 3
     vocab_size = len(vocab)
     seq_len = 6
-    return data, vocab, vocab_size, seq_len
+    pre = jnp.ones((batch_size, 1, vocab_size)) / vocab_size
+    inputs = jnp.concatenate([pre, data], axis=1)
+    inputs = inputs[:, :-1, :]
+    return inputs, data, vocab, batch_size, vocab_size, seq_len
 
 if __name__ == '__main__':
-    data, vocab, vocab_size, seq_len = get_minimal_english_phrases()
+    inputs, data, vocab, batch_size, vocab_size, seq_len = get_minimal_english_phrases()
     # print(data, vocab, vocab_size, seq_len)
