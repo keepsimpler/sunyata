@@ -13,7 +13,7 @@ class Linear(eqx.Module):
     
     use_bias: bool = static_field()
     
-    def __init__(self, in_features: int, out_features: int, key: random.PRNGKey, 
+    def __init__(self, key: random.PRNGKey, in_features: int, out_features: int,  
                  weight_init_func: Callable=jax.nn.initializers.xavier_normal(),
                  use_bias=True, bias_init_func: Callable=jax.nn.initializers.zeros):
         super().__init__()
