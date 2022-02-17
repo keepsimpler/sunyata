@@ -58,6 +58,20 @@ class LinearMixer(eqx.Module):
         
         return x_vocab_transpose_seq_transpose
 
+
+class Embedding(eqx.Module):
+    weight: jnp.ndarray
+    
+    def __init__(self, vocab_size: int, embed_size: int, init_func: Callable, key: random.PRNGKey):
+        super().__init__()
+        self.weight = init_func(key, (vocab_size, embed_size))
+        
+    def __call__(self, x):
+        # x_embed = jnp.take(self.weight, x, axis=0)
+        x_embed = self.weight[x]        
+        return x_embed
+
+
 if __name__ == '__main__':
     key = random.PRNGKey(1)
     linear_vocab_key, linear_seq_key = random.split(key, num=2)
