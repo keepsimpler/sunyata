@@ -1,9 +1,11 @@
 from typing import Callable, List
 from dataclasses import dataclass
+from functools import partial
 
 import jax
 import jax.numpy as jnp
 from jax import lax, random
+import optax
 
 import equinox as eqx
 from equinox import static_field
@@ -110,6 +112,14 @@ class GMLPNet(eqx.Module):
         x = self.out_norm(x)
         x = self.project_out(x)
         return x
+
+
+@partial(eqx.filter_value_and_grad, has_aux=True)
+def gmlp_loss_fn(model, inputs, targets_onehot):
+    outputs = model(inputs)
+    loss = optax.softmax_cross_entropy(outputs[..., :-1,:], targets_onehot).mean()
+    accuracy = jnp.mean(outputs[..., :-1,:].argmax(-1) == targets_onehot.argmax(-1))
+    return loss, accuracy
 
 
 if __name__ == '__main__':
