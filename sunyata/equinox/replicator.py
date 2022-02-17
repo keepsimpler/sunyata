@@ -80,7 +80,13 @@ class ReplicatorNet(eqx.Module):
 
 if __name__ == '__main__':
     from sunyata.data.minimal_english_phrases import *
-    data, vocab, vocab_size, seq_len = get_minimal_english_phrases()
+    inputs, data, vocab, batch_size, vocab_size, seq_len = get_minimal_english_phrases()
+
+    key = random.PRNGKey(1)
+    replicator_layer = ReplicatorLayer(key, vocab_size, seq_len, positive_method='exp', use_bias=False)
+    init_priors = jnp.ones_like(data) / vocab_size
+    posteriors, new_evidence = replicator_layer(init_priors, data)
+    print(posteriors.shape, new_evidence.shape)
 
     cfg = ReplicatorCfg(layers_num=2, vocab_size=vocab_size, seq_len=seq_len, batch_size=2, positive_method='exp')
 
