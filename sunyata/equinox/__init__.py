@@ -1,1 +1,1 @@
-from .replicator import (ReplicatorCfg, ReplicatorLayer, ReplicatorNet)
+from .replicator import (ReplicatorCfg, ReplicatorLayer, ReplicatorNet, replicator_loss_fn)
