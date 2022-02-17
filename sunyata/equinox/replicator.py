@@ -1,5 +1,6 @@
 from typing import Callable, List
 from dataclasses import dataclass
+from functools import partial
 
 import jax
 import jax.numpy as jnp
@@ -76,6 +77,16 @@ class ReplicatorNet(eqx.Module):
             priors, evidence = layer(priors, evidence)
 
         return priors
+
+
+@partial(eqx.filter_value_and_grad, has_aux=True)
+def replicator_loss_fn(model, inputs, targets):
+    outputs = model(inputs)
+#     outputs = jnp.where(outputs==0, 2e-38, outputs)
+    losses = -jnp.sum(jnp.log(outputs) * targets, axis=-1)
+    loss = losses.mean()
+    accuracy = jnp.mean(outputs.argmax(-1) == targets.argmax(-1))
+    return loss, accuracy
 
 
 if __name__ == '__main__':
