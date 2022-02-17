@@ -16,6 +16,7 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=[
         "jax",
+        "optax",
         "numpy",
         "sentencepiece"
         # "torch >=1.8",
