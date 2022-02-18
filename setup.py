@@ -16,14 +16,17 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=[
         "jax",
+        "equinox",
         "optax",
         "numpy",
-        "sentencepiece"
-        # "torch >=1.8",
-        # "einops >=0.3",
-        # "pytorch_lightning",
         # "transformers",
+        "datasets",
+        "tokenizers",
+        # "torch >=1.8",
+        # "pytorch_lightning",
         # "tensorflow",
         # "tensorflow_datasets"
+        # "einops >=0.3",
+        "sentencepiece"
     ]
 )
