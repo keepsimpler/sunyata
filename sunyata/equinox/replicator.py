@@ -1,19 +1,21 @@
-from typing import Callable, List
 from dataclasses import dataclass
 from functools import partial
+from typing import Callable, List
 
 import jax
 import jax.numpy as jnp
 from jax import random
+from sunyata.equinox.layers import (BayesianIteration, Linear, LinearMixer,
+                                    LinearWithMask)
+
 import equinox as eqx
 
-from sunyata.equinox.layers import Linear, LinearWithMask, LinearMixer, BayesianLayer
 
 class ReplicatorLayer(eqx.Module):
     # linear_vocab: Linear
     # linear_seq: LinearWithMask
     linear_mixer: LinearMixer
-    bayesian_layer: BayesianLayer
+    bayesian_layer: BayesianIteration
         
     def __init__(self, key: random.PRNGKey, vocab_size: int, seq_len: int, positive_method: str='none',
                  vocab_weight_init_func: Callable=jax.nn.initializers.xavier_normal(),
@@ -28,7 +30,7 @@ class ReplicatorLayer(eqx.Module):
                               weight_init_func=seq_weight_init_func, use_bias=use_bias,
                               bias_init_func=bias_init_func)
         self.linear_mixer = LinearMixer(linear_vocab, linear_seq)
-        self.bayesian_layer = BayesianLayer(positive_method=positive_method)
+        self.bayesian_layer = BayesianIteration(positive_method=positive_method)
         
     def __call__(self, priors, evidence):
         new_evidence = self.linear_mixer(evidence)

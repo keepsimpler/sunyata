@@ -26,7 +26,7 @@ def get_crime_and_punishment(file_path):
     return text, tokenizer, ids
 # %%
 def data_loader(key, input_ids, seq_len, batch_size, vocab_size, 
-                inputs_smoothing_ratio, targets_smoothing_ratio, 
+                inputs_smoothing_ratio: float=0., targets_smoothing_ratio: float=0., 
                 random_inputs: float=0., shuffle=False):
     steps_per_epoch = len(input_ids) // (seq_len * batch_size)
     vocab_mean = 1 / vocab_size
@@ -64,7 +64,7 @@ def data_loader(key, input_ids, seq_len, batch_size, vocab_size,
 # %%
 if __name__ == '__main__':
     key = random.PRNGKey(1)
-    text, tokenizer, ids = get_crime_and_punishment('resources/')
+    text, tokenizer, ids = get_crime_and_punishment('resources/crime-and-punishment/')
     vocab_size = tokenizer.vocab_size()
     train_loader = data_loader(key, ids, seq_len=6, batch_size=2,
                            vocab_size=tokenizer.vocab_size(), 

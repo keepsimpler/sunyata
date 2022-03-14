@@ -1,16 +1,16 @@
-from typing import Callable, List
 from dataclasses import dataclass
 from functools import partial
+from typing import Callable, List
 
 import jax
 import jax.numpy as jnp
-from jax import lax, random
 import optax
+from jax import lax, random
+from sunyata.equinox.layers import Embedding, LayerNorm, Linear, LinearWithMask
 
 import equinox as eqx
 from equinox import static_field
 
-from sunyata.equinox.layers import LayerNorm, Linear, LinearWithMask, Embedding
 
 class SGU(eqx.Module):
     "Spatial Gated Unit"
