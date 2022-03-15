@@ -2,34 +2,8 @@
 import jax
 import jax.numpy as jnp
 import equinox as eqx
-from numpy import ndarray
 
-# %%
-class MapValuesToNonNegative(eqx.Module):
-    def __call__(self, x: jnp.ndarray):
-        pass
-
-# %%
-class ByComputeAbsoluteValues(MapValuesToNonNegative):
-    """Map values to non negative by computing absolute values"""
-    def __call__(self, x: jnp.ndarray):
-        return jnp.abs(x)
-
-# %%
-class ByComputeSquaredValues(MapValuesToNonNegative):
-    def __call__(self, x: jnp.ndarray):
-        return x ** 2
-
-# %%
-class ByComputeExponentialValues(MapValuesToNonNegative):
-    def __call__(self, x: jnp.ndarray):
-        return jnp.exp(x)
-
-# %%
-class ByComputeReluAndSquaredValues(MapValuesToNonNegative):
-    def __call__(self, x: jnp.ndarray):
-        return jax.nn.relu(x) ** 2
-
+from sunyata.equinox.archs import ByComputeAbsoluteValues
 
 # %%
 class BayesianIteration(eqx.Module):
