@@ -62,7 +62,7 @@ class LinearMixer(eqx.Module):
 class Embedding(eqx.Module):
     weight: jnp.ndarray
     
-    def __init__(self, vocab_size: int, embed_size: int, init_func: Callable, key: random.PRNGKey):
+    def __init__(self, key: random.PRNGKey, vocab_size: int, embed_size: int, init_func: Callable):
         super().__init__()
         self.weight = init_func(key, (vocab_size, embed_size))
         

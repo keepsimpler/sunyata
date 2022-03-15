@@ -95,7 +95,7 @@ class GMLPNet(eqx.Module):
         key = random.PRNGKey(cfg.seed)
         embedding_key, project_out_key, key = random.split(key, 3)
         
-        self.embedding = Embedding(cfg.vocab_size, cfg.embed_size, cfg.embedding_init_func, embedding_key)
+        self.embedding = Embedding(embedding_key, cfg.vocab_size, cfg.embed_size, cfg.embedding_init_func)
         self.out_norm = LayerNorm((cfg.embed_size,), elementwise_affine=cfg.elementwise_affine, use_bias=cfg.use_bias)
         self.project_out = Linear(project_out_key, cfg.embed_size, cfg.vocab_size, weight_init_func=cfg.project_out_init_func)
         

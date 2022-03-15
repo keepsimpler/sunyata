@@ -166,7 +166,7 @@ class Transformer(eqx.Module):
         key = random.PRNGKey(cfg.seed)
         embedding_key, project_out_key, key = random.split(key, 3)
         
-        embedding = Embedding(cfg.vocab_size, cfg.embed_size, cfg.embedding_init_func, embedding_key)
+        embedding = Embedding(embedding_key, cfg.vocab_size, cfg.embed_size, cfg.embedding_init_func)
         self.embedding_with_positional_encoding = EmbeddingWithLearnedPositionalEncoding(embedding, cfg.seq_len, cfg.embed_size)
         self.out_norm = LayerNorm((cfg.embed_size,), elementwise_affine=cfg.elementwise_affine, use_bias=cfg.use_bias)
         self.project_out = Linear(project_out_key, cfg.embed_size, cfg.vocab_size, weight_init_func=cfg.project_out_init_func)
