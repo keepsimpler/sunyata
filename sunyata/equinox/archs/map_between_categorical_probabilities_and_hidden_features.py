@@ -11,7 +11,7 @@ class MapBetweenCategoricalProbabilitiesAndHiddenFeatures(eqx.Module):
     Map from V-dimensional categorical probabilities to D-dimensional hidden features, and vice versa.
 
     Attributes
-    ---------
+    ----------
     weight : jnp.ndarray with shape [dim_categorical_probabilities, dim_hidden_features]
         the transition matrix used both at embedding and at digging up.
 
@@ -33,12 +33,10 @@ class MapBetweenCategoricalProbabilitiesAndHiddenFeatures(eqx.Module):
         
     def embed(self, categorial_probabilities: jnp.ndarray):
         hidden_features = jnp.einsum("b s v, v d -> b s d", categorial_probabilities, self.weight)
-        # hidden_features = lax.dot_general(categorial_probabilities, self.weight, (((categorial_probabilities.ndim - 1,), (2 - 2,)), ((), ())),)
         return hidden_features
         
     def digup(self, hidden_features: jnp.ndarray):
         evidences = jnp.einsum("v d, b s d -> b s v", self.weight, hidden_features)
-        # x = lax.dot_general(hidden_features, self.weight, (((hidden_features.ndim - 1,), (2 - 2,)), ((), ())),)
         return evidences
 
 
@@ -48,20 +46,20 @@ class MapValuesToNonNegative(eqx.Module):
     def __call__(self, x: jnp.ndarray):
         pass
 
-class ByComputeAbsoluteValues(MapValuesToNonNegative):
+class ComputeAbsoluteValues(MapValuesToNonNegative):
     """Map values to non negative by computing absolute values"""
     def __call__(self, x: jnp.ndarray):
         return jnp.abs(x)
 
-class ByComputeSquaredValues(MapValuesToNonNegative):
+class ComputeSquaredValues(MapValuesToNonNegative):
     def __call__(self, x: jnp.ndarray):
         return x ** 2
 
-class ByComputeExponentialValues(MapValuesToNonNegative):
+class ComputeExponentialValues(MapValuesToNonNegative):
     def __call__(self, x: jnp.ndarray):
         return jnp.exp(x)
 
-class ByComputeReluAndSquaredValues(MapValuesToNonNegative):
+class ComputeReluAndSquaredValues(MapValuesToNonNegative):
     def __call__(self, x: jnp.ndarray):
         return jax.nn.relu(x) ** 2
 

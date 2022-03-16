@@ -1,8 +1,10 @@
-from .map_between_categorical_probabilities_and_hidden_feature_vectors import (
+from .map_between_categorical_probabilities_and_hidden_features import (
     MapValuesToNonNegative,
-    ByComputeAbsoluteValues,
-    ByComputeExponentialValues,
-    ByComputeReluAndSquaredValues,
-    ByComputeSquaredValues,
+    ComputeAbsoluteValues,
+    ComputeExponentialValues,
+    ComputeReluAndSquaredValues,
+    ComputeSquaredValues,
     MapBetweenCategoricalProbabilitiesAndHiddenFeatures
 )
+
+from .hidden_bayesian_net import HiddenBayesianNet
