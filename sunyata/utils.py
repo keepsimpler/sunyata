@@ -5,6 +5,25 @@ from jax import lax
 
 import numpy as np
 
+
+def setup_colab_tpu_or_emulate_it_by_cpus():
+    """prepare tpu environment when running on Colab, otherwise, emulate 8-core tpu by local cpus."""
+
+    import jax.tools.colab_tpu
+    try:
+        jax.tools.colab_tpu.setup_tpu()
+    except Exception as e:
+        print("TPU cores doesn't exist: ", e)
+        print("Emulate 8 devices using CPUs...")
+        import os
+        os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=8'
+
+    import jax
+    assert jax.device_count() == 8
+    
+
+
+
 def get_all_files_with_specific_filetypes_in_a_directory(directory: str, filetypes: List[str]=["*"]):
     files_with_specific_filetypes = []
     for filetype in filetypes:
