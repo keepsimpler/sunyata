@@ -1,4 +1,5 @@
 import jax
+import jax.numpy as jnp
 from jax import random
 from sunyata.equinox.archs import (
     ComputeExponentialValues, HiddenBayesianNet,
@@ -27,3 +28,6 @@ def test_hidden_bayesian_net():
 
     posteriors = hidden_bayesian(categorical_probabilities)
     assert posteriors.shape == (batch_size, sequence_len, dim_categorical_probabilities)
+
+    assert jnp.allclose(jnp.sum(posteriors, axis=-1), 1.)
+
