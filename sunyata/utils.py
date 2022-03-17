@@ -21,7 +21,9 @@ def setup_colab_tpu_or_emulate_it_by_cpus():
     import jax
     assert jax.device_count() == 8
     print("Success gotten 8 TPU cores.")    
-    
+
+    return True
+
 
 def get_all_files_with_specific_filetypes_in_a_directory(directory: str, filetypes: List[str]=["*"]):
     files_with_specific_filetypes = []
@@ -42,7 +44,7 @@ def smoothing_func(batch: np.ndarray, vocab_size: int, smoothing_ratio: float):
 
 
 # copy from flax.training.common_utils.onehot
-def one_hot(seq, vocab_size, on_value=1.0, off_value=0.0):
-    x = (seq[..., None] == jnp.arange(vocab_size).reshape((1,) * seq.ndim + (-1,)))
+def one_hot_encode(labels: jnp.ndarray, dim_categorical_probabilities: int, on_value: float=1.0, off_value: float=0.0):
+    x = (labels[..., None] == jnp.arange(dim_categorical_probabilities).reshape((1,) * labels.ndim + (-1,)))
     x = lax.select(x, jnp.full(x.shape, on_value), jnp.full(x.shape, off_value))
     return x.astype(jnp.float32)
