@@ -14,12 +14,13 @@ def setup_colab_tpu_or_emulate_it_by_cpus():
         jax.tools.colab_tpu.setup_tpu()
     except Exception as e:
         print("TPU cores doesn't exist: ", e)
-        print("Emulate 8 devices using CPUs...")
+        print("Emulate 8 TPU cores using CPUs...")
         import os
         os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=8'
 
     import jax
     assert jax.device_count() == 8
+    print("Success gotten 8 TPU cores.")    
     
 
 def get_all_files_with_specific_filetypes_in_a_directory(directory: str, filetypes: List[str]=["*"]):
