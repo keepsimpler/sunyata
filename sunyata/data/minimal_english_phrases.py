@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from sunyata.utils import onehot
+from sunyata.utils import one_hot
 
 # a set of six word phrases
 phrases = [
@@ -19,7 +19,7 @@ def get_vocab(phrases):
 def phrase_to_tensor(phrase, vocab):
     tokens = [vocab[word] for word in phrase.split()]
     index = jnp.array(tokens)
-    return onehot(index, len(vocab))
+    return one_hot(index, len(vocab))
 
 def tensor_to_phrase(phrase, vocab):
     index = jnp.argmax(phrase, axis=1)

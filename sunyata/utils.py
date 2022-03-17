@@ -22,8 +22,6 @@ def setup_colab_tpu_or_emulate_it_by_cpus():
     assert jax.device_count() == 8
     
 
-
-
 def get_all_files_with_specific_filetypes_in_a_directory(directory: str, filetypes: List[str]=["*"]):
     files_with_specific_filetypes = []
     for filetype in filetypes:

@@ -11,17 +11,17 @@ from sunyata.equinox.archs import (
 def test_map_between_categorical_probabilities_and_hidden_features():
     key = random.PRNGKey(1)
     dim_categorical_probabilities, dim_hidden_features = 16, 8
-    map_between_categorical_probabilities_and_hidden_features = MapBetweenCategoricalProbabilitiesAndHiddenFeatures(
+    embed_and_digup = MapBetweenCategoricalProbabilitiesAndHiddenFeatures(
                                                         key, dim_categorical_probabilities, dim_hidden_features,
                                                         weight_init_func=jax.nn.initializers.glorot_normal())
 
 
     batch_size, sequence_len = 2, 32
     categorical_probabilities = random.normal(key, (batch_size, sequence_len, dim_categorical_probabilities))
-    hidden_features = map_between_categorical_probabilities_and_hidden_features.embed(categorical_probabilities)
+    hidden_features = embed_and_digup.embed(categorical_probabilities)
     assert hidden_features.shape == (batch_size, sequence_len, dim_hidden_features)
 
-    candidate_evidences = map_between_categorical_probabilities_and_hidden_features.digup(hidden_features)
+    candidate_evidences = embed_and_digup.digup(hidden_features)
     assert candidate_evidences.shape == (batch_size, sequence_len, dim_categorical_probabilities)
 
     compute_absolute_values = ComputeAbsoluteValues()
