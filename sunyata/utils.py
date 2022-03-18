@@ -19,7 +19,7 @@ def setup_colab_tpu_or_emulate_it_by_cpus():
         os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=8'
 
     import jax
-    assert jax.device_count() == 8
+    assert jax.local_device_count() == 8
     print("Success gotten 8 TPU cores.")    
 
     return True
