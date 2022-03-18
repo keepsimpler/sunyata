@@ -12,6 +12,10 @@ DESCRIPTION
         2. prefix an unknown token (uniform prob.) to the sequence. 
            Then for the new sequence, follow the steps of the above case.
 
+CLASSES
+-------
+    PrePostProcessLM
+
 """
 
 from dataclasses import dataclass
@@ -23,6 +27,16 @@ from sunyata.utils import one_hot_encode
 
 @dataclass
 class PrePostProcessLM:
+    """
+    Attributes
+    ----------
+    language_model: str
+        supported language models: causal language model, two cases
+    dataset: str
+        supported dataset: openwebtext2
+    dim_categorical_probabilities: int
+        dimension of categorical probability
+    """
     language_model: str = "clm1"
     dataset: str = "openwebtext2"
     dim_categorical_probabilities: int = 50257
