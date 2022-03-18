@@ -2,6 +2,7 @@
 from typing import List
 import jax
 import jax.numpy as jnp
+from jax import random
 import equinox as eqx
 from sunyata.equinox.archs import MapBetweenCategoricalProbabilitiesAndHiddenFeatures, MapValuesToNonNegative
 from sunyata.equinox.layers import BayesianIteration
@@ -38,6 +39,18 @@ class HiddenBayesianNet(eqx.Module):
     bayesian_iteration: BayesianIteration
 
     layers: List[eqx.Module]
+
+    @classmethod
+    def create(cls, map_values_to_non_negative: MapValuesToNonNegative, layers: List[eqx.Module],
+                    seed: int, dim_categorical_probabilities: int, dim_hidden_features: int,
+                    weight_init_func=jax.nn.initializers.glorot_normal()):
+            key = random.PRNGKey(seed)
+            embed_and_digup = MapBetweenCategoricalProbabilitiesAndHiddenFeatures(
+                                key, dim_categorical_probabilities, dim_hidden_features,
+                                weight_init_func)
+            bayesian_iteration = BayesianIteration()
+
+            return cls(embed_and_digup, map_values_to_non_negative, bayesian_iteration, layers)
 
     def __call__(self, categorical_probabilities: jnp.ndarray):
         dim_categorical_probabilities = categorical_probabilities.shape[-1]
