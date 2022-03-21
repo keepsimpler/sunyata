@@ -16,3 +16,5 @@ def test_compute_cross_entropy():
     assert cross_entropy.shape == (batch_size, sequence_len)
     
     assert jnp.all(cross_entropy > 0)
+
+

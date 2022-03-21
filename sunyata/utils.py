@@ -5,7 +5,6 @@ from jax import lax
 
 import numpy as np
 
-
 def setup_colab_tpu_or_emulate_it_by_cpus():
     """prepare tpu environment when running on Colab, otherwise, emulate 8-core tpu by local cpus."""
 
@@ -19,6 +18,7 @@ def setup_colab_tpu_or_emulate_it_by_cpus():
         os.environ['XLA_FLAGS'] = '--xla_force_host_platform_device_count=8'
 
     import jax
+    print(jax.local_device_count())
     assert jax.local_device_count() == 8
     print("Success gotten 8 TPU cores.")    
 

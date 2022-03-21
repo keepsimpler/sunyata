@@ -1,7 +1,10 @@
 import jax
 import jax.numpy as jnp
 
-from sunyata.utils import one_hot_encode
+from sunyata.utils import one_hot_encode, setup_colab_tpu_or_emulate_it_by_cpus
+
+def test_setup_colab_tpu_or_emulate_it_by_cpus():
+    setup_colab_tpu_or_emulate_it_by_cpus()
 
 def test_one_hot_encode():
     batch_size = 2

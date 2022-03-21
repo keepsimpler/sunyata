@@ -41,7 +41,7 @@ class MapBetweenCategoricalProbabilitiesAndHiddenFeatures(eqx.Module):
 
 
 # %%
-class MapValuesToNonNegative(eqx.Module):
+class MapValuesToNonNegative:  # (eqx.Module)
     """Map values to non negative, in order to work as evidences."""
     def __call__(self, x: jnp.ndarray):
         pass
