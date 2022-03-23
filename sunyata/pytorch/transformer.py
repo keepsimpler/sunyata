@@ -3,6 +3,38 @@
 import torch
 import torch.nn as nn
 
+
+class TransformerLayer(nn.Module):
+    def __init__(self, embed_dim, hidden_dim, num_heads, dropout):
+        super().__init__()
+        self.attention = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout, batch_first=True)
+        self.feed_forward = nn.Sequential(
+            nn.Linear(embed_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, embed_dim)
+        )
+        self.dropout = nn.Dropout(dropout)
+        self.layer_norm_1 = nn.LayerNorm(embed_dim, eps=1e-12)
+        self.layer_norm_2 = nn.LayerNorm(embed_dim, eps=1e-12)
+
+    def forward(self, x):
+        _, seq_len, _ = x.shape
+        attn_mask = torch.full((seq_len, seq_len), -float('Inf'), device=x.device, dtype=x.dtype)
+        attn_mask = torch.triu(attn_mask, diagonal=1)
+
+        x = self.layer_norm_1(x)
+        h, _ = self.attention(x, x, x, attn_mask=attn_mask, need_weights=False)
+        h = self.dropout(h)
+        x = x + h
+
+        x = self.layer_norm_2(x)
+        h = self.feed_forward(x)
+        h = self.dropout(h)
+        x = x + h
+
+        return x
+        
+
 class Transformer(nn.Module):
     def __init__(self, embed_dim, hidden_dim, num_embeddings, num_max_positions, num_heads, num_layers, dropout):
         """ Transformer (GPT-2 architecture) """
