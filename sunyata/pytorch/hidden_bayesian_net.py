@@ -7,15 +7,22 @@ import pytorch_lightning as pl
 
 
 class HiddenBayesianNet(pl.LightningModule):
-    def __init__(self, layers: nn.ModuleList, vocab_size: int, hidden_dim: int, learning_rate: float):
+    def __init__(self, layers: nn.ModuleList, vocab_size: int, hidden_dim: int, learning_rate: float, sharing_weight: bool=False):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, hidden_dim)
         self.digup = nn.Linear(hidden_dim, vocab_size, bias=False)
-        self.digup.weight = self.embedding.weight  # weight sharing
+        if sharing_weight:
+            self.digup.weight = self.embedding.weight
         self.layers = layers
         self.vocab_size, self.hidden_dim, self.learning_rate = vocab_size, hidden_dim, learning_rate
 
-    def forward(self, input: torch.Tensor):
+        self.init_weights()
+
+    def init_weights(self) -> None:
+        torch.nn.init.xavier_normal_(self.embedding.weight.data)
+        torch.nn.init.xavier_normal_(self.digup.weight.data)
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         hidden_features = self.embedding(input)
 
         prior = torch.ones_like(input).unsqueeze(-1).repeat((1, 1, self.vocab_size))

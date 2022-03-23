@@ -130,5 +130,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Pytorch Lightning
+# Pytorch Lightning logs
 lightning_logs/
+
+# data
+.data/
