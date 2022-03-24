@@ -18,18 +18,18 @@ num_heads = 2
 dropout = 0.2
 transformer = TransformerLayer(hidden_dim, expanded_dim, num_heads, dropout)
 # %%
-num_layers = 8
+num_layers = 4
 # layers = [TransformerLayer(hidden_dim, expanded_dim, num_heads, dropout).cuda() for _ in range(num_layers)]
 layers = [nn.Linear(hidden_dim, hidden_dim).cuda() for _ in range(num_layers)]
 # %%
-layers = nn.Sequential(*layers)
-layers = [layers]
+# layers = nn.Sequential(*layers)
+# layers = [layers]
 # %%
-layers = [nn.Identity()]
+# layers = [nn.Identity()]
 # %%
 vocab_size = wikitext2_data_module.vocab_size
 learning_rate = 1e-3
-hidden_bayesian_net = HiddenBayesianNet(layers, vocab_size, hidden_dim, learning_rate, sharing_weight=True)
+hidden_bayesian_net = HiddenBayesianNet(layers, vocab_size, hidden_dim, learning_rate, sharing_weight=False)
 # %%
 trainer = pl.Trainer(gpus=1)
 # %%
