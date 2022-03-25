@@ -9,14 +9,20 @@ import pytorch_lightning as pl
 
 class HiddenBayesianNet(pl.LightningModule):
     def __init__(self, layers: nn.ModuleList, vocab_size: int, hidden_dim: int, learning_rate: float, 
-                        to_non_negative: Callable=torch.exp, sharing_weight: bool=False):
+                    has_pre_layernorm: bool=False, has_post_layernorm: bool=False,
+                    to_non_negative: Callable=torch.exp, sharing_weight: bool=False):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, hidden_dim)
         self.digup = nn.Linear(hidden_dim, vocab_size, bias=False)
+        if has_pre_layernorm:
+            self.pre_layernorm = nn.LayerNorm(hidden_dim, eps=1e-12)
+        if has_post_layernorm:
+            self.post_layernorm = nn.LayerNorm(hidden_dim, eps=1e-12)
         if sharing_weight:
             self.digup.weight = self.embedding.weight
         self.layers = layers
         self.vocab_size, self.hidden_dim, self.learning_rate = vocab_size, hidden_dim, learning_rate
+        self.has_pre_layernorm, self.has_post_layernorm = has_pre_layernorm, has_post_layernorm
         self.to_non_negative = to_non_negative
 
         self.init_weights()
@@ -32,7 +38,11 @@ class HiddenBayesianNet(pl.LightningModule):
 
         for layer in self.layers:
             hidden_features = layer(hidden_features)
+            if self.has_pre_layernorm:
+                hidden_features = self.pre_layernorm(hidden_features)
             evidence_candidated = self.digup(hidden_features)
+            if self.has_post_layernorm:
+                evidence_candidated = self.post_layernorm(evidence_candidated)
             evidence = self.to_non_negative(evidence_candidated)
             posterior = bayesian_iteration(prior, evidence)
             prior = posterior
