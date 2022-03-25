@@ -65,8 +65,7 @@ class HiddenBayesianNet(pl.LightningModule):
 
 
 def bayesian_iteration(prior: torch.Tensor, evidence: torch.Tensor) -> torch.Tensor:
-    with torch.no_grad():
-        total_evidence = torch.sum(prior * evidence, dim=-1, keepdim=True)
+    total_evidence = torch.sum(prior * evidence, dim=-1, keepdim=True)
     posterior = (prior * evidence) / total_evidence
     return posterior
 
