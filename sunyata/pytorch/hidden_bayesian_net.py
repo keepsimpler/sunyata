@@ -17,7 +17,7 @@ class HiddenBayesianNet(pl.LightningModule):
         if has_pre_layernorm:
             self.pre_layernorm = nn.LayerNorm(hidden_dim, eps=1e-12)
         if has_post_layernorm:
-            self.post_layernorm = nn.LayerNorm(hidden_dim, eps=1e-12)
+            self.post_layernorm = nn.LayerNorm(vocab_size, eps=1e-12)
         if sharing_weight:
             self.digup.weight = self.embedding.weight
         self.layers = layers
