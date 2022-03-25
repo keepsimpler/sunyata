@@ -40,6 +40,8 @@ class HiddenBayesianNet(pl.LightningModule):
             hidden_features = layer(hidden_features)
             if self.has_pre_layernorm:
                 evidence_candidated = self.pre_layernorm(hidden_features)
+            else:
+                evidence_candidated = hidden_features
             evidence_candidated = self.digup(evidence_candidated)
             if self.has_post_layernorm:
                 evidence_candidated = self.post_layernorm(evidence_candidated)
