@@ -8,7 +8,7 @@ from jax import random
 
 from sunyata.utils import setup_colab_tpu_or_emulate_it_by_cpus
 
-
+@pytest.mark.skip(reason="setup tpu cores can not be tested now")
 def test_hidden_bayesian_net_trainer():
     # set the directory of your tfrecords files, only support absolute path till now!!
     directory = "/home/fengwf/sunyata/resources/openwebtext2/tfrecords/"

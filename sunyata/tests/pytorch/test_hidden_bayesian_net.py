@@ -11,7 +11,7 @@ def test_hidden_bayesian_net():
     target = batch[:, 1:]
 
     layers = [nn.Identity()]
-    hidden_bayesian_net = HiddenBayesianNet(layers, vocab_size, hidden_dim)
+    hidden_bayesian_net = HiddenBayesianNet(layers, vocab_size, hidden_dim, learning_rate=1e-3)
 
     posterior = hidden_bayesian_net(input)
     assert torch.allclose(posterior.sum(dim=-1), torch.tensor(1.))
