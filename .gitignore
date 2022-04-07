@@ -135,3 +135,14 @@ lightning_logs/
 
 # data
 .data/
+
+# latex
+*.bst
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.sty
+*.synctex.gz
