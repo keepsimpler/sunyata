@@ -35,6 +35,7 @@ class HiddenBayesianNet(pl.LightningModule):
         hidden_features = self.embedding(input)
 
         prior = torch.ones_like(input).unsqueeze(-1).repeat((1, 1, self.vocab_size))
+        log_prior = torch.log(prior)
 
         for layer in self.layers:
             hidden_features = layer(hidden_features)
@@ -45,17 +46,18 @@ class HiddenBayesianNet(pl.LightningModule):
             evidence_candidated = self.digup(evidence_candidated)
             if self.has_post_layernorm:
                 evidence_candidated = self.post_layernorm(evidence_candidated)
-            evidence = self.to_non_negative(evidence_candidated)
-            posterior = bayesian_iteration(prior, evidence)
-            prior = posterior
 
-        return posterior
+            # evidence = self.to_non_negative(evidence_candidated)
+            log_posterior = log_bayesian_iteration(log_prior, evidence_candidated)
+            log_prior = log_posterior
+
+        return log_posterior
 
     def training_step(self, batch, batch_idx):
         input, target = batch
-        posterior = self.forward(input)
-        posterior = posterior.permute((0, 2, 1))
-        loss = cross_entropy_loss(posterior, target)
+        log_posterior = self.forward(input)
+        log_posterior = log_posterior.permute((0, 2, 1))
+        loss = F.nll_loss(log_posterior, target)
         self.log("train_loss", loss)
         return loss
 
@@ -65,7 +67,9 @@ class HiddenBayesianNet(pl.LightningModule):
 
 
 def log_bayesian_iteration(log_prior: torch.Tensor, evidence_candidated: torch.Tensor) -> torch.Tensor:
-    log_total_evidence = 
+    log_total_evidence = torch.logsumexp(log_prior + evidence_candidated, dim=-1, keepdim=True)
+    log_posterior = log_prior + evidence_candidated - log_total_evidence
+    return log_posterior
 
 
 def bayesian_iteration(prior: torch.Tensor, evidence: torch.Tensor) -> torch.Tensor:
