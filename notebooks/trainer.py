@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from sunyata.pytorch.hidden_bayesian_net import HiddenBayesianNet
+from sunyata.pytorch.hidden_bayesian_net import DeepBayesInferLM
 from sunyata.pytorch.transformer import TransformerLayer
 from sunyata.pytorch.wikitext import WikiText2DataModule
 
@@ -36,7 +36,7 @@ def square(x: torch.Tensor):
 # %%
 vocab_size = wikitext2_data_module.vocab_size
 learning_rate = 1e-1
-hidden_bayesian_net = HiddenBayesianNet(layers, vocab_size, hidden_dim, learning_rate, to_non_negative=relu_and_square, sharing_weight=False)
+hidden_bayesian_net = DeepBayesInferLM(layers, vocab_size, hidden_dim, learning_rate, to_non_negative=relu_and_square, sharing_weight=False)
 # %%
 trainer = pl.Trainer(gpus=1)
 # %%
