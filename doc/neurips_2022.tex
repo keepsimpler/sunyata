@@ -29,14 +29,14 @@
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
+\usepackage{amsmath, bm}
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colors
 
-
 \title{
-  Bayesian inference and language modeling
-  % Formatting Instructions For NeurIPS 2022
+  A Deep Bayesian Inference Architecture  % coupled to neural networks
+  % Bayesian inference and language modeling
   }
 
 
@@ -96,33 +96,39 @@
 \end{abstract}
 
 
-\section{Submission of papers to NeurIPS 2022}
+\section{Introduction}
 
-\subsection{Bayesian Inference and Language Model}
+From a probabilistic perspective, we can view the task of supervised learning as fitting a conditional model of the form $p(\bm{y}|\bm{x})$, which specifies a distribution over outputs given inputs (P44 of \cite{murphy2022probabilistic}).
+
+A recently popular approach to unsupervised learning is known as self-supervised learning. In this approach, the task of unsupervised learning is transformed to supervised learning by creating a proxy supervised task. 
+For example, causal language modeling, predict the next word from a word sequence, masked language modeling, mask out words in a sentence and predict them given the surrounding context. 
+The resulting proxy task can also be viewed as a conditional model of the form $p(\bm{y}|\bm{x})$, where both outputs and inputs come from the unlabeled data.
+
+When dealing with high-dimensional data, it is often useful to reduce the dimensionality by projecting it to a lower dimensional subspace which captures the "essence" of the data. (P46)
+
+\subsection{Bayesian Inference}
+
+Bayes theorem is a principle way to calculate a conditional probability.
+
+Bayesian inference is an iterative process utilizing Bayes' Theorem to deduce(infer) a probability distribution based on new observed data coming in iteratively \citep{harper2009replicator}.
+Bayesian inference allows you to update your beliefs iteratively as new information(data) comes in. It works as follows: you have a prior belief about the distribution of your target, then, after you receive some new data, you can update your beliefs by calculating the posterior distribution by Bayes rule. Afterwards, we get even more data come in. So our posterior becomes the new prior. We can update the new prior with the likelihood derived from the new data and again we get a new posterior. This cycle can continue so long as new data comes in, so we can continuously updating our beliefs.
+
+\url{https://towardsdatascience.com/probability-concepts-explained-bayesian-inference-for-parameter-estimation-90e8930e5348}
+
+The posterior is a kind of weighted average (mean) of the prior, where the likelihood are the weights, the evidence are the summation of the weights. 
+
+At each Bayesian iteration, the likelihood is provided by the output of the corresponding layer of the neural network.
+
+\subsection{Language Model}
+
 A goal of language modeling is to learn the joint probability function of sequences of words in a language \citep{bengio2000neural}.
+
 
 \url{https://www.inference.vc/implicit-bayesian-inference-in-sequence-models/}:
 We can think of these one-step-ahead predictive distributions as implicitly performing Bayesian inference.
 
 
-\subsection{Style}
-
-
-Papers to be submitted to NeurIPS 2022 must be prepared according to the
-instructions presented here. Papers may only be up to {\bf nine} pages long,
-including figures. Additional pages \emph{containing only acknowledgments and
-references} are allowed. Papers that exceed the page limit will not be
-reviewed, or in any other way considered for presentation at the conference.
-
-
-The margins in 2022 are the same as those in 2007, which allow for $\sim$$15\%$
-more words in the paper compared to earlier years.
-
-
-Authors are required to use the NeurIPS \LaTeX{} style files obtainable at the
-NeurIPS website as indicated below. Please make sure you use the current files
-and not previous versions. Tweaking the style files may be grounds for
-rejection.
+\subsection{Deep Bayesian Inference Architecture}
 
 
 \subsection{Retrieval of style files}
