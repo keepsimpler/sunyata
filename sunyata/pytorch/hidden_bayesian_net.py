@@ -3,16 +3,14 @@
 A deep Bayesian inference architecture includes four parts:
 - Deep Bayesian Inference composed with a chain of Bayesian iterations.
 - Neural Network composed with a chain of layers.
-- Embed Block mapping from the probability space to the hidden space.
-- Dig-up Block mapping from the hidden space back to the probability space.
+- Embed Block mapping from the observable space to the hidden space.
+- Dig-up Block mapping from the hidden space to the probability space.
 
 Classes:
 
 Functions:
 
 """
-
-from typing import Callable
 
 import pytorch_lightning as pl
 import torch
@@ -31,30 +29,38 @@ class DeepBayesInferLM(pl.LightningModule):
 
     Attributes
     ----------
-
+    layers: ModuleList
+        a chain of neural network layers, that transform hidden feature vectors
+    embed: Module
+        map word sequence to hidden feature vectors
+    digup: Module
+        map hidden feature vectors to logits, i.e. unscaled log probabilities
     
-
     """
     def __init__(self, layers: nn.ModuleList, vocab_size: int, hidden_dim: int, learning_rate: float, 
-                    has_pre_layernorm: bool=False, has_post_layernorm: bool=False,
-                    to_non_negative: Callable=torch.exp, sharing_weight: bool=False):
-
+                    has_layernorm: bool=False, sharing_weight: bool=False, prior_as_params: bool=False):
         super().__init__()
+        self.layers = nn.ModuleList(layers)
+
         self.embed = nn.Embedding(vocab_size, hidden_dim)
         self.digup = nn.Linear(hidden_dim, vocab_size, bias=False)
-        if has_pre_layernorm:
-            self.pre_layernorm = nn.LayerNorm(hidden_dim, eps=1e-12)
-        if has_post_layernorm:
-            self.post_layernorm = nn.LayerNorm(vocab_size, eps=1e-12)
-        if sharing_weight:
-            self.digup.weight = self.embed.weight
-        self.layers = nn.ModuleList(layers)
-        self.vocab_size, self.hidden_dim, self.learning_rate = vocab_size, hidden_dim, learning_rate
-        self.has_pre_layernorm, self.has_post_layernorm = has_pre_layernorm, has_post_layernorm
-        self.to_non_negative = to_non_negative
-
         self.init_weights()
 
+        if sharing_weight:
+            self.digup.weight = self.embed.weight
+        
+        if has_layernorm:
+            self.digup = nn.Sequential(
+                nn.LayerNorm(hidden_dim, eps=1e-12),
+                self.digup
+            )
+
+        if prior_as_params:
+            raise RuntimeError("Prior as parameters still have not been implemented.")
+            # self.prior = nn.Parameter(torch.zeros(1, ))
+
+        self.vocab_size, self.hidden_dim, self.learning_rate = vocab_size, hidden_dim, learning_rate
+        
     def init_weights(self) -> None:
         torch.nn.init.xavier_normal_(self.embed.weight.data)
         torch.nn.init.xavier_normal_(self.digup.weight.data)
@@ -67,16 +73,9 @@ class DeepBayesInferLM(pl.LightningModule):
 
         for layer in self.layers:
             hidden_features = layer(hidden_features)
-            if self.has_pre_layernorm:
-                evidence_candidated = self.pre_layernorm(hidden_features)
-            else:
-                evidence_candidated = hidden_features
-            evidence_candidated = self.digup(evidence_candidated)
-            if self.has_post_layernorm:
-                evidence_candidated = self.post_layernorm(evidence_candidated)
+            logits = self.digup(hidden_features)
 
-            # evidence = self.to_non_negative(evidence_candidated)
-            log_posterior = log_bayesian_iteration(log_prior, evidence_candidated)
+            log_posterior = log_bayesian_iteration(log_prior, logits)
             log_prior = log_posterior
 
         return log_posterior
@@ -89,6 +88,14 @@ class DeepBayesInferLM(pl.LightningModule):
         self.log("train_loss", loss)
         return loss
 
+    def validation_step(self, batch, batch_idx):
+        input, target = batch
+        log_posterior = self.forward(input)
+        log_posterior = log_posterior.permute((0, 2, 1))
+        loss = F.nll_loss(log_posterior, target)
+        self.log("val_loss", loss)
+        # return loss
+
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
@@ -98,3 +105,17 @@ def log_bayesian_iteration(log_prior: torch.Tensor, evidence_candidated: torch.T
     log_total_evidence = torch.logsumexp(log_prior + evidence_candidated, dim=-1, keepdim=True)
     log_posterior = log_prior + evidence_candidated - log_total_evidence
     return log_posterior
+
+
+
+if __name__ == "__main__":
+    batch_size, seq_len, vocab_size, hidden_dim = 2, 8, 16, 8
+    batch = torch.randint(0, vocab_size-1, (batch_size, seq_len+1))
+    input = batch[:, :-1]
+
+    layers = [nn.Identity()]
+    hidden_bayesian_net = DeepBayesInferLM(layers, vocab_size, hidden_dim, learning_rate=1e-3)
+
+    log_posterior = hidden_bayesian_net(input)
+
+    print(log_posterior)
