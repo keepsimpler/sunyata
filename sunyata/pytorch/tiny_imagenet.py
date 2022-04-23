@@ -23,14 +23,18 @@ class TinyImageNet(VisionDataset):
         raw_file_path = os.path.join(self.root, self.raw_file_name)
         if check_integrity(raw_file_path, self.md5) is True:
             print(f'{self.raw_file_name}already downloaded and verified.')
+            if not os.path.exists(self.dataset_path):
+                print('Extracting...')
+                extract_archive(raw_file_path)
+
         elif download is True:
             print('Downloading...')
             download_url(self.download_url, root=self.root, filename=self.raw_file_name)
+            print('Extracting...')
+            extract_archive(raw_file_path)
         else:
             raise RuntimeError('Dataset not found. You can use download=True to download it.')
 
-        print('Extracting...')
-        extract_archive(raw_file_path)
 
         classes_file_path = os.path.join(self.dataset_path, 'wnids.txt')
         _, class_to_idx = find_classes(classes_file_path)
