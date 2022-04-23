@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from torch.nn import TransformerEncoderLayer
 
+
 class TransformerLayer(nn.Module):
     def __init__(self, hidden_dim, expanded_dim, num_heads, dropout):
         super().__init__()

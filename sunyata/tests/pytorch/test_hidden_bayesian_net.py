@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from sunyata.pytorch.hidden_bayesian_net import DeepBayesInferLM
+from sunyata.pytorch.bayes import DeepBayesInferLM
 
 
 def test_hidden_bayesian_net():

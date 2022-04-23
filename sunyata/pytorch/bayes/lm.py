@@ -12,15 +12,36 @@ Functions:
 
 """
 
+from dataclasses import dataclass
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import repeat
+
+
+@dataclass
+class DeepBayesInferLMCfg:
+    vocab_size: int = None
+    hidden_dim: int = None
+    seq_len: int = None
+    num_heads: int = None
+    mlp_dim: int = None
+    dropout: float = 0.
+
+    is_layernorm_before_digup: bool = True
+    is_sharing_weight: bool = False
+    is_prior_as_params: bool = False
+
+    is_masking: bool = True
+
+    batch_size: int = None
+    learning_rate: float = None
 
 
 class DeepBayesInferLM(pl.LightningModule):
     """
-    Deep Bayesian Inference Architecture of Language Models.
+    Deep Bayesian Inference Architecture for Language Models.
 
     Parameters
     ----------
@@ -37,39 +58,41 @@ class DeepBayesInferLM(pl.LightningModule):
         map hidden feature vectors to logits, i.e. unscaled log probabilities
     
     """
-    def __init__(self, layers: nn.ModuleList, vocab_size: int, hidden_dim: int, learning_rate: float, 
-                    has_layernorm: bool=False, sharing_weight: bool=False, prior_as_params: bool=False):
+    def __init__(self, layers: nn.ModuleList, cfg: DeepBayesInferLMCfg):
         super().__init__()
         self.layers = nn.ModuleList(layers)
 
-        self.embed = nn.Embedding(vocab_size, hidden_dim)
-        self.digup = nn.Linear(hidden_dim, vocab_size, bias=False)
+        self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
+        self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
         self.init_weights()
 
-        if sharing_weight:
+        if cfg.is_sharing_weight:
             self.digup.weight = self.embed.weight
         
-        if has_layernorm:
+        if cfg.is_layernorm_before_digup:
             self.digup = nn.Sequential(
-                nn.LayerNorm(hidden_dim, eps=1e-12),
+                nn.LayerNorm(cfg.hidden_dim, eps=1e-12),
                 self.digup
             )
 
-        if prior_as_params:
-            raise RuntimeError("Prior as parameters still have not been implemented.")
-            # self.prior = nn.Parameter(torch.zeros(1, ))
+        log_prior = torch.zeros(1, cfg.seq_len, cfg.vocab_size)
+        if cfg.is_prior_as_params:
+            self.log_prior = nn.Parameter(log_prior)
+        else:
+            self.register_buffer('log_prior', log_prior)
 
-        self.vocab_size, self.hidden_dim, self.learning_rate = vocab_size, hidden_dim, learning_rate
+        self.vocab_size, self.hidden_dim, self.learning_rate = cfg.vocab_size, cfg.hidden_dim, cfg.learning_rate
         
     def init_weights(self) -> None:
         torch.nn.init.xavier_normal_(self.embed.weight.data)
         torch.nn.init.xavier_normal_(self.digup.weight.data)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        hidden_features = self.embed(input)
+        batch_size, seq_len = input.shape
+        log_prior = repeat(self.log_prior, '1 s v -> b s v', b=batch_size)        
+        # log_prior = torch.zeros_like(input).unsqueeze(-1).repeat((1, 1, self.vocab_size))
 
-        prior = torch.ones_like(input).unsqueeze(-1).repeat((1, 1, self.vocab_size))
-        log_prior = torch.log(prior)
+        hidden_features = self.embed(input)
 
         for layer in self.layers:
             hidden_features = layer(hidden_features)
@@ -101,21 +124,22 @@ class DeepBayesInferLM(pl.LightningModule):
         return optimizer
 
 
-def log_bayesian_iteration(log_prior: torch.Tensor, evidence_candidated: torch.Tensor) -> torch.Tensor:
-    log_total_evidence = torch.logsumexp(log_prior + evidence_candidated, dim=-1, keepdim=True)
-    log_posterior = log_prior + evidence_candidated - log_total_evidence
+def log_bayesian_iteration(log_prior: torch.Tensor, logits: torch.Tensor) -> torch.Tensor:
+    log_total_evidence = torch.logsumexp(log_prior + logits, dim=-1, keepdim=True)
+    log_posterior = log_prior + logits - log_total_evidence
     return log_posterior
 
 
 
 if __name__ == "__main__":
-    batch_size, seq_len, vocab_size, hidden_dim = 2, 8, 16, 8
-    batch = torch.randint(0, vocab_size-1, (batch_size, seq_len+1))
+    cfg = DeepBayesInferLMCfg(vocab_size=16, hidden_dim=8, seq_len=8, batch_size=2, learning_rate=1e-3)
+    batch = torch.randint(0, cfg.vocab_size-1, (cfg.batch_size, cfg.seq_len+1))
     input = batch[:, :-1]
 
     layers = [nn.Identity()]
-    hidden_bayesian_net = DeepBayesInferLM(layers, vocab_size, hidden_dim, learning_rate=1e-3)
+    deep_bayesian_net = DeepBayesInferLM(layers, cfg)
 
-    log_posterior = hidden_bayesian_net(input)
+    log_posterior = deep_bayesian_net(input)
+    posterior = torch.exp(log_posterior)
 
-    print(log_posterior)
+    assert torch.allclose(posterior.sum(dim=-1), torch.tensor(1.)) 
