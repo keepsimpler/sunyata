@@ -68,6 +68,8 @@ class DeepBayesInferVision(pl.LightningModule):
         else:
             self.register_buffer('log_prior', log_prior)
 
+        self.learning_rate = cfg.learning_rate
+
     def forward(self, img):
         batch_size, _, _, _ = img.shape
         log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)        
