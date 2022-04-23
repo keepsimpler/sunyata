@@ -107,5 +107,5 @@ def write_to_csv(file: str, image_to_class: list):
 def read_from_csv(file: str):
     with open(file, "r") as f:
         reader = csv.reader(f)
-        data = list(reader)    
+        data = [[row[0], int(row[1])] for row in reader]
     return data
