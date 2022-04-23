@@ -130,25 +130,26 @@ We can think of these one-step-ahead predictive distributions as implicitly perf
 
 \subsection{Deep Bayesian Inference Architecture}
 
-\paragraph*{Advantage} Similar to auxiliary loss, DBI reduce the vanishing gradient problem for earlier layers, stabilize the training and is used as regularization.
+\paragraph{Advantage} 
+Similar to auxiliary loss, DBI reduce the vanishing gradient problem for earlier layers, stabilize the training and is used as regularization.
 \url{https://stats.stackexchange.com/questions/304699/what-is-auxiliary-loss-as-mentioned-in-pspnet-paper}
 
+Deep generative models are used to estimate the likelihood of each observation and to create new samples from the underlying distribution.
+Suppose the underlying distribution is a categorical distribution, whose parameters are $p_i, i \in [1, N]$.
+Then the likelihood is defined as $P(p_i | c)$, where $c$ is the context observations.
+The likelihood works as weights in a Bayesian iteration to update the prior belief.
+(Ref: An introduction to deep generative modeling)
+
+
+\subsection{Related Works}
+
+\paragraph{Bayesian Neural Network}
+A Bayesian neural network (BNN) is commonly defined as a stochastic artificial neural network trained using Bayesian inference \citep{jospin2022hands}.
+While the prior distribution in BNN is taken over the possible model parameterization,
+the prior distribution of Deep Bayesian Inference is taken over the possible parameterization of data distribution.
+
+
 \subsection{Retrieval of style files}
-
-
-The style files for NeurIPS and other conference information are available on
-the World Wide Web at
-\begin{center}
-  \url{http://www.neurips.cc/}
-\end{center}
-The file \verb+neurips_2022.pdf+ contains these instructions and illustrates the
-various formatting requirements your NeurIPS paper must satisfy.
-
-
-The only supported style file for NeurIPS 2022 is \verb+neurips_2022.sty+,
-rewritten for \LaTeXe{}.  \textbf{Previous style files for \LaTeX{} 2.09,
-  Microsoft Word, and RTF are no longer supported!}
-
 
 The \LaTeX{} style file contains three optional arguments: \verb+final+, which
 creates a camera-ready copy, \verb+preprint+, which creates a preprint for
