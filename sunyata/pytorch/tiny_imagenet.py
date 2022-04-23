@@ -1,6 +1,6 @@
 # copied from https://github.com/lvyilin/pytorch-fgvc-dataset/blob/master/tiny_imagenet.py
 
-import os
+import os, csv
 
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.folder import default_loader
@@ -35,11 +35,15 @@ class TinyImageNet(VisionDataset):
         else:
             raise RuntimeError('Dataset not found. You can use download=True to download it.')
 
+        image_to_class_file_path = os.path.join(self.dataset_path, f'{self.split}_data.csv')
+        if os.path.exists(image_to_class_file_path):
+            self.data = read_from_csv(image_to_class_file_path)
+        else:
+            classes_file_path = os.path.join(self.dataset_path, 'wnids.txt')
+            _, class_to_idx = find_classes(classes_file_path)
 
-        classes_file_path = os.path.join(self.dataset_path, 'wnids.txt')
-        _, class_to_idx = find_classes(classes_file_path)
-
-        self.data = make_dataset(self.dataset_path, self.split, class_to_idx)
+            self.data = make_dataset(self.dataset_path, self.split, class_to_idx)
+            write_to_csv(image_to_class_file_path, self.data)
 
     def __getitem__(self, index: int):
         image_path, target = self.data[index]
@@ -93,3 +97,15 @@ def make_dataset(dataset_path, split, class_to_idx):
         raise RuntimeError("split other than train and val has not been implemented.")
 
     return images
+
+
+def write_to_csv(file: str, image_to_class: list):
+    with open(file, "w", newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(image_to_class)
+
+def read_from_csv(file: str):
+    with open(file, "r") as f:
+        reader = csv.reader(f)
+        data = list(reader)    
+    return data
