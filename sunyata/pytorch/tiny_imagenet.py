@@ -26,7 +26,8 @@ class TinyImageNet(VisionDataset):
             if not os.path.exists(self.dataset_path):
                 print('Extracting...')
                 extract_archive(raw_file_path)
-
+        elif os.path.exists(self.dataset_path):
+            pass
         elif download is True:
             print('Downloading...')
             download_url(self.download_url, root=self.root, filename=self.raw_file_name)
