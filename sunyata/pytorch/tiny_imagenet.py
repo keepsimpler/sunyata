@@ -44,7 +44,10 @@ class TinyImageNet(VisionDataset):
             _, class_to_idx = find_classes(classes_file_path)
 
             self.data = make_dataset(self.dataset_path, self.split, class_to_idx)
-            write_to_csv(image_to_class_file_path, self.data)
+            try:
+                write_to_csv(image_to_class_file_path, self.data)
+            except Exception:
+                print('can not write to csv file.')
 
     def __getitem__(self, index: int):
         image_path, target = self.data[index]
