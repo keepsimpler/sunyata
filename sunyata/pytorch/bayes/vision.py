@@ -6,10 +6,10 @@ import torch.nn.functional as F
 from einops import repeat
 from einops.layers.torch import Rearrange
 
-from sunyata.pytorch.bayes.lm import log_bayesian_iteration
+from sunyata.pytorch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
 
 @dataclass
-class DeepBayesInferVisionCfg:
+class DeepBayesInferVisionCfg(DeepBayesInferCfg):
     image_size: int = 224
     patch_size: int = 16
     num_classes: int = 200
@@ -17,7 +17,7 @@ class DeepBayesInferVisionCfg:
     hidden_dim: int = 1024
     num_heads: int = 16
     dim_head: int = 64
-    mlp_dim: int = 2048
+    expanded_dim: int = 2048
 
     num_layers: int = 6
     pool: str = 'cls' # or 'mean'

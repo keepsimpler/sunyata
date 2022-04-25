@@ -4,7 +4,7 @@ from einops import rearrange
 
 
 class Attention(nn.Module):
-    def __init__(self, hidden_dim: int, num_heads: int, scale: float=None, 
+    def __init__(self, hidden_dim: int, num_heads: int, scale: float=None, dropout=0.,
                  is_to_qkv_bias=False, is_to_out=True, is_to_out_bias=False,
                  is_mask=True, is_softmax=True):
         super().__init__()
@@ -16,7 +16,10 @@ class Attention(nn.Module):
 
         self.to_qkv = nn.Linear(hidden_dim, hidden_dim * 3, bias=is_to_qkv_bias)
         self.attend = nn.Softmax(dim=-1) if is_softmax else nn.Identity()
-        self.to_out = nn.Linear(hidden_dim, hidden_dim, bias=is_to_out_bias) if is_to_out else nn.Identity()
+        self.to_out = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim, bias=is_to_out_bias),
+            nn.Dropout(dropout),
+         ) if is_to_out else nn.Identity()
 
         self.is_mask, self.is_softmax = is_mask, is_softmax
 

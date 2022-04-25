@@ -19,24 +19,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import repeat
 
+from sunyata.pytorch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
 
 @dataclass
-class DeepBayesInferLMCfg:
+class DeepBayesInferLMCfg(DeepBayesInferCfg):
     vocab_size: int = None
-    hidden_dim: int = None
     seq_len: int = None
-    num_heads: int = None
-    mlp_dim: int = None
-    dropout: float = 0.
-
-    is_layernorm_before_digup: bool = True
-    is_sharing_weight: bool = False
-    is_prior_as_params: bool = False
-
-    is_masking: bool = True
-
-    batch_size: int = None
-    learning_rate: float = None
 
 
 class DeepBayesInferLM(pl.LightningModule):
@@ -122,12 +110,6 @@ class DeepBayesInferLM(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
-
-
-def log_bayesian_iteration(log_prior: torch.Tensor, logits: torch.Tensor) -> torch.Tensor:
-    log_total_evidence = torch.logsumexp(log_prior + logits, dim=-1, keepdim=True)
-    log_posterior = log_prior + logits - log_total_evidence
-    return log_posterior
 
 
 
