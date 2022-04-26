@@ -31,7 +31,7 @@ class WikiText103DataModule(pl.LightningDataModule):
             self.train_data,
             batch_size=self.batch_size,
             shuffle=True,
-            # collate_fn=shift_one_token
+            collate_fn=shift_one_token
         )
 
     def val_dataloader(self):
@@ -39,13 +39,17 @@ class WikiText103DataModule(pl.LightningDataModule):
             self.valid_data,
             batch_size=self.batch_size,
             shuffle=False,
-            # collate_fn=shift_one_token
+            collate_fn=shift_one_token
         )
 
 
+def shift_one_token(batch):
+    input = batch[:, :-1]
+    target = batch[:, 1:]
+    return input, target
+
 
 def setup_wikitext103(data_dir: str, vocab_size: int, seq_len: int):
-
     dataset = load_dataset("wikitext", "wikitext-103-v1")
     tokenizer = ByteLevelBPETokenizer()
     tokenizer.train_from_iterator(batch_iterator(dataset, "train"), vocab_size=vocab_size,
