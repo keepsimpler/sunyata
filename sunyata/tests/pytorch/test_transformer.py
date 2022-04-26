@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from sunyata.pytorch.layers import Attention, TransformerLayer
+from sunyata.pytorch.layers.attention import Attention
+from sunyata.pytorch.layers.transformer import TransformerLayer
 from sunyata.pytorch.bayes import DeepBayesInferCfg
 
 def test_attention():
@@ -23,6 +24,6 @@ def test_transformer():
     print(output.shape)
 
 
-if __name__ == "__main__":
-    test_attention()
-    test_transformer()
+# if __name__ == "__main__":
+#     test_attention()
+#     test_transformer()

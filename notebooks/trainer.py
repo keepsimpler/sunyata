@@ -3,9 +3,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from sunyata.pytorch.hidden_bayesian_net import DeepBayesInferLM
+from sunyata.pytorch.bayes import DeepBayesInferLM
 from sunyata.pytorch.layers.transformer import TransformerLayer
-from sunyata.pytorch.wikitext import WikiText2DataModule
+from sunyata.pytorch.wikitext2 import WikiText2DataModule
 
 import pytorch_lightning as pl
 # %%

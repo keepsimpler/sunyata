@@ -1,7 +1,6 @@
-from sqlalchemy import Identity
 import torch
 import torch.nn as nn
-from sunyata.pytorch.layers import Attention
+from sunyata.pytorch.layers.attention import Attention
 from sunyata.pytorch.bayes import DeepBayesInferCfg
 
 
