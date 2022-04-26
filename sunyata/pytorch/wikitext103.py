@@ -44,6 +44,7 @@ class WikiText103DataModule(pl.LightningDataModule):
 
 
 def shift_one_token(batch):
+    batch = torch.stack(batch)
     input = batch[:, :-1]
     target = batch[:, 1:]
     return input, target
