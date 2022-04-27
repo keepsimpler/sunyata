@@ -16,17 +16,16 @@ class DeepBayesInferVisionCfg(DeepBayesInferCfg):
 
     hidden_dim: int = 1024
     num_heads: int = 16
-    dim_head: int = 64
+    # dim_head: int = 64
     expanded_dim: int = 2048
 
     is_mask=False
-
 
     num_layers: int = 6
     pool: str = 'cls' # or 'mean'
     channels: int = 3
 
-    dropout: float = 0.1
+    # dropout: float = 0.1
     emb_dropout: float = 0.1 
 
     is_prior_as_params: bool = False
