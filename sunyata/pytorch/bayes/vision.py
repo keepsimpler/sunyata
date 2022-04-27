@@ -19,6 +19,9 @@ class DeepBayesInferVisionCfg(DeepBayesInferCfg):
     dim_head: int = 64
     expanded_dim: int = 2048
 
+    is_mask=False
+
+
     num_layers: int = 6
     pool: str = 'cls' # or 'mean'
     channels: int = 3

@@ -1,4 +1,4 @@
-# copied from https://github.com/lvyilin/pytorch-fgvc-dataset/blob/master/tiny_imagenet.py
+# modified from https://github.com/lvyilin/pytorch-fgvc-dataset/blob/master/tiny_imagenet.py
 
 import os, csv
 
