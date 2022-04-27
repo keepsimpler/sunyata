@@ -87,9 +87,10 @@ class DeepBayesInferVision(pl.LightningModule):
 
         for layer in self.layers:
             x = layer(x)
-            x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
 
-            logits = self.mlp_head(x)
+            x_chosen = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
+
+            logits = self.mlp_head(x_chosen)
 
             log_posterior = log_bayesian_iteration(log_prior, logits)
             log_prior = log_posterior
