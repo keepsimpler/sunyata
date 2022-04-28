@@ -7,12 +7,12 @@
 
 
 % ready for submission
-\usepackage{neurips_2022}
+% \usepackage{neurips_2022}
 
 
 % to compile a preprint version, e.g., for submission to arXiv, add add the
 % [preprint] option:
-%     \usepackage[preprint]{neurips_2022}
+\usepackage[preprint]{neurips_2022}
 
 
 % to compile a camera-ready version, add the [final] option, e.g.:
@@ -35,49 +35,21 @@
 \usepackage{xcolor}         % colors
 
 \title{
-  A Deep Bayesian Inference Architecture  % coupled to neural networks
-  % Bayesian inference and language modeling
-  }
-
-
-% The \author macro works with any number of authors. There are two commands
-% used to separate the names and addresses of multiple authors: \And and \AND.
-%
-% Using \And between authors leaves it to LaTeX to determine where to break the
-% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
-% authors names on the first line, and the last on the second line, try using
-% \AND instead of \And before the third author name.
+  Deep Bayesian Inference: \\ a natural coupling to deep neural network
+}
 
 
 \author{%
-  David S.~Hippocampus\thanks{Use footnote for providing further information
-    about author (webpage, alternative address)---\emph{not} for acknowledging
-    funding agencies.} \\
-  Department of Computer Science\\
-  Cranberry-Lemon University\\
-  Pittsburgh, PA 15213 \\
-  \texttt{hippo@cs.cranberry-lemon.edu} \\
-  % examples of more authors
-  % \And
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
-  % \AND
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
-  % \And
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
-  % \And
-  % Coauthor \\
-  % Affiliation \\
-  % Address \\
-  % \texttt{email} \\
+  Wenfeng Feng\\
+  % Department of Computer Science and Technology\\
+  Henan Polytechnic University\\
+  % Jiaozuo, Henan, China, 454003 \\
+  \texttt{fengwf@hpu.edu.cn} \\
+  \And
+  Xin Zhang\\
+  Henan Polytechnic University\\
+  % Jiaozuo, Henan, China, 454003 \\
+  \texttt{zhangxin@hpu.edu.cn} \\
 }
 
 
@@ -88,11 +60,8 @@
 
 
 \begin{abstract}
-  The abstract paragraph should be indented \nicefrac{1}{2}~inch (3~picas) on
-  both the left- and right-hand margins. Use 10~point type, with a vertical
-  spacing (leading) of 11~points.  The word \textbf{Abstract} must be centered,
-  bold, and in point size 12. Two line spaces precede the abstract. The abstract
-  must be limited to one paragraph.
+  Deep
+  where the observed evidence come from corresponding layer in deep neural network.
 \end{abstract}
 
 
@@ -104,20 +73,31 @@ A recently popular approach to unsupervised learning is known as self-supervised
 For example, causal language modeling, predict the next word from a word sequence, masked language modeling, mask out words in a sentence and predict them given the surrounding context. 
 The resulting proxy task can also be viewed as a conditional model of the form $p(\bm{y}|\bm{x})$, where both outputs and inputs come from the unlabeled data.
 
+Where softmax needed?
+
 When dealing with high-dimensional data, it is often useful to reduce the dimensionality by projecting it to a lower dimensional subspace which captures the "essence" of the data. (P46)
 
 \subsection{Bayesian Inference}
 
 Bayes theorem is a principle way to calculate a conditional probability.
 
+The prior distribution is the available knowledge about the parameters in a statistical model, which is typically determined before any data are collected and observed. 
+
+The observed evidence is expressed in terms of the likelihood function of the data given the parameters, is the conditional probability distribution $p(\bm{x}|\bm{\theta})$ of  the data $\bm{x}$ given parameters $\bm{\theta}$. 
+In Bayesian inference, the likelihood $p(\bm{x}|\bm{\theta})$ comes into the posterior as a function of $\bm{\theta}$ for observed data $\bm{x}$. \citep{van2021bayesian}
+
+At each Bayesian iteration, the likelihood function is provided by the output of the corresponding layer of the deep neural network.
+
+Both prior distribution and likelihood function are combined via Bayes' Theorem in the form of the posterior distribution. The posterior distribution reflects the updated knowledge about the parameters, balancing the prior knowledge with the observed evidence.
+The posterior distribution is a kind of weighted average (mean) of the prior distribution, where the likelihood function of the parameters are the weights. 
+
+The obtained posterior results can then be used as the prior of the next iteration of Bayesian inference.
+
 Bayesian inference is an iterative process utilizing Bayes' Theorem to deduce(infer) a probability distribution based on new observed data coming in iteratively \citep{harper2009replicator}.
 Bayesian inference allows you to update your beliefs iteratively as new information(data) comes in. It works as follows: you have a prior belief about the distribution of your target, then, after you receive some new data, you can update your beliefs by calculating the posterior distribution by Bayes rule. Afterwards, we get even more data come in. So our posterior becomes the new prior. We can update the new prior with the likelihood derived from the new data and again we get a new posterior. This cycle can continue so long as new data comes in, so we can continuously updating our beliefs.
 
 \url{https://towardsdatascience.com/probability-concepts-explained-bayesian-inference-for-parameter-estimation-90e8930e5348}
 
-The posterior is a kind of weighted average (mean) of the prior, where the likelihood are the weights, the evidence are the summation of the weights. 
-
-At each Bayesian iteration, the likelihood is provided by the output of the corresponding layer of the neural network.
 
 \subsection{Language Model}
 
@@ -128,7 +108,9 @@ A goal of language modeling is to learn the joint probability function of sequen
 We can think of these one-step-ahead predictive distributions as implicitly performing Bayesian inference.
 
 
-\subsection{Deep Bayesian Inference Architecture}
+\section{Deep Bayesian Inference Architecture}
+
+DBI is a naturally extension of 
 
 \paragraph{Advantage} 
 Similar to auxiliary loss, DBI reduce the vanishing gradient problem for earlier layers, stabilize the training and is used as regularization.
@@ -145,9 +127,10 @@ The likelihood works as weights in a Bayesian iteration to update the prior beli
 
 \paragraph{Bayesian Neural Network}
 A Bayesian neural network (BNN) is commonly defined as a stochastic artificial neural network trained using Bayesian inference \citep{jospin2022hands}.
-While the prior distribution in BNN is taken over the possible model parameterization,
+While the prior distribution in BNN is taken over the possible model parameterization (is specified for each weight and bias),
 the prior distribution of Deep Bayesian Inference is taken over the possible parameterization of data distribution.
 
+\paragraph{Normalizing Flow}
 
 \subsection{Retrieval of style files}
 
