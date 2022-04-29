@@ -35,7 +35,8 @@
 \usepackage{xcolor}         % colors
 
 \title{
-  Deep Bayesian Inference: \\ a natural coupling to deep neural network
+  Deep Bayesian Inference: \\ a natural coupling to deep neural networks
+  % Deep Bayesian inference naturally couples to deep neural networks.
 }
 
 
@@ -67,13 +68,46 @@
 
 \section{Introduction}
 
-From a probabilistic perspective, we can view the task of supervised learning as fitting a conditional model of the form $p(\bm{y}|\bm{x})$, which specifies a distribution over outputs given inputs (P44 of \cite{murphy2022probabilistic}).
+The categorical distribution is a discrete probability distribution that describes the possible results of a random variable $y$ that can take on one of $C$ possible categories $\{1,\cdots,C\}$.
+The probability of each category is separately specified and works as parameters of the categorical distribution.
+In other words, $\theta_c = p(y=c), c \in \{1,\cdots,C\}$, where the parameters $\bm{\theta}=\{\theta_1, \cdots, \theta_c, \cdots, \theta_C\}$ are constrained so that $0 \le \theta_c \le 1$ and $\sum_{c=1}^C \theta_c = 1$.
+% Note that there is no innate underlying ordering of the categories, but numerical labels are often attached for convenience in describing the distribution, (e.g. 1 to $C$).
 
-A recently popular approach to unsupervised learning is known as self-supervised learning. In this approach, the task of unsupervised learning is transformed to supervised learning by creating a proxy supervised task. 
-For example, causal language modeling, predict the next word from a word sequence, masked language modeling, mask out words in a sentence and predict them given the surrounding context. 
-The resulting proxy task can also be viewed as a conditional model of the form $p(\bm{y}|\bm{x})$, where both outputs and inputs come from the unlabeled data.
+Learning the conditional categorical distribution over a finite set of target labels (categories) given the input observations plays an essential role in machine learning.
+For example, in supervised learning, particular classification, we fit a conditional categorical distribution over a set of target classes given inputs $\bm{x}$. %i.e. $p(y=c|\bm{x})$ % (P44 of \cite{murphy2022probabilistic}). ;\theta
+In self-supervised learning, such as causal or masked language modeling, the joint probability distribution of the word sequence is factorized as the product of the conditional categorical distributions over the vocabulary of the next word or the masked words given the previous words or the unmasked words.
+In reinforcement learning, a policy is represented as a conditional categorical distribution over a finite set of actions given input states or observations.
+\textcolor{red}{add citations}
 
-Where softmax needed?
+% A recently popular approach to unsupervised learning is known as self-supervised learning. In this approach, the task of unsupervised learning is transformed to supervised learning by creating a proxy supervised task. 
+% For example, causal language modeling, predict the next word from a word sequence, masked language modeling, mask out words in a sentence and predict them given the surrounding context. 
+% The resulting proxy task can also be viewed as a conditional model of the form $p(\bm{y}|\bm{x})$, where both outputs and inputs come from the unlabeled data.
+
+The conditional categorical distribution over $C$ possible categories given the input observations $\bm{x}$ is commonly represented as:
+\begin{equation}
+  p(y=c|\bm{x}) = \bm{S}_c(f(\bm{x})), \;\;\;\; c \in \{1,\cdots,C\}.
+\end{equation}
+In the above equation, $f(\bm{x})$ is a function implemented by a deep neural network with multiple layers between inputs and outputs, and the outputs of $f(\bm{x})$, called logits (unnormalized log-probabilities), are then inputted to the Softmax function $S$ to be converted to categorical probabilities.
+
+In modern machine learning, $f(\bm{x})$ is mainly implemented by a deep neural network with multiple layers between inputs and outputs. A deep neural network makes it more eager to learn multiple levels and aspects of input data features and concepts, layer by layer.
+A deep neural network are able to create deep representations, at every layer, the network learns a new, more abstract, higher-level, or different aspect representation of the input data features and concepts.
+\url{https://www.researchgate.net/post/Why_Are_Deep_Networks_Better_Than_Shallow_Ones}
+
+However, all the different levels and aspects of input data feature can only be aggregated to the last layer of the neural network, and then are converted to categorical probabilities at the same time by the Softmax function.
+
+On the other hand, Bayesian inference is an iterative process utilizing Bayes' Theorem to deduce(infer) a probability distribution based on new observed data features coming in iteratively.
+
+Therefore, we utilize Bayesian inference to convert the data features leaned by the neural network to likelihood, layer by layer.
+Such a deep Bayesian inference architecture naturally coupled to the deep neural network, and stabilize,\textcolor{red}{Advantage of DBI}
+
+\section{Deep Bayesian Inference}
+
+
+
+\begin{equation}
+  p(y=c|\bm{x}) = \frac{p(\bm{x}|y=c)p(y=c)}{\sum_{c=1}^C p(\bm{x}|y=c)p(y=c)}
+\end{equation}
+
 
 When dealing with high-dimensional data, it is often useful to reduce the dimensionality by projecting it to a lower dimensional subspace which captures the "essence" of the data. (P46)
 
