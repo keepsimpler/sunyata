@@ -1,0 +1,113 @@
+\documentclass[border=0.2cm]{standalone}
+
+% More defined colors
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{amsmath, bm}
+
+% Required package
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+
+\tikzstyle{layer} = [
+    draw,
+    fill=SpringGreen,
+    minimum width=2cm,
+    minimum height=1.2cm
+]
+
+\tikzstyle{bayes} = [
+    draw,
+    fill=Goldenrod,
+    minimum width=2cm,
+    minimum height=1.2cm
+]
+
+\begin{document}
+
+\begin{tikzpicture}
+
+% embed
+\node[draw,
+    circle,
+    minimum size=0.6cm,
+    fill=Rhodamine!50
+] (sum) at (0,0){};
+
+% layers start
+\node [layer,
+    right=1cm of sum
+] (layer1) {$\bm{f_1}(\bm{x_1})$};
+
+\draw[-stealth] (sum.east) -- (layer1.west)
+    node[midway, above] {$\bm{x_1}$};
+
+\node [layer,
+    right=1cm of layer1
+] (layer2) {$\bm{f_2}(\bm{x_2})$};
+
+\draw[-stealth] (layer1.east) -- (layer2.west)
+    node[midway, above] {$\bm{x_2}$};
+
+\node [layer,
+    right=1cm of layer2
+] (layer3) {$\bm{f_3}(\bm{x_3})$};
+
+\draw[-stealth] (layer2.east) -- (layer3.west)
+    node[midway, above] {$\bm{x_3}$};
+
+\node [layer,
+    right=1cm of layer3
+] (layer4) {$\bm{f_4}(\bm{x_4})$};
+
+\draw[-stealth] (layer3.east) -- (layer4.west)
+    node[midway, above] {$\bm{x_4}$};
+% layers end
+
+% bayes start
+\node [bayes,
+    below=1cm of layer1
+] (bayes1) {$Bayesian$};
+
+\draw[-stealth] (layer1.south) -- (bayes1.north)
+    node[midway, right] {$\bm{x_2}$};
+
+\draw[stealth-] (bayes1.west) -- ++(-1.5,0)
+    node[midway, above] {$Prior_1$};
+
+\node [bayes,
+    below=1cm of layer2
+] (bayes2) {$Bayesian$};
+
+\draw[-stealth] (layer2.south) -- (bayes2.north)
+    node[midway, right] {$\bm{x_3}$};
+
+\draw[-stealth] (bayes1.east) -- (bayes2.west)
+    node[midway, above] {$Prior_2$};
+
+\node [bayes,
+    below=1cm of layer3
+] (bayes3) {$Bayesian$};
+
+\draw[-stealth] (layer3.south) -- (bayes3.north)
+    node[midway, right] {$\bm{x_4}$};
+
+\draw[-stealth] (bayes2.east) -- (bayes3.west)
+    node[midway, above] {$Prior_3$};
+
+\node [bayes,
+    below=1cm of layer4
+] (bayes4) {$Bayesian$};
+
+\draw[-stealth] (layer4.south) -- (bayes4.north)
+    node[midway, right] {$\bm{x_5}$};
+
+\draw[-stealth] (bayes3.east) -- (bayes4.west)
+    node[midway, above] {$Prior_4$};
+
+
+
+
+\end{tikzpicture}
+
+\end{document}
