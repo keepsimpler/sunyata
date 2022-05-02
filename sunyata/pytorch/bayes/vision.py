@@ -37,6 +37,8 @@ class DeepBayesInferVisionCfg(DeepBayesInferCfg):
 class DeepBayesInferVision(pl.LightningModule):
     def __init__(self, layers: nn.ModuleList, cfg: DeepBayesInferVisionCfg):
         super().__init__()
+
+        self.save_hyperparameters("cfg")
         self.layers = nn.ModuleList(layers)
 
         image_height, image_width = pair(cfg.image_size)
