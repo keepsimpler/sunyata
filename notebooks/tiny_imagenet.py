@@ -12,17 +12,24 @@ from sunyata.pytorch.bayes.vision import DeepBayesInferVision, DeepBayesInferVis
 from sunyata.pytorch.layers.transformer import TransformerLayer
 # %%
 cfg = DeepBayesInferVisionCfg(
-    # image_size = 64,
-    # patch_size = 8,
-    # num_classes = 200,
-    # hidden_dim= 128,  #  1024
-    # num_heads = 2,  # 16
-    # expanded_dim = 256,  # 2048
-    # is_mask = False,
-    # pool = 'cls',
-    # channels = 3,
-    # emb_dropout = 0.,
-    # num_layers = 8,
+    is_pre_layernorm=False,
+
+    is_to_qkv=True,
+    # attn_scale = 1.,
+    is_mask = False,
+    is_softmax=True,
+    is_to_out=False,
+    is_attn_shortcut=False,
+
+    is_inner_layernorm=False,
+
+    is_ff=False,
+    is_ff_shortcut=False,
+
+    is_post_layernorm=False,
+
+    is_layernorm_before_digup=True,
+
     batch_size = 16, 
     learning_rate = 1e-3)
 
