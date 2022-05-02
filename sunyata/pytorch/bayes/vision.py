@@ -10,28 +10,16 @@ from sunyata.pytorch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
 
 @dataclass
 class DeepBayesInferVisionCfg(DeepBayesInferCfg):
-    image_size: int = 224
-    patch_size: int = 16
+    image_size: int = 64  # 224
+    patch_size: int = 8  # 16
     num_classes: int = 200
-
-    hidden_dim: int = 1024
-    num_heads: int = 16
-    # dim_head: int = 64
-    expanded_dim: int = 2048
 
     is_mask=False
 
-    num_layers: int = 6
     pool: str = 'cls' # or 'mean'
     channels: int = 3
 
-    # dropout: float = 0.1
-    emb_dropout: float = 0.1 
-
-    is_prior_as_params: bool = False
-
-    batch_size: int = None
-    learning_rate: float = None
+    emb_dropout: float = 0. 
 
 
 class DeepBayesInferVision(pl.LightningModule):

@@ -5,38 +5,37 @@ import torch.nn as nn
 
 @dataclass
 class DeepBayesInferCfg:
-    hidden_dim: int = None
-
-    # transformer
-    is_attn=True
-    is_ff=True
+    hidden_dim: int = 128  # 1024
 
     # attention
-    num_heads: int = None
+    is_attn: bool = True
+    num_heads: int = 2  # 16
     attn_scale: float = None
     attn_dropout: float = 0.
-    is_to_qkv_bias=False
-    is_to_out=True
-    is_to_out_bias=False
-    is_mask=True
-    is_softmax=True
+    is_to_qkv: bool = True,
+    is_to_qkv_bias: bool = False
+    is_to_out: bool = True
+    is_to_out_bias: bool = False
+    is_mask: bool = True
+    is_softmax: bool = True
 
     # feed forward
-    expanded_dim: int = None
-    ff_dropout=0.
-    ff_act_nn=nn.ReLU()
-    ff_bias=True
-    is_nonlinear=True
+    is_ff: bool = True
+    expanded_dim: int = 256  # 2048
+    ff_dropout: float = 0.
+    ff_act_nn: nn.Module = nn.ReLU()
+    is_ff_bias: bool = True
+    is_nonlinear: bool = True
 
     # layernorm
-    is_pre_layernorm=False
-    is_inner_layernorm=False
-    is_post_layernorm=False
-    normalized_ndim = 1
+    is_pre_layernorm: bool = False
+    is_inner_layernorm: bool = False
+    is_post_layernorm: bool = False
+    normalized_ndim: int = 1
 
     # shortcut
-    is_attn_shortcut=True
-    is_ff_shortcut=True
+    is_attn_shortcut: bool = True
+    is_ff_shortcut: bool = True
 
     # bayes
     is_layernorm_before_digup: bool = True
@@ -44,6 +43,7 @@ class DeepBayesInferCfg:
     is_prior_as_params: bool = False
 
     # training
+    num_layers: int = 8
     batch_size: int = None
     learning_rate: float = None
 

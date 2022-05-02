@@ -7,11 +7,11 @@ from sunyata.pytorch.bayes import DeepBayesInferCfg
 class TransformerLayer(nn.Module):
     def __init__(self, cfg:DeepBayesInferCfg):
         super().__init__()
-        self.attention = Attention(cfg.hidden_dim, cfg.num_heads, cfg.attn_scale, cfg.attn_dropout, cfg.is_to_qkv_bias, 
-            cfg.is_to_out, cfg.is_to_out_bias, cfg.is_mask, cfg.is_softmax) if cfg.is_attn else nn.Identity()
+        self.attention = Attention(cfg.hidden_dim, cfg.num_heads, cfg.attn_scale, cfg.attn_dropout, cfg.is_to_qkv, 
+            cfg.is_to_qkv_bias, cfg.is_to_out, cfg.is_to_out_bias, cfg.is_mask, cfg.is_softmax) if cfg.is_attn else nn.Identity()
 
         self.feed_forward = FeedForward(cfg.hidden_dim, cfg.expanded_dim, cfg.ff_dropout, cfg.ff_act_nn, 
-            cfg.ff_bias, cfg.is_nonlinear) if cfg.is_ff else nn.Identity()
+            cfg.is_ff_bias, cfg.is_nonlinear) if cfg.is_ff else nn.Identity()
         
         if cfg.normalized_ndim == 1:
             normalized_shape = cfg.hidden_dim
