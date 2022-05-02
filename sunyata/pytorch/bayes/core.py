@@ -12,7 +12,7 @@ class DeepBayesInferCfg:
     num_heads: int = 2  # 16
     attn_scale: float = None
     attn_dropout: float = 0.
-    is_to_qkv: bool = True,
+    is_to_qkv: bool = True
     is_to_qkv_bias: bool = False
     is_to_out: bool = True
     is_to_out_bias: bool = False
