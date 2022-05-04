@@ -91,6 +91,8 @@ class DeepBayesInferVision(pl.LightningModule):
         log_posterior = self.forward(input)
         loss = F.nll_loss(log_posterior, target)
         self.log("train_loss", loss)
+        accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
+        self.log("train_accuracy", accuracy)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -98,6 +100,8 @@ class DeepBayesInferVision(pl.LightningModule):
         log_posterior = self.forward(input)
         loss = F.nll_loss(log_posterior, target)
         self.log("val_loss", loss)
+        accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
+        self.log("val_accuracy", accuracy)
         # return loss
 
     def configure_optimizers(self):
