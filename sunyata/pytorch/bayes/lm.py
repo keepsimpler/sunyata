@@ -63,7 +63,7 @@ class DeepBayesInferLM(pl.LightningModule):
                 self.digup
             )
 
-        log_prior = torch.zeros(1, cfg.seq_len, cfg.vocab_size)
+        log_prior = torch.zeros(1, cfg.seq_len-1, cfg.vocab_size)  # sequence len of prior should be substracted by 1
         if cfg.is_prior_as_params:
             self.log_prior = nn.Parameter(log_prior)
         else:
