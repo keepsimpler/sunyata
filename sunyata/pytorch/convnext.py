@@ -88,10 +88,8 @@ class ConvNextStage(nn.Sequential):
 class ConvNextStem(nn.Sequential):
     def __init__(self, in_features: int, out_features: int):
         super().__init__(
-            ConvNormAct(
-                in_features, out_features, kernel_size=7, stride=2
-            ),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            nn.Conv2d(in_features, out_features, kernel_size=4, stride=4),
+            nn.BatchNorm2d(out_features)
         ),
 
 
