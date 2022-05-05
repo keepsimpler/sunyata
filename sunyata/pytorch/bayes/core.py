@@ -28,8 +28,8 @@ class DeepBayesInferCfg:
     is_nonlinear: bool = True
 
     # layernorm
-    is_pre_layernorm: bool = False
-    is_inner_layernorm: bool = False
+    is_pre_layernorm: bool = True
+    is_inner_layernorm: bool = True
     is_post_layernorm: bool = False
     normalized_ndim: int = 1
 
