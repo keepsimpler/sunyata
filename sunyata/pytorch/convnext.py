@@ -35,20 +35,20 @@ class BottleNeckBlock(nn.Module):
         self,
         in_features: int,
         out_features: int,
-        reduction: int = 4,
+        expansion: int = 4,
         stride: int = 1,
     ):
         super().__init__()
-        reduced_features = out_features // reduction
+        expanded_features = out_features * expansion
         self.block = nn.Sequential(
-            # wide -> narrow
-            ConvNormAct(
-                in_features, reduced_features, kernel_size=1, stride=stride, bias=False
-            ),
-            # narrow -> narrow
-            ConvNormAct(reduced_features, reduced_features, kernel_size=3, bias=False, groups=reduced_features),
             # narrow -> wide
-            ConvNormAct(reduced_features, out_features, kernel_size=1, act=nn.Identity, bias=False),
+            ConvNormAct(
+                in_features, expanded_features, kernel_size=1, stride=stride, bias=False
+            ),
+            # wide -> wide (with depth-wise)
+            ConvNormAct(expanded_features, expanded_features, kernel_size=3, bias=False, groups=in_features),
+            # wide -> narrow
+            ConvNormAct(expanded_features, out_features, kernel_size=1, act=nn.Identity, bias=False),
         )
         self.shortcut = (
             nn.Sequential(
