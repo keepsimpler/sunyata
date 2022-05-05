@@ -63,7 +63,7 @@ class DeepBayesInferLM(pl.LightningModule):
                 self.digup
             )
 
-        log_prior = torch.zeros(1, cfg.seq_len-1, cfg.vocab_size)  # sequence len of prior should be substracted by 1
+        log_prior = torch.zeros(1, cfg.vocab_size)  # sequence len of prior should be substracted by 1
         if cfg.is_prior_as_params:
             self.log_prior = nn.Parameter(log_prior)
         else:
@@ -77,13 +77,14 @@ class DeepBayesInferLM(pl.LightningModule):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len = input.shape
-        log_prior = repeat(self.log_prior, '1 s v -> b s v', b=batch_size)        
+        log_prior = repeat(self.log_prior, '1 v -> b v', b=batch_size)        
         # log_prior = torch.zeros_like(input).unsqueeze(-1).repeat((1, 1, self.vocab_size))
 
         hidden_features = self.embed(input)
 
         for layer in self.layers:
             hidden_features = layer(hidden_features)
+            chosen_hidden_features = hidden_features[:, -1]
             logits = self.digup(hidden_features)
 
             log_posterior = log_bayesian_iteration(log_prior, logits)
@@ -94,16 +95,16 @@ class DeepBayesInferLM(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         input, target = batch
         log_posterior = self.forward(input)
-        log_posterior = log_posterior.permute((0, 2, 1))
-        loss = F.nll_loss(log_posterior, target)
+        # log_posterior = log_posterior.permute((0, 2, 1))
+        loss = F.nll_loss(log_posterior, target[:, -1])
         self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
         input, target = batch
         log_posterior = self.forward(input)
-        log_posterior = log_posterior.permute((0, 2, 1))
-        loss = F.nll_loss(log_posterior, target)
+        # log_posterior = log_posterior.permute((0, 2, 1))
+        loss = F.nll_loss(log_posterior, target[:, -1])
         self.log("val_loss", loss)
         # return loss
 
