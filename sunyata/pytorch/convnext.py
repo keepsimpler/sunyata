@@ -42,13 +42,16 @@ class BottleNeckBlock(nn.Module):
         expanded_features = out_features * expansion
         self.block = nn.Sequential(
             # narrow -> wide (with depth-wise and bigger kernel)
-            ConvNormAct(
+            nn.Conv2d(
                 in_features, in_features, kernel_size=7, stride=stride, bias=False, groups=in_features
             ),
+            # GroupNorm with num_groups=1 is the same as LayerNorm but works for 2D data
+            nn.GroupNorm(num_groups=1, num_channels=in_features),
             # wide -> wide
-            ConvNormAct(in_features, expanded_features, kernel_size=1),
+            nn.Conv2d(in_features, expanded_features, kernel_size=1),
+            nn.GELU(),
             # wide -> narrow
-            ConvNormAct(expanded_features, out_features, kernel_size=1, act=nn.Identity, bias=False),
+            nn.Conv2d(expanded_features, out_features, kernel_size=1),
         )
         self.shortcut = (
             nn.Sequential(
