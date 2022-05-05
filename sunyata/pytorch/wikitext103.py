@@ -36,7 +36,7 @@ class WikiText103DataModule(pl.LightningDataModule):
 
     def val_dataloader(self):
         return DataLoader(
-            self.valid_data,
+            self.validation_data,
             batch_size=self.batch_size,
             shuffle=False,
             collate_fn=shift_one_token

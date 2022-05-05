@@ -14,10 +14,11 @@ from sunyata.pytorch.layers.transformer import TransformerLayer
 cfg = DeepBayesInferVisionCfg(
     is_pre_layernorm=False,
 
-    is_to_qkv=True,
+    is_attn=True,
+    is_to_qkv=False,
     # attn_scale = 1.,
     is_mask = False,
-    is_softmax=True,
+    is_softmax=False,
     is_to_out=False,
     is_attn_shortcut=False,
 
@@ -26,9 +27,9 @@ cfg = DeepBayesInferVisionCfg(
     is_ff=False,
     is_ff_shortcut=False,
 
-    is_post_layernorm=False,
+    is_post_layernorm=True,
 
-    is_layernorm_before_digup=True,
+    is_layernorm_before_digup=False,
 
     batch_size = 16, 
     learning_rate = 1e-3)
@@ -78,3 +79,9 @@ layers = [nn.Sequential(*layers)]
 deep_bayes_net = DeepBayesInferVision(layers, cfg)
 trainer.fit(deep_bayes_net, tiny_image_net_datamodule)
 # %%
+# layers = [TransformerLayer(cfg) for _ in range(cfg.num_layers)]
+# deep_bayes_net = DeepBayesInferVision(layers, cfg)
+# lr_finder = trainer.tuner.lr_find(deep_bayes_net, tiny_image_net_datamodule)
+# lr_finder.results
+# lr_finder.suggestion()
+
