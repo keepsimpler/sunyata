@@ -85,7 +85,7 @@ class DeepBayesInferLM(pl.LightningModule):
         for layer in self.layers:
             hidden_features = layer(hidden_features)
             chosen_hidden_features = hidden_features[:, -1]
-            logits = self.digup(hidden_features)
+            logits = self.digup(chosen_hidden_features)
 
             log_posterior = log_bayesian_iteration(log_prior, logits)
             log_prior = log_posterior
