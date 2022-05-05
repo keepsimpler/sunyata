@@ -36,14 +36,13 @@ class BottleNeckBlock(nn.Module):
         in_features: int,
         out_features: int,
         expansion: int = 4,
-        stride: int = 1,
     ):
         super().__init__()
         expanded_features = out_features * expansion
         self.block = nn.Sequential(
             # narrow -> wide (with depth-wise and bigger kernel)
             nn.Conv2d(
-                in_features, in_features, kernel_size=7, stride=stride, bias=False, groups=in_features
+                in_features, in_features, kernel_size=7, padding=3, bias=False, groups=in_features
             ),
             # GroupNorm with num_groups=1 is the same as LayerNorm but works for 2D data
             nn.GroupNorm(num_groups=1, num_channels=in_features),
@@ -53,37 +52,27 @@ class BottleNeckBlock(nn.Module):
             # wide -> narrow
             nn.Conv2d(expanded_features, out_features, kernel_size=1),
         )
-        self.shortcut = (
-            nn.Sequential(
-                ConvNormAct(
-                    in_features, out_features, kernel_size=1, stride=stride, bias=False
-                )
-            )
-            if in_features != out_features
-            else nn.Identity()
-        )
-
-        self.act = nn.ReLU()
 
     def forward(self, x: Tensor) -> Tensor:
         res = x
         x = self.block(x)
-        res = self.shortcut(res)
         x = x + res
-        x = self.act(x)
         return x
 
 
 class ConvNextStage(nn.Sequential):
     def __init__(
-        self, in_features: int, out_features: int, depth: int, stride: int = 2, **kwargs
+        self, in_features: int, out_features: int, depth: int, **kwargs
     ):
         super().__init__(
-            # downsample is done here
-            BottleNeckBlock(in_features, out_features, stride=stride, **kwargs),
+            # add the downsampler
+            nn.Sequential(
+                nn.GroupNorm(num_groups=1, num_channels=in_features),
+                nn.Conv2d(in_features, out_features, kernel_size=2, stride=2)
+            ),
             *[
                 BottleNeckBlock(out_features, out_features, **kwargs)
-                for _ in range(depth - 1)
+                for _ in range(depth)
             ],
         )
 
