@@ -46,7 +46,7 @@ class BottleNeckBlock(nn.Module):
                 in_features, reduced_features, kernel_size=1, stride=stride, bias=False
             ),
             # narrow -> narrow
-            ConvNormAct(reduced_features, reduced_features, kernel_size=3, bias=False),
+            ConvNormAct(reduced_features, reduced_features, kernel_size=3, bias=False, groups=reduced_features),
             # narrow -> wide
             ConvNormAct(reduced_features, out_features, kernel_size=1, act=nn.Identity, bias=False),
         )
