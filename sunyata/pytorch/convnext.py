@@ -1,8 +1,9 @@
-from functools import reduce
+import torch
 import torch.nn as nn
 from torch import Tensor
 from typing import List
 
+from torchvision.ops import StochasticDepth
 
 class ConvNormAct(nn.Sequential):
     """
@@ -36,6 +37,8 @@ class BottleNeckBlock(nn.Module):
         in_features: int,
         out_features: int,
         expansion: int = 4,
+        drop_p: float = .0,
+        layer_scaler_init_value: float = 1e-6,
     ):
         super().__init__()
         expanded_features = out_features * expansion
@@ -52,10 +55,14 @@ class BottleNeckBlock(nn.Module):
             # wide -> narrow
             nn.Conv2d(expanded_features, out_features, kernel_size=1),
         )
+        self.layer_scaler = LayerScaler(layer_scaler_init_value, out_features)
+        self.drop_path = StochasticDepth(drop_p, mode="batch")
 
     def forward(self, x: Tensor) -> Tensor:
         res = x
         x = self.block(x)
+        x = self.layer_scaler(x)
+        x = self.drop_path(x)
         x = x + res
         return x
 
@@ -92,19 +99,22 @@ class ConvNextEncoder(nn.Module):
         stem_features: int,
         depths: List[int],
         widths: List[int],
+        drop_p: float = .0,
     ):
         super().__init__()
         self.stem = ConvNextStem(in_channels, stem_features)
 
         in_out_widths = list(zip(widths, widths[1:]))
+        # create drop paths probabilities (one for each stage)
+        drop_probs = [x.item() for x in torch.linspace(0, drop_p, sum(depths))]
 
         self.stages = nn.ModuleList(
             [
-                ConvNextStage(stem_features, widths[0], depths[0], stride=1),
+                ConvNextStage(stem_features, widths[0], depths[0], drop_p=drop_probs[0]),
                 *[
-                    ConvNextStage(in_features, out_features, depth)
-                    for (in_features, out_features), depth in zip(
-                        in_out_widths, depths[1:]
+                    ConvNextStage(in_features, out_features, depth, drop_p=drop_p)
+                    for (in_features, out_features), depth, drop_p in zip(
+                        in_out_widths, depths[1:], drop_probs[1:]
                     )
                 ],
             ]
@@ -115,3 +125,13 @@ class ConvNextEncoder(nn.Module):
         for stage in self.stages:
             x = stage(x)
         return x
+
+
+class LayerScaler(nn.Module):
+    def __init__(self, init_value: float, dimensions: int):
+        super().__init__()
+        self.gamma = nn.Parameter(init_value * torch.ones((dimensions)),
+                                    requires_grad=True)
+
+    def forward(self, x):
+        return self.gamma[None,...,None,None] * x
