@@ -41,12 +41,12 @@ class BottleNeckBlock(nn.Module):
         super().__init__()
         expanded_features = out_features * expansion
         self.block = nn.Sequential(
-            # narrow -> wide
+            # narrow -> wide (with depth-wise and bigger kernel)
             ConvNormAct(
-                in_features, expanded_features, kernel_size=1, stride=stride, bias=False
+                in_features, in_features, kernel_size=7, stride=stride, bias=False, groups=in_features
             ),
-            # wide -> wide (with depth-wise)
-            ConvNormAct(expanded_features, expanded_features, kernel_size=3, bias=False, groups=in_features),
+            # wide -> wide
+            ConvNormAct(in_features, expanded_features, kernel_size=1),
             # wide -> narrow
             ConvNormAct(expanded_features, out_features, kernel_size=1, act=nn.Identity, bias=False),
         )
