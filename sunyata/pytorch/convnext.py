@@ -1,11 +1,14 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch import Tensor
 from typing import List
 
 import pytorch_lightning as pl
 
-from torchvision.ops import stochastic_depth 
+from torchvision.ops import stochastic_depth
+
+from sunyata.pytorch.bayes.core import log_bayesian_iteration 
 
 
 class ConvNextForImageClassification(pl.LightningModule):
@@ -20,30 +23,43 @@ class ConvNextForImageClassification(pl.LightningModule):
         learning_rate: float = 1e-3
     ):
         super().__init__()
-        self.encoder = ConvNextEncoder(in_channels, stem_features, depths, widths, drop_p)
-        self.head = ClassificationHead(widths[-1], num_classes)
+        self.stem = ConvNextStem(in_channels, stem_features)
+        self.encoder = ConvNextEncoder(stem_features, depths, widths, drop_p)
+        # self.head = ClassificationHead(widths[-1], num_classes)
+        self.heads = nn.ModuleList(
+            ClassificationHead(out_features, num_classes)
+            for out_features in widths
+        )
+        self.num_classes = num_classes
         self.learning_rate = learning_rate
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.head(x)
-        return x
+        batch_size, in_channels, H, W = x.shape
+        log_prior = torch.zeros(batch_size, self.num_classes)
+        x = self.stem(x)
+        for stage, head in zip(self.encoder.stages, self.heads):
+            x = stage(x)
+            logits = head(x)
+            log_posterior = log_bayesian_iteration(log_prior, logits)
+            log_prior = log_posterior
+
+        return log_posterior
 
     def training_step(self, batch, batch_idx):
         input, target = batch
-        logits = self.forward(input)
-        loss = nn.CrossEntropyLoss()(logits, target)
+        log_posterior = self.forward(input)
+        loss = F.nll_loss(log_posterior, target)
         self.log("train_loss", loss)
-        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
         self.log("train_accuracy", accuracy)
         return loss
 
     def validation_step(self, batch, batch_idx):
         input, target = batch
-        logits = self.forward(input)
-        loss = nn.CrossEntropyLoss()(logits, target)
+        log_posterior = self.forward(input)
+        loss = F.nll_loss(log_posterior, target)
         self.log("val_loss", loss)
-        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
         self.log("val_accuracy", accuracy)
         return loss
 
@@ -65,14 +81,12 @@ class ClassificationHead(nn.Sequential):
 class ConvNextEncoder(nn.Module):
     def __init__(
         self,
-        in_channels: int,
         stem_features: int,
         depths: List[int],
         widths: List[int],
         drop_p: float = .0,
     ):
         super().__init__()
-        self.stem = ConvNextStem(in_channels, stem_features)
 
         in_out_widths = list(zip(widths, widths[1:]))
         # create drop paths probabilities (one for each stage)
@@ -91,7 +105,6 @@ class ConvNextEncoder(nn.Module):
         )
 
     def forward(self, x):
-        x = self.stem(x)
         for stage in self.stages:
             x = stage(x)
         return x
@@ -166,30 +179,3 @@ class LayerScaler(nn.Module):
 
     def forward(self, x):
         return self.gamma[None,...,None,None] * x
-
-
-class ConvNormAct(nn.Sequential):
-    """
-    A little util layer composed by (conv) -> (norm) -> (act) layers
-    """
-    def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        kernel_size: int,
-        norm = nn.BatchNorm2d,
-        act = nn.ReLU,
-        **kwargs
-    ):
-        super().__init__(
-            nn.Conv2d(
-                in_features,
-                out_features,
-                kernel_size=kernel_size,
-                padding=kernel_size // 2,
-                **kwargs
-            ),
-            norm(out_features),
-            act(),
-        )
-
