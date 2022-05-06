@@ -25,7 +25,7 @@ class ConvNextForImageClassification(pl.LightningModule):
         super().__init__()
         self.stem = ConvNextStem(in_channels, stem_features)
         self.encoder = ConvNextEncoder(stem_features, depths, widths, drop_p)
-        # self.head = ClassificationHead(widths[-1], num_classes)
+        self.head = ClassificationHead(widths[-1], num_classes)
         self.heads = nn.ModuleList(
             ClassificationHead(out_features, num_classes)
             for out_features in widths
@@ -41,7 +41,7 @@ class ConvNextForImageClassification(pl.LightningModule):
             for i, block in enumerate(stage):
                 x = block(x)
                 if i > 0:
-                    logits = head(x)
+                    logits = self.head(x)
                     log_posterior = log_bayesian_iteration(log_prior, logits)
                     log_prior = log_posterior
 
