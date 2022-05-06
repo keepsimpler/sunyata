@@ -182,11 +182,11 @@ class ConvNextForImageClassification(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         input, target = batch
         logits = self.forward(input)
-        loss = nn.CrossEntropyLoss(logits, target)
+        loss = nn.CrossEntropyLoss()(logits, target)
         self.log("val_loss", loss)
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
         self.log("val_accuracy", accuracy)
-        # return loss
+        return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
