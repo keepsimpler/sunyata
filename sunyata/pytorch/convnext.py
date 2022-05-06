@@ -140,7 +140,7 @@ class LayerScaler(nn.Module):
 
 
 class ClassificationHead(nn.Sequential):
-    def __init__(self, num_channels: int, num_classes: int = 1000):
+    def __init__(self, num_channels: int, num_classes: int = 200):
         super().__init__(
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(1),
@@ -157,11 +157,13 @@ class ConvNextForImageClassification(pl.LightningModule):
         depths: List[int],
         widths: List[int],
         drop_p: float = .0,
-        num_classes: int = 1000
+        num_classes: int = 200,
+        learning_rate: float = 1e-3
     ):
         super().__init__()
         self.encoder = ConvNextEncoder(in_channels, stem_features, depths, widths, drop_p)
         self.head = ClassificationHead(widths[-1], num_classes)
+        self.learning_rate = learning_rate
 
     def forward(self, x):
         x = self.encoder(x)
