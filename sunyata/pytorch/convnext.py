@@ -35,7 +35,7 @@ class ConvNextForImageClassification(pl.LightningModule):
 
     def forward(self, x):
         batch_size, in_channels, H, W = x.shape
-        log_prior = torch.zeros(batch_size, self.num_classes)
+        log_prior = torch.zeros(batch_size, self.num_classes, device=x.device)
         x = self.stem(x)
         for stage, head in zip(self.encoder.stages, self.heads):
             x = stage(x)
