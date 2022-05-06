@@ -3,7 +3,9 @@ import torch.nn as nn
 from torch import Tensor
 from typing import List
 
-from torchvision.ops import StochasticDepth
+import pytorch_lightning as pl
+
+from torchvision.ops import stochastic_depth 
 
 class ConvNormAct(nn.Sequential):
     """
@@ -56,13 +58,13 @@ class BottleNeckBlock(nn.Module):
             nn.Conv2d(expanded_features, out_features, kernel_size=1),
         )
         self.layer_scaler = LayerScaler(layer_scaler_init_value, out_features)
-        self.drop_path = StochasticDepth(drop_p, mode="batch")
+        self.drop_p = drop_p
 
     def forward(self, x: Tensor) -> Tensor:
         res = x
         x = self.block(x)
         x = self.layer_scaler(x)
-        x = self.drop_path(x)
+        x = stochastic_depth(x, self.drop_p, mode="batch")
         x = x + res
         return x
 
@@ -147,7 +149,7 @@ class ClassificationHead(nn.Sequential):
         )
 
 
-class ConvNextForImageClassification(nn.Sequential):
+class ConvNextForImageClassification(pl.LightningModule):
     def __init__(
         self,
         in_channels: int,
@@ -160,3 +162,31 @@ class ConvNextForImageClassification(nn.Sequential):
         super().__init__()
         self.encoder = ConvNextEncoder(in_channels, stem_features, depths, widths, drop_p)
         self.head = ClassificationHead(widths[-1], num_classes)
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.head(x)
+        return x
+
+    def training_step(self, batch, batch_idx):
+        input, target = batch
+        logits = self.forward(input)
+        loss = nn.CrossEntropyLoss()(logits, target)
+        self.log("train_loss", loss)
+        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        self.log("train_accuracy", accuracy)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        input, target = batch
+        logits = self.forward(input)
+        loss = nn.CrossEntropyLoss(logits, target)
+        self.log("val_loss", loss)
+        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        self.log("val_accuracy", accuracy)
+        # return loss
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        return optimizer
+
