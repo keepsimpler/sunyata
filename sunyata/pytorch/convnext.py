@@ -38,10 +38,12 @@ class ConvNextForImageClassification(pl.LightningModule):
         log_prior = torch.zeros(batch_size, self.num_classes, device=x.device)
         x = self.stem(x)
         for stage, head in zip(self.encoder.stages, self.heads):
-            x = stage(x)
-            logits = head(x)
-            log_posterior = log_bayesian_iteration(log_prior, logits)
-            log_prior = log_posterior
+            for i, block in enumerate(stage):
+                x = block(x)
+                if i > 0:
+                    logits = head(x)
+                    log_posterior = log_bayesian_iteration(log_prior, logits)
+                    log_prior = log_posterior
 
         return log_posterior
 
