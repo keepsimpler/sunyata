@@ -42,6 +42,7 @@ class DeepBayesInferMLM(pl.LightningModule):
         self.replace_prob = cfg.replace_prob
         self.mask_token_id = cfg.mask_token_id
         self.pad_token_id = cfg.pad_token_id
+        self.learning_rate = cfg.learning_rate
 
     def forward(self, input: torch.Tensor):
         no_mask = mask_with_tokens(input, self.mask_ignore_token_ids)
