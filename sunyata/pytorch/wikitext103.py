@@ -9,9 +9,10 @@ import pytorch_lightning as pl
 
 
 class WikiText103DataModule(pl.LightningDataModule):
-    def __init__(self, data_dir:str, batch_size: int, vocab_size: int, seq_len:int):
+    def __init__(self, data_dir:str, batch_size: int, vocab_size: int, seq_len:int, is_collate:bool=True):
         super().__init__()
         self.data_dir, self.batch_size, self.vocab_size, self.seq_len = data_dir, batch_size, vocab_size, seq_len
+        self.is_collate = is_collate
         self.setup()
     
     def setup(self, stage=None):
@@ -31,7 +32,7 @@ class WikiText103DataModule(pl.LightningDataModule):
             self.train_data,
             batch_size=self.batch_size,
             shuffle=True,
-            collate_fn=shift_one_token
+            collate_fn=shift_one_token if self.is_collate else None
         )
 
     def val_dataloader(self):
@@ -39,7 +40,7 @@ class WikiText103DataModule(pl.LightningDataModule):
             self.validation_data,
             batch_size=self.batch_size,
             shuffle=False,
-            collate_fn=shift_one_token
+            collate_fn=shift_one_token if self.is_collate else None
         )
 
 
