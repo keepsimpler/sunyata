@@ -1,5 +1,6 @@
 import math
 from functools import reduce
+from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
@@ -7,12 +8,11 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 
 from sunyata.pytorch.bayes.core import DeepBayesInferCfg, log_bayesian_iteration
-from sunyata.pytorch.bayes.lm import DeepBayesInferLM, DeepBayesInferLMCfg
 
-
+@dataclass
 class DeepBayesInferMLMCfg(DeepBayesInferCfg):
-    vocab_size: int
-    seq_len: int
+    vocab_size: int = None
+    seq_len: int = None
     is_mask: bool = False
 
     mask_prob: float = 0.15
@@ -48,7 +48,7 @@ class DeepBayesInferMLM(pl.LightningModule):
         mask = get_mask_subset_with_prob(~no_mask, self.mask_prob)
 
         target = input[mask]  # input.masked_fill(~mask, self.pad_token_id)
-        log_prior = torch.zeros_like(target).unsqueeze(-1).repeat((1, 1, self.vocab_size))
+        log_prior = torch.zeros_like(target).unsqueeze(-1).repeat((1, self.vocab_size))
 
         masked_input = input.clone().detach()
         replace_prob = prob_mask_like(input, self.replace_prob)

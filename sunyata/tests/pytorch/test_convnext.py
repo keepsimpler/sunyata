@@ -30,6 +30,7 @@ input, target = batch
 # %%
 classifier = ConvNextForImageClassification(in_channels=3, stem_features=64, depths=[3,3,9,3], widths=[96, 192, 384, 768])
 classifier.training_step(batch, batch_idx=None)
+classifier.validation_step(batch, batch_idx=None)
 
 # %%
 block = BottleNeckBlock(3, 3)
