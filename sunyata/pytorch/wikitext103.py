@@ -54,7 +54,7 @@ def setup_wikitext103(data_dir: str, vocab_size: int, seq_len: int):
     dataset = load_dataset("wikitext", "wikitext-103-v1")
     tokenizer = ByteLevelBPETokenizer()
     tokenizer.train_from_iterator(batch_iterator(dataset, "train"), vocab_size=vocab_size,
-        min_frequency=2, special_tokens=["<unk>","\n"])
+        min_frequency=2, special_tokens=["<pad>", "<mask>", "<unk>","\n"])
     tokenizer_path = f"{data_dir}wikitext-103-vocab{vocab_size}/"
     if not os.path.exists(tokenizer_path):
         os.mkdir(tokenizer_path)
