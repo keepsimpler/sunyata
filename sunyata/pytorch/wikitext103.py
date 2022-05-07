@@ -22,7 +22,11 @@ class WikiText103DataModule(pl.LightningDataModule):
 
         if os.path.exists(train_tensor_file) and os.path.exists(validation_tensor_file) and os.path.exists(tokenizer_path):
             self.train_data = torch.load(train_tensor_file)
+            divided_length = self.train_data.nelement() // self.seq_len * self.seq_len
+            self.train_data = self.train_data.reshape(-1)[:divided_length].reshape(-1, self.seq_len)
             self.validation_data = torch.load(validation_tensor_file)
+            divided_length = self.validation_data.nelement() // self.seq_len * self.seq_len
+            self.validation_data = self.validation_data.reshape(-1)[:divided_length].reshape(-1, self.seq_len)
             self.tokenizer = ByteLevelBPETokenizer.from_file(tokenizer_path + "vocab.json", tokenizer_path + "merges.txt")
         else:
             self.train_data, self.validation_data, self.tokenizer = setup_wikitext103(self.data_dir, self.vocab_size, self.seq_len)
