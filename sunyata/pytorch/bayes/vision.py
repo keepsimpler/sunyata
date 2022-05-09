@@ -24,7 +24,7 @@ class DeepBayesInferVisionCfg(DeepBayesInferCfg):
 
 
 class DeepBayesInferVision(pl.LightningModule):
-    def __init__(self, layers: nn.ModuleList, cfg: DeepBayesInferVisionCfg):
+    def __init__(self, layers: nn.ModuleList, cfg: DeepBayesInferVisionCfg, steps_per_epoch: int=None):
         super().__init__()
 
         self.save_hyperparameters("cfg")
@@ -62,6 +62,7 @@ class DeepBayesInferVision(pl.LightningModule):
             self.register_buffer('log_prior', log_prior)
 
         self.num_epochs, self.learning_rate, self.learning_rate_scheduler = cfg.num_epochs, cfg.learning_rate, cfg.learning_rate_scheduler
+        self.steps_per_epoch = steps_per_epoch
 
     def forward(self, img):
         x = self.to_patch_embedding(img)
@@ -110,7 +111,7 @@ class DeepBayesInferVision(pl.LightningModule):
             lr_scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
         elif self.learning_rate_scheduler == "OneCycle":
             lr_scheduler = OneCycleLR(optimizer, max_lr=self.learning_rate,
-                steps_per_epoch=len(self.train_dataloader()), epochs=self.num_epochs)
+                steps_per_epoch=len(self.steps_per_epoch), epochs=self.num_epochs)
         else:
             raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
 
