@@ -27,19 +27,19 @@ class TransformerLayer(nn.Module):
         self.is_attn_shortcut, self.is_ff_shortcut = cfg.is_attn_shortcut, cfg.is_ff_shortcut
 
     def forward(self, x):
-        _x = self.pre_layernorm(x)
+        x = self.pre_layernorm(x)
 
         if self.is_attn_shortcut:
-            x = x + self.attention(_x)
+            x = x + self.attention(x)
         else:
-            x = self.attention(_x)
+            x = self.attention(x)
 
-        _x = self.inner_layernorm(x)
+        x = self.inner_layernorm(x)
 
         if self.is_ff_shortcut:
-            x = x + self.feed_forward(_x)
+            x = x + self.feed_forward(x)
         else:
-            x = self.feed_forward(_x)
+            x = self.feed_forward(x)
 
         x = self.post_layernorm(x)
 
