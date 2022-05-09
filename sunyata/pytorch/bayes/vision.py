@@ -111,7 +111,7 @@ class DeepBayesInferVision(pl.LightningModule):
             lr_scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
         elif self.learning_rate_scheduler == "OneCycle":
             lr_scheduler = OneCycleLR(optimizer, max_lr=self.learning_rate,
-                steps_per_epoch=len(self.steps_per_epoch), epochs=self.num_epochs)
+                steps_per_epoch=self.steps_per_epoch, epochs=self.num_epochs)
         else:
             raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
 
