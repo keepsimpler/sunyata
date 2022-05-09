@@ -45,7 +45,9 @@ class DeepBayesInferCfg:
     # training
     num_layers: int = 8
     batch_size: int = None
+    num_epochs: int = 1
     learning_rate: float = None
+    learning_rate_scheduler: str = "Step"  # "OneCycle"
 
 
 
