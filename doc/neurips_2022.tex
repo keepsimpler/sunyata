@@ -166,37 +166,22 @@ the prior distribution of Deep Bayesian Inference is taken over the possible par
 
 \paragraph{Normalizing Flow}
 
-\subsection{Retrieval of style files}
+\section{Experiments}
+\paragraph{Experiment environment and setting}
+We use Kaggle's free accessed GPUs to do our experiments. 
+Kaggle provides a NVIDIA TESLA P100 GPU for each user which has 15.9GB memory, with a limit on each user's GPU use of 30 hours/week.
+Due to the limitation of the hardware, we mainly do experiments on Tiny ImageNet, rather than ImageNet.
 
-The \LaTeX{} style file contains three optional arguments: \verb+final+, which
-creates a camera-ready copy, \verb+preprint+, which creates a preprint for
-submission to, e.g., arXiv, and \verb+nonatbib+, which will not load the
-\verb+natbib+ package for you in case of package clash.
+\subsection{Image Classification}
 
+\paragraph{Vision Transformers and CNN}
+\cite{dosovitskiy2020image}
 
-\paragraph{Preprint option}
-If you wish to post a preprint of your work online, e.g., on arXiv, using the
-NeurIPS style, please use the \verb+preprint+ option. This will create a
-nonanonymized version of your work with the text ``Preprint. Work in progress.''
-in the footer. This version may be distributed as you see fit. Please \textbf{do
-  not} use the \verb+final+ option, which should \textbf{only} be used for
-papers accepted to NeurIPS.
-
-
-At submission time, please omit the \verb+final+ and \verb+preprint+
-options. This will anonymize your submission and add line numbers to aid
-review. Please do \emph{not} refer to these line numbers in your paper as they
-will be removed during generation of camera-ready copies.
-
-
-The file \verb+neurips_2022.tex+ may be used as a ``shell'' for writing your
-paper. All you have to do is replace the author, title, abstract, and text of
-the paper with your own.
-
-
-The formatting instructions contained in these style files are summarized in
-Sections \ref{gen_inst}, \ref{headings}, and \ref{others} below.
-
+\paragraph{Tiny ImageNet}
+The Tiny ImageNet dataset is a modified subset of the original ImageNet dataset.
+Here, there are 200 different classes instead of 1000 classes of ImageNet dataset,
+with 100,000 training examples and 10,000 validation examples.
+The resolution of the images is just 64x64 pixels.
 
 \section{General formatting instructions}
 \label{gen_inst}
@@ -472,12 +457,7 @@ line. Please give LaTeX hyphenation hints using the \verb+\-+ command when
 necessary.
 
 \begin{ack}
-Use unnumbered first level headings for the acknowledgments. All acknowledgments
-go at the end of the paper before the list of references. Moreover, you are required to declare
-funding (financial activities supporting the submitted work) and competing interests (related financial activities outside the submitted work).
-More information about this disclosure can be found at: \url{https://neurips.cc/Conferences/2022/PaperInformation/FundingDisclosure}.
-
-
+Thanks Kaggle for providing free GPUs.
 Do {\bf not} include this section in the anonymized submission, only in the final paper. You can use the \texttt{ack} environment provided in the style file to autmoatically hide this section in the anonymized submission.
 \end{ack}
 

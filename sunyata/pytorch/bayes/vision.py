@@ -3,6 +3,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.optim.lr_scheduler import StepLR, OneCycleLR
 from einops import repeat
 from einops.layers.torch import Rearrange
 
@@ -50,7 +51,7 @@ class DeepBayesInferVision(pl.LightningModule):
         self.pool = cfg.pool
 
         self.mlp_head = nn.Sequential(
-            nn.LayerNorm(cfg.hidden_dim),
+            nn.LayerNorm(cfg.hidden_dim) if cfg.is_layernorm_before_digup else nn.Identity(),
             nn.Linear(cfg.hidden_dim, cfg.num_classes)
         )        
 
@@ -60,18 +61,17 @@ class DeepBayesInferVision(pl.LightningModule):
         else:
             self.register_buffer('log_prior', log_prior)
 
-        self.learning_rate = cfg.learning_rate
+        self.num_epochs, self.learning_rate, self.learning_rate_scheduler = cfg.num_epochs, cfg.learning_rate, cfg.learning_rate_scheduler
 
     def forward(self, img):
-        batch_size, _, _, _ = img.shape
-        log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)        
-
         x = self.to_patch_embedding(img)
-        b, n, _ = x.shape
+        batch_size, num_patches, _ = x.shape
 
-        cls_tokens = repeat(self.cls_token, '1 n d -> b n d', b = b)
+        log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)        
+        cls_tokens = repeat(self.cls_token, '1 1 d -> b 1 d', b = batch_size)
+
         x = torch.cat((cls_tokens, x), dim=1)
-        x += self.pos_embedding[:, :(n + 1)]
+        x += self.pos_embedding[:, :(num_patches + 1)]
         x = self.dropout(x)
 
         for layer in self.layers:
@@ -105,8 +105,16 @@ class DeepBayesInferVision(pl.LightningModule):
         # return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        return optimizer
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
+        if self.learning_rate_scheduler == "Step":
+            lr_scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
+        elif self.learning_rate_scheduler == "OneCycle":
+            lr_scheduler = OneCycleLR(optimizer, max_lr=self.learning_rate,
+                steps_per_epoch=len(self.train_dataloader()), epochs=self.num_epochs)
+        else:
+            raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
+
+        return [optimizer], [lr_scheduler]
 
 
 def pair(t):
