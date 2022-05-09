@@ -23,7 +23,7 @@ class DeepBayesInferCfg:
     is_ff: bool = True
     expanded_dim: int = 256  # 2048
     ff_dropout: float = 0.
-    ff_act_nn: nn.Module = nn.ReLU()
+    ff_act_nn: nn.Module = nn.GELU()
     is_ff_bias: bool = True
     is_nonlinear: bool = True
 
