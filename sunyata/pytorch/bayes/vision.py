@@ -87,12 +87,12 @@ class DeepBayesInferVision(pl.LightningModule):
             log_posterior = log_bayesian_iteration(log_prior, logits)
             log_prior = log_posterior
 
-        return logits
+        return log_posterior
 
     def training_step(self, batch, batch_idx):
         input, target = batch
         log_posterior = self.forward(input)
-        loss = F.cross_entropy(log_posterior, target)
+        loss = F.nll_loss(log_posterior, target)
         self.log("train_loss", loss)
         accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
         self.log("train_accuracy", accuracy)
@@ -101,7 +101,7 @@ class DeepBayesInferVision(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         input, target = batch
         log_posterior = self.forward(input)
-        loss = F.cross_entropy(log_posterior, target)
+        loss = F.nll_loss(log_posterior, target)
         self.log("val_loss", loss)
         accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
         self.log("val_accuracy", accuracy)
@@ -127,7 +127,8 @@ class DeepBayesInferVision(pl.LightningModule):
                 "frequency": 1
             }
         else:
-            raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
+            lr_scheduler = None
+            # raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
 
         return [optimizer], [lr_scheduler]
 
