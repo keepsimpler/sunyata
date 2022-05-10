@@ -50,9 +50,9 @@ class DeepBayesInferCfg:
     learning_rate: float = None
     learning_rate_scheduler: str = "Step"  # or "OneCycle" or "ReduceLROnPlateau"
 
-    gamma = 0.7
-    factor = 0.1
-    patience = 3
+    gamma: float = 0.7
+    factor: float = 0.1
+    patience: int = 3
 
 
 
