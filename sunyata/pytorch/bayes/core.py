@@ -46,8 +46,13 @@ class DeepBayesInferCfg:
     num_layers: int = 8
     batch_size: int = None
     num_epochs: int = 1
+    optimizer_method: str = "Adam"  # or "AdamW"
     learning_rate: float = None
-    learning_rate_scheduler: str = "Step"  # "OneCycle"
+    learning_rate_scheduler: str = "Step"  # or "OneCycle" or "ReduceLROnPlateau"
+
+    gamma = 0.7
+    factor = 0.1
+    patience = 3
 
 
 

@@ -3,7 +3,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import StepLR, OneCycleLR
+from torch.optim.lr_scheduler import StepLR, OneCycleLR, ReduceLROnPlateau
 from einops import repeat
 from einops.layers.torch import Rearrange
 
@@ -62,7 +62,9 @@ class DeepBayesInferVision(pl.LightningModule):
             self.register_buffer('log_prior', log_prior)
 
         self.num_epochs, self.learning_rate, self.learning_rate_scheduler = cfg.num_epochs, cfg.learning_rate, cfg.learning_rate_scheduler
+        self.optimizer_method = cfg.optimizer_method
         self.steps_per_epoch = steps_per_epoch
+        self.cfg = cfg
 
     def forward(self, img):
         x = self.to_patch_embedding(img)
@@ -106,12 +108,24 @@ class DeepBayesInferVision(pl.LightningModule):
         # return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
+        if self.optimizer_method == "Adam":
+            optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        elif self.optimizer_method == "AdamW":
+            optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
+        else:
+            Exception("Only support Adam and AdamW optimizer now.")
+
         if self.learning_rate_scheduler == "Step":
-            lr_scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
+            lr_scheduler = StepLR(optimizer, step_size=1, gamma=self.cfg.gamma)
         elif self.learning_rate_scheduler == "OneCycle":
             lr_scheduler = OneCycleLR(optimizer, max_lr=self.learning_rate,
                 steps_per_epoch=self.steps_per_epoch, epochs=self.num_epochs)
+        elif self.learning_rate_scheduler == "ReduceLROnPlateau":
+            lr_scheduler = {
+                "scheduler": ReduceLROnPlateau(optimizer, 'min', factor=self.cfg.factor, patience=self.cfg.patience),
+                "monitor": "val_loss",
+                "frequency": 1
+            }
         else:
             raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
 
