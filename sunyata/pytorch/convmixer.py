@@ -44,7 +44,7 @@ class DeepBayesInferConvMixer(pl.LightningModule):
             ) for _ in range(cfg.num_layers)
         ])
         if not cfg.is_bayes:
-            self.layers = nn.Sequential(self.layers)  # to one layer
+            self.layers = nn.ModuleList([nn.Sequential(*self.layers)])  # to one layer
 
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
