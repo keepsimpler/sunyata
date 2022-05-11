@@ -20,7 +20,7 @@ class ConvNextForImageClassification(pl.LightningModule):
         widths: List[int],
         drop_p: float = .0,
         num_classes: int = 200,
-        learning_rate: float = 1e-3
+        learning_rate: float = 4e-3
     ):
         super().__init__()
         self.stem = ConvNextStem(in_channels, stem_features)
