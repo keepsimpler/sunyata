@@ -112,13 +112,20 @@ class DeepBayesInferVision(pl.LightningModule):
             optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         elif self.optimizer_method == "AdamW":
             optimizer = torch.optim.AdamW(self.parameters(), lr=self.learning_rate)
+        elif self.optimizer_method == "SGD":
+            optimizer = torch.optim.SGD(
+                self.parameters(),
+                lr=self.learning_rate,
+                momentum=0.9,
+                weight_decay=5e-4,
+            )
         else:
             Exception("Only support Adam and AdamW optimizer now.")
 
         if self.learning_rate_scheduler == "Step":
             lr_scheduler = StepLR(optimizer, step_size=1, gamma=self.cfg.gamma)
         elif self.learning_rate_scheduler == "OneCycle":
-            lr_scheduler = OneCycleLR(optimizer, max_lr=self.learning_rate,
+            lr_scheduler = OneCycleLR(optimizer, max_lr=2*self.learning_rate,
                 steps_per_epoch=self.steps_per_epoch, epochs=self.num_epochs)
         elif self.learning_rate_scheduler == "ReduceLROnPlateau":
             lr_scheduler = {
