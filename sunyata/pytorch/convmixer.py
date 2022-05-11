@@ -17,6 +17,7 @@ class DeepBayesInferConvMixerCfg:
     num_classes: int = 10
 
     is_bayes: bool = True
+    is_prior_as_params: bool = False
 
     batch_size: int = 128
     num_epochs: int = 10
