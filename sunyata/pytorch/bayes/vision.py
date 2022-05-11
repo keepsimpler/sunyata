@@ -136,8 +136,11 @@ class DeepBayesInferVision(pl.LightningModule):
         else:
             lr_scheduler = None
             # raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
-
-        return [optimizer], [lr_scheduler]
+            
+        if lr_scheduler is None:
+            return optimizer
+        else:
+            return [optimizer], [lr_scheduler]
 
 
 def pair(t):
