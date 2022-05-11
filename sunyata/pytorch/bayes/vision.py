@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -6,6 +7,7 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import StepLR, OneCycleLR, ReduceLROnPlateau
 from einops import repeat
 from einops.layers.torch import Rearrange
+import warmup_scheduler
 
 from sunyata.pytorch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
 
@@ -15,20 +17,25 @@ class DeepBayesInferVisionCfg(DeepBayesInferCfg):
     patch_size: int = 8  # 16
     num_classes: int = 200
 
-    is_mask=False
+    is_mask: bool = False
+    is_bayes: bool = True
 
     pool: str = 'cls' # or 'mean'
     channels: int = 3
 
     emb_dropout: float = 0. 
 
+    warmup_epoch: int = 5
+
 
 class DeepBayesInferVision(pl.LightningModule):
-    def __init__(self, layers: nn.ModuleList, cfg: DeepBayesInferVisionCfg, steps_per_epoch: int=None):
+    def __init__(self, layers: List, cfg: DeepBayesInferVisionCfg, steps_per_epoch: int=None):
         super().__init__()
 
         self.save_hyperparameters("cfg")
         self.layers = nn.ModuleList(layers)
+        if not cfg.is_bayes:
+            self.layers = nn.ModuleList([nn.Sequential(*self.layers)])  # to one layer
 
         image_height, image_width = pair(cfg.image_size)
         patch_height, patch_width = pair(cfg.patch_size)
@@ -89,24 +96,21 @@ class DeepBayesInferVision(pl.LightningModule):
 
         return log_posterior
 
-    def training_step(self, batch, batch_idx):
+    def _step(self, batch, mode="train"):  # or "val"
         input, target = batch
         log_posterior = self.forward(input)
         loss = F.nll_loss(log_posterior, target)
-        self.log("train_loss", loss)
+        self.log(mode + "_loss", loss)
         accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
-        self.log("train_accuracy", accuracy)
+        self.log(mode + "_accuracy", accuracy)
         return loss
 
-    def validation_step(self, batch, batch_idx):
-        input, target = batch
-        log_posterior = self.forward(input)
-        loss = F.nll_loss(log_posterior, target)
-        self.log("val_loss", loss)
-        accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
-        self.log("val_accuracy", accuracy)
-        # return loss
+    def training_step(self, batch, batch_idx):
+        return self._step(batch, mode="train")
 
+    def validation_step(self, batch, batch_idx):
+        return self._step(batch, mode="val")
+    
     def configure_optimizers(self):
         if self.optimizer_method == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -120,7 +124,7 @@ class DeepBayesInferVision(pl.LightningModule):
                 weight_decay=5e-4,
             )
         else:
-            Exception("Only support Adam and AdamW optimizer now.")
+            raise Exception("Only support Adam and AdamW optimizer now.")
 
         if self.learning_rate_scheduler == "Step":
             lr_scheduler = StepLR(optimizer, step_size=1, gamma=self.cfg.gamma)
@@ -133,6 +137,12 @@ class DeepBayesInferVision(pl.LightningModule):
                 "monitor": "val_loss",
                 "frequency": 1
             }
+        elif self.learning_rate_scheduler == "CosineAnnealing":
+            lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.num_epochs)
+        elif self.learning_rate_scheduler == "WarmupThenCosineAnnealing":
+            base_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.num_epochs)
+            lr_scheduler = warmup_scheduler.GradualWarmupScheduler(optimizer, multiplier=1., total_epoch=self.cfg.warmup_epoch,
+                                                                    after_scheduler=base_scheduler)
         else:
             lr_scheduler = None
             # raise Exception("Only support StepLR and OneCycleLR learning rate schedulers now.")
