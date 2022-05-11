@@ -28,6 +28,9 @@ class DeepBayesInferMlpMixerCfg:
     is_bayes: bool = True
     is_prior_as_params: bool =False
 
+    num_epochs: int = 3
+    learning_rate: float = 1e-3
+
 
 
 class DeepBayesInferMlpMixer(pl.LightningModule):
@@ -60,7 +63,9 @@ class DeepBayesInferMlpMixer(pl.LightningModule):
         if cfg.is_prior_as_params:
             self.log_prior = nn.Parameter(log_prior)
         else:
-            self.register_buffer('log_prior', log_prior)        
+            self.register_buffer('log_prior', log_prior) 
+
+        self.learning_rate = cfg.learning_rate  
     
     def forward(self, x):
         batch_size, _, _, _ = x.shape
