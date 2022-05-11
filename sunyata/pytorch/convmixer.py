@@ -10,14 +10,15 @@ from sunyata.pytorch.bayes.core import log_bayesian_iteration
 
 @dataclass
 class DeepBayesInferConvMixerCfg:
-    hidden_dim: int = None
+    hidden_dim: int = 256
     num_layers: int = 8
     kernel_size: int = 5
-    patch_size: int = 2,
+    patch_size: int = 2
     num_classes: int = 10
 
     is_bayes: bool = True
 
+    batch_size: int = 128
     num_epochs: int = 10
     learning_rate: float = 1e-3
     optimizer_method: str = "Adam"  # or "AdamW"
