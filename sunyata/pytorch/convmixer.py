@@ -52,11 +52,28 @@ class DeepBayesInferConvMixer(pl.LightningModule):
             nn.BatchNorm2d(cfg.hidden_dim),
         )
 
-        self.digup = nn.Sequential(
+        one_digup = nn.Sequential(
             nn.AdaptiveAvgPool2d((1,1)),
             nn.Flatten(),
             nn.Linear(cfg.hidden_dim, cfg.num_classes)
         )
+
+        if cfg.is_bayes:
+            self.digup = nn.ModuleList([
+                nn.Sequential(
+                    nn.AdaptiveAvgPool2d((1,1)),
+                    nn.Flatten(),
+                    nn.Linear(cfg.hidden_dim, cfg.num_classes)
+                ) for _ in range(cfg.num_layers)
+            ])
+        else:
+            self.digup = nn.ModuleList([
+                nn.Sequential(
+                    nn.AdaptiveAvgPool2d((1,1)),
+                    nn.Flatten(),
+                    nn.Linear(cfg.hidden_dim, cfg.num_classes)
+                )
+            ])
 
         log_prior = torch.zeros(1, cfg.num_classes)
         if cfg.is_prior_as_params:
@@ -71,9 +88,9 @@ class DeepBayesInferConvMixer(pl.LightningModule):
         log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)
 
         x = self.embed(x)
-        for layer in self.layers:
+        for layer, digup in zip(self.layers, self.digup):
             x = layer(x)
-            logits = self.digup(x)
+            logits = digup(x)
             log_posterior = log_bayesian_iteration(log_prior, logits)
             log_prior = log_posterior        
         
