@@ -71,9 +71,9 @@ class DeepBayesInferConvMixer(pl.LightningModule):
         log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)
 
         x = self.embed(x)
-        for layer in self.layers:
+        for i, layer in enumerate(self.layers):
             x = layer(x)
-            logits = self.digup(x) / 5
+            logits = self.digup(x) / (i+1)
             log_posterior = log_bayesian_iteration(log_prior, logits)
             # self.log("log_posterior", log_posterior)
             log_prior = log_posterior
