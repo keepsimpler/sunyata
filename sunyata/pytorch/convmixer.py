@@ -74,15 +74,18 @@ class DeepBayesInferConvMixer(pl.LightningModule):
         for layer in self.layers:
             x = layer(x)
             logits = self.digup(x)
-            log_posterior = log_bayesian_iteration(log_prior, logits)
-            log_prior = log_posterior        
+            # log_posterior = log_bayesian_iteration(log_prior, logits)
+            log_posterior = logits
+            # self.log("log_posterior", log_posterior)
+            log_prior = log_posterior
         
         return log_posterior
 
     def _step(self, batch, mode="train"):  # or "val"
         input, target = batch
         log_posterior = self.forward(input)
-        loss = F.nll_loss(log_posterior, target)
+        # loss = F.nll_loss(log_posterior, target)
+        loss = F.cross_entropy(log_posterior, target)
         self.log(mode + "_loss", loss)
         accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy)
