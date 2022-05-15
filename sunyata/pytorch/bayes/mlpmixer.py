@@ -42,6 +42,7 @@ class DeepBayesInferMlpMixer(pl.LightningModule):
         image_h, image_w = pair(cfg.image_size)
         assert (image_h % cfg.patch_size) == 0 and (image_w % cfg.patch_size) == 0, 'image must be divisible by patch size'
         num_patches = (image_h // cfg.patch_size) * (image_w // cfg.patch_size)
+
         chan_first, chan_last = partial(nn.Conv1d, kernel_size = 1), nn.Linear
         self.layers = nn.ModuleList([
             nn.Sequential(
@@ -128,7 +129,7 @@ class PreNormResidual(nn.Module):
         self.norm = nn.LayerNorm(dim)
 
     def forward(self, x):
-        return self.fn(self.norm(x)) + x
+        return self.fn(self.norm(x)) # + x
 
 def FeedForward(dim, expansion_factor = 4, dropout = 0., dense = nn.Linear):
     inner_dim = int(dim * expansion_factor)
