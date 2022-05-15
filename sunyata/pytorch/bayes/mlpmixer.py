@@ -44,11 +44,12 @@ class DeepBayesInferMlpMixer(pl.LightningModule):
         num_patches = (image_h // cfg.patch_size) * (image_w // cfg.patch_size)
 
         chan_first, chan_last = partial(nn.Conv1d, kernel_size = 1), nn.Linear
-        model_list = []
-        for _ in range(cfg.num_layers):
-            model_list.append(PreNormResidual(cfg.hidden_dim, FeedForward(num_patches, cfg.expansion_factor, cfg.dropout, chan_first)))
-            model_list.append(PreNormResidual(cfg.hidden_dim, FeedForward(cfg.hidden_dim, cfg.expansion_factor_token, cfg.dropout, chan_last)))
-        self.layers = nn.ModuleList(model_list)
+        self.layers = nn.ModuleList([
+            nn.Sequential(
+                PreNormResidual(cfg.hidden_dim, FeedForward(num_patches, cfg.expansion_factor, cfg.dropout, chan_first)),
+                PreNormResidual(cfg.hidden_dim, FeedForward(cfg.hidden_dim, cfg.expansion_factor_token, cfg.dropout, chan_last))
+            ) for _ in range(cfg.num_layers)
+        ])
         if not cfg.is_bayes:
             self.layers = nn.ModuleList([nn.Sequential(*self.layers)])  # to one layer
 
@@ -128,7 +129,7 @@ class PreNormResidual(nn.Module):
         self.norm = nn.LayerNorm(dim)
 
     def forward(self, x):
-        return self.fn(self.norm(x)) # + x
+        return self.fn(self.norm(x)) + x
 
 def FeedForward(dim, expansion_factor = 4, dropout = 0., dense = nn.Linear):
     inner_dim = int(dim * expansion_factor)
