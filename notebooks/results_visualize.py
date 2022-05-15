@@ -42,7 +42,10 @@ val_transforms = transforms.Compose(
         normalize
     ]
 )
-dataset = TinyImageNet(".data/", split='val', transform=val_transforms)
+
+dataset_path = "/home/fengwf/Code/"
+# dataset = ".data/"
+dataset = TinyImageNet(dataset_path, split='val', transform=val_transforms)
 val_dataloader = DataLoader(dataset, batch_size=32)
 # %%
 # csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/",
@@ -61,6 +64,8 @@ log_posterior.shape
 # %%
 predicted = log_posterior.argmax(dim=-1)
 predicted, target
+
+
 # %%
 batch_size, _, _, _ = input.shape
 log_prior = torch.zeros(batch_size, cfg.num_classes)
@@ -106,12 +111,45 @@ compared_log_posterior
 torch.max(compared_model.digup[2].bias), torch.min(compared_model.digup[2].bias), torch.mean(compared_model.digup[2].bias)
 torch.max(compared_model.digup[2].weight), torch.min(compared_model.digup[2].weight), torch.mean(compared_model.digup[2].weight)
 
+
 # %%
 log_posterior_list = []
 target_list = []
-
-for input, target in val_dataloader:
-    log_posterior = model(input)
-    log_posterior_list.append(log_posterior)
-    target_list.append(target)
+with torch.no_grad():
+    for input, target in val_dataloader:
+        log_posterior = compared_model(input)
+        log_posterior_list.append(log_posterior)
+        target_list.append(target)
+        print(len(target_list))
+# %%
+log_posteriors = torch.cat(log_posterior_list)
+targets = torch.cat(target_list)
+# %%
+F.nll_loss(log_posteriors, targets)  # 2.0313
+# %%
+n_bins = 15
+bin_boundaries = torch.linspace(0, 1, n_bins + 1)
+bin_lowers = bin_boundaries[:-1]
+bin_uppers = bin_boundaries[1:]
+bin_boundaries
+# %%
+softmaxs = torch.exp(log_posteriors)
+softmaxs.sum(-1)
+# %%
+confidences, predictions = torch.max(softmaxs, 1)
+accuracies = predictions.eq(targets)
+sum(accuracies)
+# %%
+ece = torch.zeros(1)
+# %%
+for bin_lower, bin_upper in zip(bin_lowers, bin_uppers):
+    # Calculated |confidence - accuracy| in each bin
+    in_bin = confidences.gt(bin_lower.item()) * confidences.le(bin_upper.item())
+    prop_in_bin = in_bin.float().mean()
+    if prop_in_bin.item() > 0:
+        accuracy_in_bin = accuracies[in_bin].float().mean()
+        avg_confidence_in_bin = confidences[in_bin].mean()
+        ece += torch.abs(avg_confidence_in_bin - accuracy_in_bin) * prop_in_bin
+# %%
+ece  # 0.0280
 # %%
