@@ -120,6 +120,6 @@ class Residual(nn.Module):
         self.fn = fn
 
     def forward(self, x):
-        return self.fn(x) + x
+        return self.fn(x) # + x
 
 
