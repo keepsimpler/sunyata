@@ -129,7 +129,7 @@ class PreNormResidual(nn.Module):
         self.norm = nn.LayerNorm(dim)
 
     def forward(self, x):
-        return self.fn(self.norm(x)) + x
+        return self.fn(self.norm(x)) # + x
 
 def FeedForward(dim, expansion_factor = 4, dropout = 0., dense = nn.Linear):
     inner_dim = int(dim * expansion_factor)
