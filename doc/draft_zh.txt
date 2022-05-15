@@ -1,0 +1,9 @@
+第一次将bayesian inference和deep neural network相结合，在提高性能的同时，增加了可解释性。
+将它应用到transformer在image classification中，我们在vanilla vit上加上dbi以后，在小数据集上的性能媲美cnn，这一点，其他模型都是要在vit上增加local 等图像bias才可能实现的。
+我们预期dbi在大数据集上的效果。
+dbi是一个general architecture，can be applied to 
+
+我们将dbi应用到transformer，mlp-mixer， convmixer，三种architecture上，应用在image classification任务中。
+实验结果表明，随着网络深度的增加，dbi架构的性能会逐步超越传统架构。
+也就是说，dbi可以让我们训练更深的网络架构，
+

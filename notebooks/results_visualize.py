@@ -43,7 +43,7 @@ val_transforms = transforms.Compose(
     ]
 )
 dataset = TinyImageNet(".data/", split='val', transform=val_transforms)
-val_dataloader = DataLoader(dataset, batch_size=4)
+val_dataloader = DataLoader(dataset, batch_size=32)
 # %%
 # csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/",
 #                  name="convmixer-tiny-imagenet", version=0)
@@ -90,7 +90,8 @@ torch.max(model.digup[2].bias), torch.min(model.digup[2].bias), torch.mean(model
 # %%
 torch.max(model.digup[2].weight), torch.min(model.digup[2].weight), torch.mean(model.digup[2].weight)
 
-# %%
+
+# %% none bayesian
 cfg.is_bayes = False
 compared_model = DeepBayesInferConvMixer.load_from_checkpoint(
     ".data/results/convmixer-tiny-imagenet/version_1/checkpoints/epoch=39-step=31280.ckpt",
@@ -105,4 +106,12 @@ compared_log_posterior
 torch.max(compared_model.digup[2].bias), torch.min(compared_model.digup[2].bias), torch.mean(compared_model.digup[2].bias)
 torch.max(compared_model.digup[2].weight), torch.min(compared_model.digup[2].weight), torch.mean(compared_model.digup[2].weight)
 
+# %%
+log_posterior_list = []
+target_list = []
+
+for input, target in val_dataloader:
+    log_posterior = model(input)
+    log_posterior_list.append(log_posterior)
+    target_list.append(target)
 # %%
