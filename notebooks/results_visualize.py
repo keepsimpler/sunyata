@@ -43,8 +43,8 @@ val_transforms = transforms.Compose(
     ]
 )
 
-dataset_path = "/home/fengwf/Code/"
-# dataset = ".data/"
+# dataset_path = "/home/fengwf/Code/"
+dataset_path = ".data/"
 dataset = TinyImageNet(dataset_path, split='val', transform=val_transforms)
 val_dataloader = DataLoader(dataset, batch_size=32)
 # %%
@@ -85,16 +85,18 @@ for i, layer in enumerate(model.layers):
 # %%
 len(activations), activations[0].shape
 # %%
-torch.cat(activations).shape
-# %%
 all_log_posteriores = torch.stack(activations).permute(1,0,2)
 # %%
 torch.max(torch.exp(all_log_posteriores)), torch.min(all_log_posteriores), torch.mean(all_log_posteriores)
 # %%
 torch.max(model.digup[2].bias), torch.min(model.digup[2].bias), torch.mean(model.digup[2].bias)
-# %%
 torch.max(model.digup[2].weight), torch.min(model.digup[2].weight), torch.mean(model.digup[2].weight)
-
+# %%
+all_log_posteriores.shape
+# %%
+import seaborn as sns; sns.set_theme()
+# %%
+ax = sns.heatmap(all_log_posteriores[0])
 
 # %% none bayesian
 cfg.is_bayes = False
