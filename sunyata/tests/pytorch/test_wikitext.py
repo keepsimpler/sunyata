@@ -1,10 +1,10 @@
-from sunyata.pytorch.wikitext103 import WikiText103DataModule
+from sunyata.pytorch.wikitext import WikiTextDataModule
 
 
 def test_wikitext103():
-    data_dir = "resources/wikitext-103-v1/"
+    data_dir = ".data/wikitext/"
     batch_size = 16
     vocab_size = 20000
     seq_len = 128
 
-    wikitext103_datamodule = WikiText103DataModule(data_dir, batch_size, vocab_size, seq_len)
+    wikitext103_datamodule = WikiTextDataModule("103", data_dir, batch_size, vocab_size, seq_len)

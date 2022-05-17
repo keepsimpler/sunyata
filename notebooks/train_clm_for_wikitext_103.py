@@ -4,7 +4,7 @@ import torch.nn as nn
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 
-from sunyata.pytorch.wikitext103 import WikiText103DataModule
+from sunyata.pytorch.wikitext import WikiTextDataModule
 
 from sunyata.pytorch.bayes import DeepBayesInferLM, DeepBayesInferLMCfg
 from sunyata.pytorch.layers.transformer import TransformerLayer
@@ -20,12 +20,12 @@ cfg = DeepBayesInferLMCfg(
     learning_rate = 1e-3,
 )
 # %%
-data_dir = ".data/wikitext-103-v1/"
+data_dir = ".data/wikitext/"
 batch_size = cfg.batch_size
 vocab_size = cfg.vocab_size
 seq_len = cfg.seq_len
 
-wikitext103_datamodule = WikiText103DataModule(data_dir, batch_size, vocab_size, seq_len)
+wikitext103_datamodule = WikiTextDataModule("103", data_dir, batch_size, vocab_size, seq_len)
 # %%
 csv_logger = pl_loggers.CSVLogger(save_dir="lightning_logs/", 
     name="wikitext_103", version=1)
