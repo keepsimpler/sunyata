@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from sunyata.pytorch.layers.attention import Attention
-from sunyata.pytorch.bayes.core import DeepBayesInferCfg
+from sunyata.pytorch.layer.attention import Attention
+from sunyata.pytorch.arch.bayes import DeepBayesInferCfg
 
 
 class TransformerLayer(nn.Module):

@@ -19,7 +19,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import repeat
 
-from sunyata.pytorch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
+from sunyata.pytorch.arch.bayes import log_bayesian_iteration, DeepBayesInferCfg
 
 @dataclass
 class DeepBayesInferLMCfg(DeepBayesInferCfg):

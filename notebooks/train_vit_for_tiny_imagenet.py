@@ -7,9 +7,9 @@ from torchvision import transforms
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 
-from sunyata.pytorch.tiny_imagenet import TinyImageNet, TinyImageNetDataModule
-from sunyata.pytorch.bayes.vision import DeepBayesInferVision, DeepBayesInferVisionCfg
-from sunyata.pytorch.layers.transformer import TransformerLayer
+from sunyata.pytorch.data.tiny_imagenet import TinyImageNet, TinyImageNetDataModule
+from sunyata.pytorch.arch.vision import DeepBayesInferVision, DeepBayesInferVisionCfg
+from sunyata.pytorch.layer.transformer import TransformerLayer
 # %%
 cfg = DeepBayesInferVisionCfg(
     is_pre_layernorm=False,

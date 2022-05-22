@@ -4,10 +4,10 @@ import torch.nn as nn
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 
-from sunyata.pytorch.wikitext import WikiTextDataModule
+from sunyata.pytorch.data.wikitext import WikiTextDataModule
 
-from sunyata.pytorch.bayes import DeepBayesInferLM, DeepBayesInferLMCfg
-from sunyata.pytorch.layers.transformer import TransformerLayer
+from sunyata.pytorch.arch import DeepBayesInferLM, DeepBayesInferLMCfg
+from sunyata.pytorch.layer.transformer import TransformerLayer
 
 # %%
 cfg = DeepBayesInferLMCfg(

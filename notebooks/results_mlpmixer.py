@@ -1,6 +1,6 @@
 # %%
 import pandas as pd
-from sunyata.pytorch.bayes.mlpmixer import DeepBayesInferMlpMixerCfg, DeepBayesInferMlpMixer
+from sunyata.pytorch.arch.mlpmixer import DeepBayesInferMlpMixerCfg, DeepBayesInferMlpMixer
 # %%
 models = ["convmixer", "mlpmixer", "vit"]
 datasets = ["cifar10", "tiny-imagenet"]

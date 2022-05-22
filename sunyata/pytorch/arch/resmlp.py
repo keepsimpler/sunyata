@@ -1,25 +1,30 @@
 from dataclasses import dataclass
+from functools import partial
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import repeat
-import pytorch_lightning as pl
+from einops.layers.torch import Rearrange, Reduce
 
-from sunyata.pytorch.bayes.core import log_bayesian_iteration
+from sunyata.pytorch.arch.bayes import log_bayesian_iteration
 
+pair = lambda x: x if isinstance(x, tuple) else (x, x)
 
 @dataclass
-class DeepBayesInferConvMixerCfg:
-    hidden_dim: int = 256
+class DeepBayesInferResMlpCfg:
+    image_size: int = 32  # 224
+    patch_size: int = 4  # 16
+    hidden_dim: int = 128
+    expansion_factor: int = 4
+
     num_layers: int = 8
-    kernel_size: int = 5
-    patch_size: int = 2
     num_classes: int = 10
+    channels: int = 3
 
     is_bayes: bool = True
-    is_prior_as_params: bool = False
+    is_prior_as_params: bool =False
 
-    batch_size: int = 128
     num_epochs: int = 10
     learning_rate: float = 1e-3
     optimizer_method: str = "Adam"  # or "AdamW"
@@ -27,36 +32,41 @@ class DeepBayesInferConvMixerCfg:
     weight_decay: float = None  # of "AdamW"
 
 
-class DeepBayesInferConvMixer(pl.LightningModule):
-    def __init__(self, cfg:DeepBayesInferConvMixerCfg):
+
+class DeepBayesInferResMlp(pl.LightningModule):
+    def __init__(self, cfg:DeepBayesInferResMlpCfg):
         super().__init__()
+
+        image_h, image_w = pair(cfg.image_size)
+        assert (image_h % cfg.patch_size) == 0 and (image_w % cfg.patch_size) == 0, 'image must be divisible by patch size'
+        num_patches = (image_h // cfg.patch_size) * (image_w // cfg.patch_size)
+        wrapper = lambda i, fn: PreAffinePostLayerScale(cfg.hidden_dim, i + 1, fn)
 
         self.layers = nn.ModuleList([
             nn.Sequential(
-                Residual(nn.Sequential(
-                    nn.Conv2d(cfg.hidden_dim, cfg.hidden_dim, cfg.kernel_size, groups=cfg.hidden_dim, padding="same"),
+                wrapper(i, nn.Conv1d(num_patches, num_patches, 1)),
+                wrapper(i, nn.Sequential(
+                    nn.Linear(cfg.hidden_dim, cfg.hidden_dim * cfg.expansion_factor),
                     nn.GELU(),
-                    nn.BatchNorm2d(cfg.hidden_dim)
-                )),
-                nn.Conv2d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
-                nn.GELU(),
-                nn.BatchNorm2d(cfg.hidden_dim)
-            ) for _ in range(cfg.num_layers)
+                    nn.Linear(cfg.hidden_dim * cfg.expansion_factor, cfg.hidden_dim)
+                ))
+            ) for i in range(cfg.num_layers)
         ])
         if not cfg.is_bayes:
             self.layers = nn.ModuleList([nn.Sequential(*self.layers)])  # to one layer
 
         self.embed = nn.Sequential(
-            nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
-            nn.GELU(),
-            nn.BatchNorm2d(cfg.hidden_dim),
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=cfg.patch_size, p2=cfg.patch_size),
+            nn.Linear((cfg.patch_size ** 2) * cfg.channels, cfg.hidden_dim)
         )
 
         self.digup = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1,1)),
-            nn.Flatten(),
+            Affine(cfg.hidden_dim),
+            Reduce('b n c -> b c', 'mean'),
             nn.Linear(cfg.hidden_dim, cfg.num_classes)
         )
+
+        self.is_bayes = cfg.is_bayes
 
         log_prior = torch.zeros(1, cfg.num_classes)
         if cfg.is_prior_as_params:
@@ -64,20 +74,19 @@ class DeepBayesInferConvMixer(pl.LightningModule):
         else:
             self.register_buffer('log_prior', log_prior) 
 
-        self.cfg = cfg
-
-    def forward(self, x)        :
+        self.cfg = cfg  
+    
+    def forward(self, x):
         batch_size, _, _, _ = x.shape
         log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)
 
         x = self.embed(x)
-        for i, layer in enumerate(self.layers):
+        for layer in self.layers:
             x = layer(x)
-            logits = self.digup(x)   # / 5 / (i+1)
+            logits = self.digup(x)
             log_posterior = log_bayesian_iteration(log_prior, logits)
-            # self.log("log_posterior", log_posterior)
             log_prior = log_posterior
-        
+
         return log_posterior
 
     def _step(self, batch, mode="train"):  # or "val"
@@ -114,12 +123,31 @@ class DeepBayesInferConvMixer(pl.LightningModule):
             return [optimizer], [lr_scheduler]
         
 
-class Residual(nn.Module):
-    def __init__(self, fn):
+class Affine(nn.Module):
+    def __init__(self, dim):
         super().__init__()
+        self.g = nn.Parameter(torch.ones(1, 1, dim))
+        self.b = nn.Parameter(torch.zeros(1, 1, dim))
+
+    def forward(self, x):
+        return x * self.g + self.b
+
+
+class PreAffinePostLayerScale(nn.Module):
+    def __init__(self, dim, depth, fn):
+        super().__init__()
+        if depth <= 18:
+            init_eps = 0.1
+        elif depth > 18 and depth <= 24:
+            init_eps = 1e-5
+        else:
+            init_eps = 1e-6
+
+        scale = torch.zeros(1, 1, dim).fill_(init_eps)
+        self.scale = nn.Parameter(scale)
+        self.affine = Affine(dim)
         self.fn = fn
 
     def forward(self, x):
-        return self.fn(x) + x
-
+        return self.fn(self.affine(x)) * self.scale + x
 

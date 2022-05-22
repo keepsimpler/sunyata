@@ -8,7 +8,7 @@ import pytorch_lightning as pl
 
 from torchvision.ops import stochastic_depth
 
-from sunyata.pytorch.bayes.core import log_bayesian_iteration 
+from sunyata.pytorch.arch.bayes import log_bayesian_iteration 
 
 
 class ConvNextForImageClassification(pl.LightningModule):

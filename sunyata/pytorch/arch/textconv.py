@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 
 @dataclass
-class TextConvCfg:
+class TextConvCfg:                                            
     hidden_dim: int = 64
     vocab_size: int = 1000
     seq_len: int = 128

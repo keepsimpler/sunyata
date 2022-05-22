@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 
 # %%
-from sunyata.pytorch.wikitext import WikiTextDataModule
+from sunyata.pytorch.data.wikitext import WikiTextDataModule
 from sunyata.pytorch.textconv import TextConv, TextConvCfg
 
 # %%

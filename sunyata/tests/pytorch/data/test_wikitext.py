@@ -1,4 +1,4 @@
-from sunyata.pytorch.wikitext import WikiTextDataModule
+from sunyata.pytorch.data.wikitext import WikiTextDataModule
 
 
 def test_wikitext103():

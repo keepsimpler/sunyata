@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 
-from sunyata.pytorch.tiny_imagenet import TinyImageNet, TinyImageNetDataModule
+from sunyata.pytorch.data.tiny_imagenet import TinyImageNet, TinyImageNetDataModule
 
 from sunyata.pytorch.convnext import BottleNeckBlock, ConvNextStage, ConvNextStem, ConvNextEncoder
 from sunyata.pytorch.convnext import LayerScaler, ConvNextForImageClassification, ClassificationHead

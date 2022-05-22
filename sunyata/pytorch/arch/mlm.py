@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
 
-from sunyata.pytorch.bayes.core import DeepBayesInferCfg, log_bayesian_iteration
+from sunyata.pytorch.arch.bayes import DeepBayesInferCfg, log_bayesian_iteration
 
 @dataclass
 class DeepBayesInferMLMCfg(DeepBayesInferCfg):

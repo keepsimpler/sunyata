@@ -1,4 +1,4 @@
-from sunyata.pytorch.fake_data import yield_fake_data
+from sunyata.pytorch.data.fake_data import yield_fake_data
 
 
 def test_yield_fake_data():

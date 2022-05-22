@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from sunyata.pytorch.bayes import DeepBayesInferLM, DeepBayesInferLMCfg
-from sunyata.pytorch.bayes.vision import DeepBayesInferVision, DeepBayesInferVisionCfg
-from sunyata.pytorch.layers.transformer import TransformerLayer
+from sunyata.pytorch.arch import DeepBayesInferLM, DeepBayesInferLMCfg
+from sunyata.pytorch.arch.vision import DeepBayesInferVision, DeepBayesInferVisionCfg
+from sunyata.pytorch.layer.transformer import TransformerLayer
 
 
 def test_deep_bayes_net_for_lm():
