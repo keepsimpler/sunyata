@@ -3,21 +3,31 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import pytorch_lightning as pl
+
 # %%
 from sunyata.pytorch.wikitext import WikiTextDataModule
-
+from sunyata.pytorch.textconv import TextConv, TextConvCfg
 
 # %%
-hidden_dim = 64
-vocab_size = 1000
-seq_len = 128
-batch_size = 2
+cfg = TextConvCfg(
+    hidden_dim = 64,
+    vocab_size = 1000,
+    seq_len = 128,
+    batch_size = 16,
+    kernel_size = 3,
+    num_layers = 6,
+
+    num_epochs = 10,
+    learning_rate = 1e-3
+)
+
 # %%
 wikitext2 = WikiTextDataModule(subset="2", 
                    data_dir=".data/wikitext/", 
-                   batch_size=batch_size,
-                   vocab_size=vocab_size,
-                   seq_len=seq_len,
+                   batch_size=cfg.batch_size,
+                   vocab_size=cfg.vocab_size,
+                   seq_len=cfg.seq_len,
                    is_collate=True)
 # %%
 wikitext2.tokenizer.decode(wikitext2.train_data[0].tolist(), skip_special_tokens=False)
@@ -29,45 +39,22 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
-embed = nn.Embedding(vocab_size, hidden_dim)
-embeded = embed(input)
-embeded.shape
-# %%
+textconv = TextConv(cfg)
+textconv.summarize(max_depth=2)
 
 # %%
-# %%
-seq_len = 64
-seq = torch.arange(seq_len)
+csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
+    name="wikitext_2") # , version=2
+trainer = pl.Trainer(gpus=1, 
+                     max_epochs=cfg.num_epochs, 
+                     enable_checkpointing=False,
+                    #  limit_train_batches=100,  # 1.0 
+                    #  limit_val_batches=10,  # 1.0 
+                     log_every_n_steps=50,
+                     logger=csv_logger)
 
-# %% from one dim to two dim
-kernel = 4
-stride = 2
-col = kernel + stride * kernel - 1
-"col = ", col
 # %%
-idx = 0
-while idx < len(seq) - col:
-    print(seq[idx:idx+col])
-    idx = idx + kernel
+trainer.fit(textconv, wikitext2)
 
 
 # %%
-row = (seq_len + 1) // kernel - stride
-"row = ", row
-# %%
-(row - 1) * kernel + col
-(row - 1) * kernel + kernel + stride * kernel - 1
-# %%
-unfolded = seq.unfold(0, col, kernel)
-unfolded.shape
-# %%
-conv2d = nn.Conv2d()
-# %%
-embedded = embeded.permute(0,2,1)
-# %%
-embedded.unfold(-1, col, kernel).shape
-# %%
-(127 - col) / kernel + 1
-# %%
-
-
