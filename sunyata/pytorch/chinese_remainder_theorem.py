@@ -18,15 +18,16 @@ def extended_euclid(a, b):
 class ChineseRemainderTheorem():
     def __init__(self, coprime1: int = 122, coprime2: int = 121):
         self.coprime1, self.coprime2 = coprime1, coprime2
+        self.x, self.y = extended_euclid(coprime1, coprime2)
 
     def to_x(self, r1, r2):
-        (x, y) = extended_euclid(self.coprime1, self.coprime2)
+        # (x, y) = extended_euclid(self.coprime1, self.coprime2)
         m = self.coprime1 * self.coprime2
-        n = r2 * x * self.coprime1 + r1 * y * self.coprime2
+        n = r2 * self.x * self.coprime1 + r1 * self.y * self.coprime2
         return (n % m + m) % m
 
     def to_r(self, x):
-        assert 0 <= x < self.coprime1 * self.coprime2
+        # assert 0 <= x < self.coprime1 * self.coprime2
         return x % self.coprime1, x % self.coprime2
 
 
