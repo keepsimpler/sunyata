@@ -6,8 +6,10 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 
 # %%
-from sunyata.pytorch.data.wikitext import WikiTextDataModule
-from sunyata.pytorch.textconv import TextConv, TextConvCfg
+from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
+                                            shift_one_token,
+                                            split_to_two_parts)
+from sunyata.pytorch.arch.textconv import TextConv, TextConvCfg
 
 # %%
 cfg = TextConvCfg(
@@ -28,7 +30,7 @@ wikitext2 = WikiTextDataModule(subset="2",
                    batch_size=cfg.batch_size,
                    vocab_size=cfg.vocab_size,
                    seq_len=cfg.seq_len,
-                   is_collate=True)
+                   collate_fn=shift_one_token)  # shift_one_token  None
 # %%
 wikitext2.tokenizer.decode(wikitext2.train_data[0].tolist(), skip_special_tokens=False)
 # https://colab.research.google.com/github/huggingface/notebooks/blob/master/examples/tokenizer_training.ipynb
