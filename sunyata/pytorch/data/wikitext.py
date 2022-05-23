@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import Callable, List
 import torch
 from torch.utils.data import DataLoader
 from datasets import load_dataset
@@ -7,13 +7,15 @@ from tokenizers import ByteLevelBPETokenizer
 
 import pytorch_lightning as pl
 
+from sunyata.pytorch.chinese_remainder_theorem import ChineseRemainderTheorem
+
 
 class WikiTextDataModule(pl.LightningDataModule):
-    def __init__(self, subset: str, data_dir:str, batch_size: int, vocab_size: int, seq_len:int, is_collate:bool=True):
+    def __init__(self, subset: str, data_dir:str, batch_size: int, vocab_size: int, seq_len:int, collate_fn:Callable=None):
         super().__init__()
         assert subset == "2" or subset == "103", 'only support wikitext-2 and wikitext-103'
         self.subset, self.data_dir, self.batch_size, self.vocab_size = subset, data_dir, batch_size, vocab_size
-        self.seq_len, self.is_collate = seq_len, is_collate
+        self.seq_len, self.collate_fn = seq_len, collate_fn
         self.setup()
     
     def setup(self, stage=None):
@@ -36,7 +38,7 @@ class WikiTextDataModule(pl.LightningDataModule):
             self.train_data,
             batch_size=self.batch_size,
             shuffle=True,
-            collate_fn=shift_one_token if self.is_collate else None
+            collate_fn=self.collate_fn
         )
 
     def val_dataloader(self):
@@ -44,9 +46,16 @@ class WikiTextDataModule(pl.LightningDataModule):
             self.validation_data,
             batch_size=self.batch_size,
             shuffle=False,
-            collate_fn=shift_one_token if self.is_collate else None
+            collate_fn=self.collate_fn
         )
 
+
+def split_to_two_parts(batch):
+    batch = torch.stack(batch)
+    crt = ChineseRemainderTheorem(122, 121)
+    input_r1, input_r2 = crt.to_r(batch[:, :-1])
+    target_r1, target_r2 = crt.to_r(batch[:, 1:])
+    return (input_r1, input_r2), (target_r1, target_r2)
 
 def shift_one_token(batch):
     batch = torch.stack(batch)

@@ -25,7 +25,7 @@ batch_size = cfg.batch_size
 vocab_size = cfg.vocab_size
 seq_len = cfg.seq_len
 
-wikitext103_datamodule = WikiTextDataModule("103", data_dir, batch_size, vocab_size, seq_len, is_collate=False)
+wikitext103_datamodule = WikiTextDataModule("103", data_dir, batch_size, vocab_size, seq_len, collate_fn=None)
 # %%
 csv_logger = pl_loggers.CSVLogger(save_dir="lightning_logs/", 
     name="wikitext_103", version=1)
