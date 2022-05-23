@@ -14,11 +14,11 @@ from sunyata.pytorch.arch.textconv import TextConv, TextConvCfg
 # %%
 cfg = TextConvCfg(
     hidden_dim = 64,
-    vocab_size = 1000,
+    vocab_size = 10000,
     seq_len = 128,
     batch_size = 16,
     kernel_size = 3,
-    num_layers = 6,
+    num_layers = 8,
 
     num_epochs = 10,
     learning_rate = 1e-3
