@@ -4,8 +4,8 @@ import jax
 import jax.numpy as jnp
 from jax import random
 import equinox as eqx
-from sunyata.equinox.archs import MapBetweenCategoricalProbabilitiesAndHiddenFeatures, MapValuesToNonNegative
-from sunyata.equinox.layers import BayesianIteration, bayesian_iteration
+from sunyata.equinox.arch import MapBetweenCategoricalProbabilitiesAndHiddenFeatures, MapValuesToNonNegative
+from sunyata.equinox.layer import BayesianIteration, bayesian_iteration
 
 # %%
 class HiddenBayesianNet(eqx.Module):

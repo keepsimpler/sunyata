@@ -7,12 +7,12 @@ import jax
 import optax
 from jax import random
 from sunyata.data import ReadTfrecordsFiles
-from sunyata.equinox.archs import (
+from sunyata.equinox.arch import (
     ComputeExponentialValues, HiddenBayesianNet,
     MapBetweenCategoricalProbabilitiesAndHiddenFeatures)
-from sunyata.equinox.archs.map_between_categorical_probabilities_and_hidden_features import \
+from sunyata.equinox.arch.map_between_categorical_probabilities_and_hidden_features import \
     MapValuesToNonNegative
-from sunyata.equinox.layers import BayesianIteration
+from sunyata.equinox.layer import BayesianIteration
 from sunyata.equinox.train.lm import PrePostProcessLM
 from sunyata.equinox.utils import (compute_cross_entropy,
                                    split_first_dim_of_array_by_core)
