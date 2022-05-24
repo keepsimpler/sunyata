@@ -1,4 +1,4 @@
-import os
+import os, random, json
 from typing import Callable, List
 import torch
 from torch.utils.data import DataLoader
@@ -11,11 +11,12 @@ from sunyata.pytorch.chinese_remainder_theorem import ChineseRemainderTheorem
 
 
 class WikiTextDataModule(pl.LightningDataModule):
-    def __init__(self, subset: str, data_dir:str, batch_size: int, vocab_size: int, seq_len:int, collate_fn:Callable=None):
+    def __init__(self, subset: str, data_dir:str, batch_size: int, vocab_size: int, seq_len:int, 
+                 collate_fn:Callable=None, is_shuffle:bool=False):
         super().__init__()
         assert subset == "2" or subset == "103", 'only support wikitext-2 and wikitext-103'
         self.subset, self.data_dir, self.batch_size, self.vocab_size = subset, data_dir, batch_size, vocab_size
-        self.seq_len, self.collate_fn = seq_len, collate_fn
+        self.seq_len, self.collate_fn, self.is_shuffle = seq_len, collate_fn, is_shuffle
         self.setup()
     
     def setup(self, stage=None):
@@ -23,12 +24,12 @@ class WikiTextDataModule(pl.LightningDataModule):
         validation_tensor_file = os.path.join(self.data_dir, f"wikitext-{self.subset}-vocab-{self.vocab_size}.validation.pt")
         tokenizer_path = os.path.join(self.data_dir, f"wikitext-{self.subset}-vocab-{self.vocab_size}/")
 
-        if os.path.exists(train_tensor_file) and os.path.exists(validation_tensor_file) and os.path.exists(tokenizer_path):
+        if os.path.exists(train_tensor_file) and os.path.exists(validation_tensor_file) and os.path.exists(tokenizer_path) and not self.is_shuffle:
             self.train_data = torch.load(train_tensor_file)
             self.validation_data = torch.load(validation_tensor_file)
             self.tokenizer = ByteLevelBPETokenizer.from_file(tokenizer_path + "vocab.json", tokenizer_path + "merges.txt")
         else:
-            self.dataset, self.train_data, self.validation_data, self.tokenizer = setup_wikitext(self.subset, self.data_dir, self.vocab_size)
+            self.dataset, self.train_data, self.validation_data, self.tokenizer = setup_wikitext(self.subset, self.data_dir, self.vocab_size, self.is_shuffle)
 
         self.train_data = tensor_strip(self.train_data, self.seq_len)
         self.validation_data = tensor_strip(self.validation_data, self.seq_len)
@@ -63,7 +64,7 @@ def shift_one_token(batch):
     target = batch[:, 1:]
     return input, target
 
-def setup_wikitext(subset: str, data_dir: str, vocab_size: int):
+def setup_wikitext(subset: str, data_dir: str, vocab_size: int, is_shuffle: bool=False):
     assert subset == "2" or subset == "103", 'only support wikitext-2 and wikitext-103'
     dataset = load_dataset("wikitext", "wikitext-103-v1" if subset=="103" else "wikitext-2-v1")
 
@@ -76,6 +77,11 @@ def setup_wikitext(subset: str, data_dir: str, vocab_size: int):
     if not os.path.exists(tokenizer_path):
         os.mkdir(tokenizer_path)
     tokenizer.save_model(tokenizer_path)
+
+    if is_shuffle:
+        shuffle(tokenizer_path, tokenizer.get_vocab_size(), start_id=4)
+        tokenizer = ByteLevelBPETokenizer.from_file(tokenizer_path + "vocab.json", tokenizer_path + "merges.txt")
+
 
     train_data = tokenizer.encode_batch([
         line.strip().replace('\n', '') + "<eol>" for line in dataset['train']['text'] if len(line) > 0
@@ -92,6 +98,26 @@ def setup_wikitext(subset: str, data_dir: str, vocab_size: int):
     torch.save(validation_ids, os.path.join(data_dir, f"wikitext-{subset}-vocab-{vocab_size}.validation.pt"))
 
     return dataset, train_ids, validation_ids, tokenizer
+
+
+def shuffle(tokenizer_path, vocab_size: int, start_id: int):
+    vocab_file = os.path.join(tokenizer_path, "vocab.json")
+    with open(vocab_file, encoding='utf-8') as f:
+        vocab = json.load(f)
+        
+    ids = list(range(start_id, vocab_size))
+    random.shuffle(ids)
+
+    shuffled_vocab = [(k, ids[i-start_id]) for i, (k, v) in enumerate(vocab.items()) if v >= start_id]
+    shuffled_vocab = dict(shuffled_vocab)
+
+    special_tokens = dict([(k, v) for k, v in vocab.items() if v < start_id])
+    special_tokens.update(shuffled_vocab)
+    shuffled_vocab = special_tokens
+
+    with open(vocab_file, mode='w', encoding='utf-8') as f:
+        json.dump(shuffled_vocab, f, ensure_ascii=False)
+
 
 
 def batch_iterator(text: List[str], batch_size: int = 1000):
