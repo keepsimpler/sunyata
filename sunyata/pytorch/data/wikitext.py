@@ -53,10 +53,9 @@ class WikiTextDataModule(pl.LightningDataModule):
 
 def split_to_two_parts(batch):
     batch = torch.stack(batch)
-    crt = ChineseRemainderTheorem(122, 121)
-    input_r1, input_r2 = crt.to_r(batch[:, :-1])
-    target_r1, target_r2 = crt.to_r(batch[:, 1:])
-    return (input_r1, input_r2), (target_r1, target_r2)
+    input_row, input_col = torch.div(batch[:, :-1], 100, rounding_mode='trunc'), batch[:, :-1] % 100
+    target = batch[:, 1:]
+    return (input_row, input_col), target
 
 def shift_one_token(batch):
     batch = torch.stack(batch)
