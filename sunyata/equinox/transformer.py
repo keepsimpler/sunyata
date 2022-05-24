@@ -10,7 +10,7 @@ import optax
 import equinox as eqx
 from equinox import static_field
 
-from sunyata.equinox.layers import LayerNorm, Linear, LinearWithMask, Embedding
+from sunyata.equinox.layer import LayerNorm, Linear, LinearWithMask, Embedding
 
 
 @dataclass

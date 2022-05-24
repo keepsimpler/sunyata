@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 import optax
 from jax import lax, random
-from sunyata.equinox.layers import Embedding, LayerNorm, Linear, LinearWithMask
+from sunyata.equinox.layer import Embedding, LayerNorm, Linear, LinearWithMask
 
 import equinox as eqx
 from equinox import static_field
