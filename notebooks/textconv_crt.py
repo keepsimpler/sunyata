@@ -13,8 +13,8 @@ from sunyata.pytorch.arch.textconv_crt import TextConvCrt, TextConvCrtCfg
 
 # %%
 cfg = TextConvCrtCfg(
-    r1 = 122,
-    r2 = 121,
+    r1 = 100,
+    r2 = 100,
     expansion = 2,
     vocab_size = 10000,
     seq_len = 128,
@@ -32,15 +32,16 @@ wikitext2 = WikiTextDataModule(subset="2",
                    batch_size=cfg.batch_size,
                    vocab_size=cfg.vocab_size,
                    seq_len=cfg.seq_len,
-                   collate_fn=split_to_two_parts)  # shift_one_token  None
+                   collate_fn=split_to_two_parts,
+                   is_shuffle=True)  # shift_one_token  None
 # %%
 wikitext2.tokenizer.decode(wikitext2.train_data[0].tolist(), skip_special_tokens=False)
 # https://colab.research.google.com/github/huggingface/notebooks/blob/master/examples/tokenizer_training.ipynb
 # https://www.thepythoncode.com/article/pretraining-bert-huggingface-transformers-in-python
 
 # %%
-(input_r1, input_r2), (target_r1, target_r2) = next(iter(wikitext2.train_dataloader()))
-input_r1.shape, target_r1.shape
+(input_row, input_col), target = next(iter(wikitext2.train_dataloader()))
+input_row.shape, target.shape
 
 # %%
 textconvcrt = TextConvCrt(cfg)

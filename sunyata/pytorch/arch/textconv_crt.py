@@ -69,15 +69,17 @@ class TextConvCrt(pl.LightningModule):
         return x_r1, x_r2
 
     def _step(self, batch, mode="train"):  # or "val"
-        (input_r1, input_r2), (target_r1, target_r2) = batch
-        logits_r1, logits_r2 = self.forward(input_r1, input_r2)
-        logits_r1 = logits_r1.permute(0, 2, 1)
-        loss_r1 = F.cross_entropy(logits_r1, target_r1)
-        logits_r2 = logits_r2.permute(0, 2, 1)
-        loss_r2 = F.cross_entropy(logits_r2, target_r2)
-        loss = (loss_r1 + loss_r2) / 2
+        (input_row, input_col), target = batch
+        logits_row, logits_col = self.forward(input_row, input_col)
+        probs_row = torch.softmax(logits_row, dim=-1)
+        probs_col = torch.softmax(logits_col, dim=-1)
+        probs = torch.einsum('b s p, b s q -> b s p q', probs_row, probs_col)
+        probs = probs.reshape(*probs.shape[:2], -1)
+        log_probs = torch.log(probs)
+        log_probs = log_probs.permute(0, 2, 1)
+        loss = F.nll_loss(log_probs, target)
         self.log(mode + "_loss", loss)
-        accuracy = torch.logical_and(logits_r1.argmax(dim=1) == target_r1, logits_r2.argmax(dim=1) == target_r2).float().mean()
+        accuracy = (log_probs.argmax(dim=1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy)
         return loss
 
