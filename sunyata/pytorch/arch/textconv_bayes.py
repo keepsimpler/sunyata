@@ -54,6 +54,9 @@ class TextConvBayes(pl.LightningModule):
         log_prior = torch.zeros_like(x).unsqueeze(-1).repeat((1, 1, self.cfg.vocab_size))
 
         x = self.embed(x)
+        chosen = self.digup(x)
+        log_prior = log_bayesian_iteration(log_prior, chosen)
+
         x = x.permute(0, 2, 1)
         logits = x
         for layer in self.layers:
