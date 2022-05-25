@@ -23,12 +23,13 @@ class TextConvCfg:
     learning_rate_scheduler: str = "CosineAnnealing"
 
 
-class TextConv(pl.LightningModule):
+class TextConvRes(pl.LightningModule):
     def __init__(self, cfg: TextConvCfg):
         super().__init__()
         self.save_hyperparameters("cfg")
 
         self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
+        # nn.init.zeros_(self.embed.weight.data)
         self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size)
 
         self.layers = nn.Sequential(*[
@@ -49,11 +50,11 @@ class TextConv(pl.LightningModule):
     def forward(self, x):
         x = self.embed(x)
         x = x.permute(0, 2, 1)
-        x1 = x
-        for layer in self.layers:
-            x1 = layer(x1)
-            x = x + x1
-        # x = self.layers(x)
+        # x1 = x
+        # for layer in self.layers:
+        #     x1 = layer(x1)
+        #     x = x + x1
+        x = self.layers(x)
         x = x.permute(0, 2, 1)
         x = self.digup(x)
         return x
@@ -93,6 +94,33 @@ class TextConv(pl.LightningModule):
             return [optimizer], [lr_scheduler]   
 
 
+class TextConvSum(TextConvRes):
+    def __init__(self, cfg:TextConvCfg):
+        super().__init__(cfg)
+        # nn.init.zeros_(self.embed.weight.data)
+        self.layers = nn.Sequential(*[
+            nn.Sequential(
+                Conv1dThenLeftPad(cfg.hidden_dim, cfg.kernel_size),
+                nn.GELU(),
+                nn.BatchNorm1d(cfg.hidden_dim),  # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True)
+                nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
+                nn.GELU(),
+                nn.BatchNorm1d(cfg.hidden_dim)
+            ) for _ in range(cfg.num_layers)
+        ])
+
+    def forward(self, x):
+        x = self.embed(x)
+        x = x.permute(0, 2, 1)
+        x1 = x
+        for layer in self.layers:
+            x1 = layer(x1)
+            x = x + x1
+        x = x.permute(0, 2, 1)
+        x = self.digup(x)
+        return x
+        
+
 class LayerNorm1d(nn.Module):
     def __init__(self, hidden_dim: int):
         super().__init__()
@@ -121,5 +149,5 @@ class Residual(nn.Module):
         self.fn = fn
 
     def forward(self, x):
-        return self.fn(x) # + x
+        return self.fn(x) + x
 

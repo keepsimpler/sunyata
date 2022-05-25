@@ -9,12 +9,12 @@ import pytorch_lightning as pl
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
                                             shift_one_token,
                                             split_to_two_parts)
-from sunyata.pytorch.arch.textconv import TextConv, TextConvCfg
+from sunyata.pytorch.arch.textconv import TextConvRes, TextConvSum, TextConvCfg
 
 # %%
 cfg = TextConvCfg(
     hidden_dim = 64,
-    vocab_size = 10000,
+    vocab_size = 1000,
     seq_len = 128,
     batch_size = 16,
     kernel_size = 3,
@@ -41,7 +41,8 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
-textconv = TextConv(cfg)
+# textconv = TextConvRes(cfg)
+textconv = TextConvSum(cfg)
 textconv.summarize(max_depth=2)
 
 # %%
