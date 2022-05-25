@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from sunyata.pytorch.arch.bayes import log_bayesian_iteration
+
 
 @dataclass
 class TextConvBayesCfg:                                            
@@ -38,10 +40,7 @@ class TextConvBayes(pl.LightningModule):
                 nn.Sequential(
                     Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
                     nn.GELU(),
-                    nn.BatchNorm1d(cfg.hidden_dim)  # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True)
-
-                ),
-                nn.Sequential(
+                    nn.BatchNorm1d(cfg.hidden_dim),  # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True)
                     nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
                     nn.GELU(),
                     nn.BatchNorm1d(cfg.hidden_dim)
@@ -52,26 +51,27 @@ class TextConvBayes(pl.LightningModule):
         self.cfg = cfg
 
     def forward(self, x):
+        log_prior = torch.zeros_like(x).unsqueeze(-1).repeat((1, 1, self.cfg.vocab_size))
+
         x = self.embed(x)
         x = x.permute(0, 2, 1)
         logits = x
         for layer in self.layers:
-            logits = layer[0](logits)
-            log_mean = torch.logsumexp(logits, dim=-1, keepdim=True)
-            x = x + logits - log_mean
-            logits = layer[1](logits)
-            log_mean = torch.logsumexp(logits, dim=-2, keepdim=True)
-            x = x + logits - log_mean
+            logits = layer(logits)
+            # x = x + logits
 
-        x = x.permute(0, 2, 1)
-        x = self.digup(x)
-        return x
+            chosen = logits.permute(0, 2, 1)
+            chosen = self.digup(chosen)
+            log_posterior = log_bayesian_iteration(log_prior, chosen)
+            log_prior = log_posterior
+
+        return log_posterior
 
     def _step(self, batch, mode="train"):  # or "val"
         input, target = batch
         logits = self.forward(input)
         logits = logits.permute(0, 2, 1)
-        loss = F.cross_entropy(logits, target)
+        loss = F.nll_loss(logits, target)
         self.log(mode + "_loss", loss)
         accuracy = (logits.argmax(dim=1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy)
