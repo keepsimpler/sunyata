@@ -40,10 +40,10 @@ class TextConvBayes(pl.LightningModule):
                 nn.Sequential(
                     Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
                     nn.GELU(),
-                    nn.BatchNorm1d(cfg.hidden_dim),  # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True)
+                    # nn.BatchNorm1d(cfg.hidden_dim),  # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True)
                     nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
                     nn.GELU(),
-                    nn.BatchNorm1d(cfg.hidden_dim)
+                    # nn.BatchNorm1d(cfg.hidden_dim)
                 )
             ) for _ in range(cfg.num_layers)
         ])
@@ -54,8 +54,8 @@ class TextConvBayes(pl.LightningModule):
         log_prior = torch.zeros_like(x).unsqueeze(-1).repeat((1, 1, self.cfg.vocab_size))
 
         x = self.embed(x)
-        chosen = self.digup(x)
-        log_prior = log_bayesian_iteration(log_prior, chosen)
+        # chosen = self.digup(x)
+        # log_prior = log_bayesian_iteration(log_prior, chosen)
 
         x = x.permute(0, 2, 1)
         logits = x
