@@ -1,3 +1,17 @@
+"""Deep Bayesian Inference Architecture
+
+A deep Bayesian inference architecture includes four parts:
+- Deep Bayesian Inference composed with a chain of Bayesian iterations.
+- Neural Network composed with a chain of layers.
+- Embed Block mapping from the observable space to the hidden space.
+- Dig-up Block mapping from the hidden space to the probability space.
+
+Classes:
+
+Functions:
+
+"""
+
 from dataclasses import dataclass
 import torch
 import torch.nn as nn
@@ -12,10 +26,6 @@ class DeepBayesInferCfg:
     num_heads: int = 2  # 16
     attn_scale: float = None
     attn_dropout: float = 0.
-    is_to_qkv: bool = True
-    is_to_qkv_bias: bool = False
-    is_to_out: bool = True
-    is_to_out_bias: bool = False
     is_mask: bool = True
     is_softmax: bool = True
 
@@ -24,14 +34,10 @@ class DeepBayesInferCfg:
     expanded_dim: int = 256  # 2048
     ff_dropout: float = 0.
     ff_act_nn: nn.Module = nn.GELU()
-    is_ff_bias: bool = True
-    is_nonlinear: bool = True
 
     # layernorm
-    is_pre_layernorm: bool = True
-    is_inner_layernorm: bool = True
-    is_post_layernorm: bool = False
-    normalized_ndim: int = 1
+    is_attn_layernorm: bool = True
+    is_ff_layernorm: bool = True
 
     # shortcut
     is_attn_shortcut: bool = True

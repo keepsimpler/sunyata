@@ -20,7 +20,8 @@ cfg = TransformerCLMCfg(
     transformer = TransformerCfg(
         hidden_dim = 64,
         num_heads = 2,
-        expanded_dim= 2*64
+        expanded_dim= 2*64,
+        is_softmax=False,
     ),
 
     batch_size = 16,
