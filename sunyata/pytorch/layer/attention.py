@@ -5,7 +5,6 @@ from einops import rearrange
 
 class Attention(nn.Module):
     def __init__(self, hidden_dim: int, num_heads: int, scale: float=None, dropout=0.,
-                 is_to_qkv=True, is_to_qkv_bias=False, is_to_out=True, is_to_out_bias=False,
                  is_mask=True, is_softmax=True):
         super().__init__()
         head_dim = hidden_dim // num_heads
@@ -14,26 +13,21 @@ class Attention(nn.Module):
 
         self.scale = head_dim ** -0.5 if scale is None else scale
 
-        self.is_to_qkv = is_to_qkv
-        if is_to_qkv:
-            self.to_qkv = nn.Linear(hidden_dim, hidden_dim * 3, bias=is_to_qkv_bias)
+        self.to_qkv = nn.Linear(hidden_dim, hidden_dim * 3)
         
         self.attend = nn.Softmax(dim=-1) if is_softmax else nn.Identity()
 
         self.to_out = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim, bias=is_to_out_bias),
+            nn.Linear(hidden_dim, hidden_dim),
             nn.Dropout(dropout),
-         ) if is_to_out else nn.Identity()
+         )
 
         self.is_mask, self.is_softmax = is_mask, is_softmax
 
     def forward(self, x):
         _, seq_len, _ = x.shape
 
-        if self.is_to_qkv:
-            q, k, v = self.to_qkv(x).chunk(3, dim=-1)
-        else:
-            q, k, v = x, x, x
+        q, k, v = self.to_qkv(x).chunk(3, dim=-1)
         
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=self.num_heads), (q, k, v))
 
