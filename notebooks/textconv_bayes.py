@@ -13,14 +13,14 @@ from sunyata.pytorch.arch.textconv_bayes import TextConvBayes, TextConvBayesCfg
 
 # %%
 cfg = TextConvBayesCfg(
-    hidden_dim = 64,
+    hidden_dim = 128,
     vocab_size = 1000,
     seq_len = 128,
     batch_size = 16,
     kernel_size = 3,
     num_layers = 8,
 
-    num_epochs = 10,
+    num_epochs = 1,
     learning_rate = 1e-3
 )
 

@@ -10,7 +10,7 @@ from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
                                             shift_one_token,
                                             )
 from sunyata.pytorch.layer.transformer import TransformerCfg
-from sunyata.pytorch.arch.clm import TransformerCLM, TransformerCLMCfg
+from sunyata.pytorch.arch.clm import TransformerCLM, TransformerCLMCfg, TransformerCLMNoShortcut
 
 # %%
 cfg = TransformerCLMCfg(
@@ -22,11 +22,13 @@ cfg = TransformerCLMCfg(
         num_heads = 2,
         expanded_dim= 2*64,
         is_softmax=False,
+        is_ff=False,
+        is_ff_layernorm=False,
     ),
 
     batch_size = 16,
     num_layers = 8,
-    num_epochs = 10,
+    num_epochs = 1,
     learning_rate = 1e-3
 )
 
@@ -47,7 +49,8 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
-transformer_clm = TransformerCLM(cfg)
+# transformer_clm = TransformerCLM(cfg)
+transformer_clm = TransformerCLMNoShortcut(cfg)
 transformer_clm.summarize(max_depth=2)
 
 # %%
