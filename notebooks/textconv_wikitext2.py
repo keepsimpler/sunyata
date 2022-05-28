@@ -13,7 +13,7 @@ from sunyata.pytorch.arch.textconv import TextConvRes, TextConvSum, TextConvCfg
 
 # %%
 cfg = TextConvCfg(
-    hidden_dim = 64,
+    hidden_dim = 128,
     vocab_size = 1000,
     seq_len = 128,
     batch_size = 16,
@@ -41,8 +41,8 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
-# textconv = TextConvRes(cfg)
-textconv = TextConvSum(cfg)
+textconv = TextConvRes(cfg)
+# textconv = TextConvSum(cfg)
 textconv.summarize(max_depth=2)
 
 # %%

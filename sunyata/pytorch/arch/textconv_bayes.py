@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sunyata.pytorch.arch.bayes import log_bayesian_iteration
+from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
 
 @dataclass
@@ -104,6 +104,11 @@ class TextConvBayes(pl.LightningModule):
         else:
             return [optimizer], [lr_scheduler]   
 
+
+
+class NegReLU(nn.Module):
+    def forward(self, x):
+        return torch.min(torch.tensor(0), x)
 
 
 class Conv1dWithLeftPad(nn.Module):
