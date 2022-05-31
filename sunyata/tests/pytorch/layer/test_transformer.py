@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 from sunyata.pytorch.layer.attention import Attention
-from sunyata.pytorch.layer.transformer import TransformerLayer
-from sunyata.pytorch.arch import DeepBayesInferCfg
+from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
 def test_attention():
 
@@ -16,7 +15,15 @@ def test_attention():
     assert output.shape == (batch_size, seq_len, hidden_dim)
 
 def test_transformer():
-    cfg = DeepBayesInferCfg(hidden_dim=8, num_heads=2, expanded_dim=16)
+    cfg = TransformerCfg(
+        hidden_dim = 64,
+        num_heads = 2,
+        expanded_dim= 2*64,
+        is_softmax=True,
+        is_ff=True,
+        is_ff_layernorm=True,
+    )
+    
     transformer = TransformerLayer(cfg)
 
     input = torch.randn(2, 6, cfg.hidden_dim)

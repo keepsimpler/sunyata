@@ -45,8 +45,8 @@ class TransformerLayer(nn.Module):
         self.ff_layernorm = nn.LayerNorm(cfg.hidden_dim) if cfg.is_ff_layernorm else nn.Identity()
 
     def forward(self, x):
-        x = x + self.attn_layernorm(self.attention(x))
-        x = x + self.ff_layernorm(self.feed_forward(x))
+        x = x + self.feed_forward(self.ff_layernorm(x))
+        x = x + self.attention(self.attn_layernorm(x))
         return x
         
 
