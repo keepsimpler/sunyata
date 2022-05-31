@@ -1,5 +1,5 @@
-from lib2to3.pytree import Base
 import torch
+import torch.nn as nn
 from dataclasses import dataclass
 import pytorch_lightning as pl
 
@@ -45,4 +45,14 @@ class BaseModule(pl.LightningModule):
             return optimizer
         else:
             return [optimizer], [lr_scheduler]   
+
+
+class Residual(nn.Module):
+    def __init__(self, fn):
+        super().__init__()
+        self.fn = fn
+
+    def forward(self, x):
+        return self.fn(x) + x
+
 
