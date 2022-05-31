@@ -7,9 +7,9 @@ import pytorch_lightning as pl
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
 from sunyata.pytorch.data.tiny_imagenet import TinyImageNetDataModule, TinyImageNet
-from sunyata.pytorch.arch.convmixer import DeepBayesInferConvMixer, DeepBayesInferConvMixerCfg
+from sunyata.pytorch.arch.convmixer import ConvMixer, ConvMixerCfg
 # %%
-cfg = DeepBayesInferConvMixerCfg(
+cfg = ConvMixerCfg(
     hidden_dim = 256,
     num_layers = 16,
     kernel_size = 5,
@@ -27,7 +27,7 @@ cfg = DeepBayesInferConvMixerCfg(
 )
 
 # model = DeepBayesInferConvMixer(cfg)
-model = DeepBayesInferConvMixer.load_from_checkpoint(
+model = ConvMixer.load_from_checkpoint(
     ".data/results/convmixer-tiny-imagenet/version_0/checkpoints/epoch=39-step=31280.ckpt",
     cfg=cfg)
 
@@ -100,7 +100,7 @@ ax = sns.heatmap(all_log_posteriores[0])
 
 # %% none bayesian
 cfg.is_bayes = False
-compared_model = DeepBayesInferConvMixer.load_from_checkpoint(
+compared_model = ConvMixer.load_from_checkpoint(
     ".data/results/convmixer-tiny-imagenet/version_1/checkpoints/epoch=39-step=31280.ckpt",
     cfg=cfg)
 

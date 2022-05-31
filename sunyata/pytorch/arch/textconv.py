@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
 
@@ -132,6 +132,16 @@ class BayesConvCLM(ResConvCLM):
 
         return log_prior
 
+    def _step(self, batch, mode="train"):  # or "val"
+        input, target = batch
+        logits = self.forward(input)
+        logits = logits.permute(0, 2, 1)
+        loss = F.nll_loss(logits, target)
+        self.log(mode + "_loss", loss)
+        accuracy = (logits.argmax(dim=1) == target).float().mean()
+        self.log(mode + "_accuracy", accuracy)
+        return loss
+
 
 class Conv1dWithLeftPad(nn.Module):
     def __init__(self, hidden_dim: int, kernel_size: int):
@@ -141,15 +151,6 @@ class Conv1dWithLeftPad(nn.Module):
 
     def forward(self, x):
         return self.conv1d(F.pad(x, (self.kernel_size - 1, 0)))
-
-
-class Residual(nn.Module):
-    def __init__(self, fn):
-        super().__init__()
-        self.fn = fn
-
-    def forward(self, x):
-        return self.fn(x) + x
 
 
 class LayerNorm1d(nn.Module):
