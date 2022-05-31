@@ -31,6 +31,7 @@ class TransformerCLM(pl.LightningModule):
     """
     def __init__(self, cfg: TransformerCLMCfg):
         super().__init__()
+        self.save_hyperparameters("cfg")
         self.layers = nn.Sequential(*[TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)])
 
         self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)

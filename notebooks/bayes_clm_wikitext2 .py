@@ -9,27 +9,18 @@ import pytorch_lightning as pl
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
                                             shift_one_token,
                                             )
-from sunyata.pytorch.layer.transformer import TransformerCfg
-from sunyata.pytorch.arch.clm import TransformerCLM, TransformerCLMCfg, TransformerCLMNoShortcut
 
+from sunyata.pytorch.arch.clm_bayes import TransformerCLMBayes, TransformerCLMBayesCfg
 # %%
-cfg = TransformerCLMCfg(
+cfg = TransformerCLMBayesCfg(
     vocab_size = 1000,
     seq_len = 128,
     hidden_dim = 64,
-    transformer = TransformerCfg(
-        hidden_dim = 64,
-        num_heads = 2,
-        expanded_dim= 2*64,
-        is_softmax=True,
-        is_ff=True,
-        is_ff_layernorm=True,
-    ),
 
     batch_size = 16,
     num_layers = 8,
     num_epochs = 1,
-    learning_rate = 3e-4 # 1e-3  3e-4
+    learning_rate = 1e-3 # 1e-3  3e-4
 )
 
 # %%
@@ -49,12 +40,11 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
-transformer_clm = TransformerCLM(cfg)
-# transformer_clm = TransformerCLMNoShortcut(cfg)
-transformer_clm.summarize(max_depth=2)
+bayes_clm = TransformerCLMBayes(cfg)
+bayes_clm.summarize(max_depth=2)
 
 # %%
-loss = transformer_clm._step((input, target))
+loss = bayes_clm._step((input, target))
 loss
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
@@ -68,7 +58,7 @@ trainer = pl.Trainer(gpus=1,
                      logger=csv_logger)
 
 # %%
-trainer.fit(transformer_clm, wikitext2)
+trainer.fit(bayes_clm, wikitext2)
 
 
 # %%
