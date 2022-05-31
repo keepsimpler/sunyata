@@ -16,8 +16,7 @@ class ConvMixerCfg(BaseCfg):
     patch_size: int = 2
     num_classes: int = 10
 
-    is_bayes: bool = True
-    is_prior_as_params: bool = False
+    # is_prior_as_params: bool = False
 
 
 class ConvMixer(BaseModule):
@@ -106,10 +105,7 @@ class BayesConvMixer(ConvMixer):
         ])
         
         log_prior = torch.zeros(1, cfg.num_classes)
-        if cfg.is_prior_as_params:
-            self.log_prior = nn.Parameter(log_prior)
-        else:
-            self.register_buffer('log_prior', log_prior) 
+        self.register_buffer('log_prior', log_prior) 
 
         self.cfg = cfg
 
