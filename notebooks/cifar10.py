@@ -45,9 +45,9 @@ cifar10_dm = CIFAR10DataModule(
     val_transforms=test_transforms,
 )
 # %%
-from sunyata.pytorch.arch.convmixer import DeepBayesInferConvMixer, DeepBayesInferConvMixerCfg
+from sunyata.pytorch.arch.convmixer import ConvMixer, ConvMixerCfg
 
-cfg = DeepBayesInferConvMixerCfg(
+cfg = ConvMixerCfg(
     hidden_dim = 256,
     num_layers = 8,
     kernel_size = 5,
@@ -64,7 +64,7 @@ cfg = DeepBayesInferConvMixerCfg(
     weight_decay = None,  # of "AdamW"
 )
 # %%
-model = DeepBayesInferConvMixer(cfg)
+model = ConvMixer(cfg)
 
 trainer = pl.Trainer(
     progress_bar_refresh_rate=10,
