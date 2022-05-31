@@ -4,10 +4,10 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import pytorch_lightning as pl
-from sunyata.pytorch.arch.bayes import log_bayesian_iteration
+from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
 from sunyata.pytorch.data.tiny_imagenet import TinyImageNetDataModule, TinyImageNet
-from sunyata.pytorch.convmixer import DeepBayesInferConvMixer, DeepBayesInferConvMixerCfg
+from sunyata.pytorch.arch.convmixer import DeepBayesInferConvMixer, DeepBayesInferConvMixerCfg
 # %%
 cfg = DeepBayesInferConvMixerCfg(
     hidden_dim = 256,

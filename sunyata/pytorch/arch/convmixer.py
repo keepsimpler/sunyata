@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from einops import repeat
 import pytorch_lightning as pl
 
-from sunyata.pytorch.arch.bayes import log_bayesian_iteration
+from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
 
 @dataclass

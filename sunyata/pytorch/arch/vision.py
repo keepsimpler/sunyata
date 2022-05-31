@@ -9,7 +9,7 @@ from einops import repeat
 from einops.layers.torch import Rearrange
 import warmup_scheduler
 
-from sunyata.pytorch.arch.bayes import log_bayesian_iteration, DeepBayesInferCfg
+from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
 
 @dataclass
 class DeepBayesInferVisionCfg(DeepBayesInferCfg):

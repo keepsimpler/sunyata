@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from einops import repeat
 from einops.layers.torch import Rearrange, Reduce
 
-from sunyata.pytorch.arch.bayes import log_bayesian_iteration
+from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
 pair = lambda x: x if isinstance(x, tuple) else (x, x)
 
