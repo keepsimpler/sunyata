@@ -24,7 +24,7 @@ cfg = TransformerCLMBayesCfg(
 )
 
 # %%
-wikitext2 = WikiTextDataModule(subset="2", 
+wikitext2 = WikiTextDataModule(subset="103", 
                    data_dir=".data/wikitext/", 
                    batch_size=cfg.batch_size,
                    vocab_size=cfg.vocab_size,
