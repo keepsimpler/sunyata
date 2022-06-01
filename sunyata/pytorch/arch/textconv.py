@@ -109,10 +109,10 @@ class BayesConvCLM(ResConvCLM):
                 nn.Sequential(
                     Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
                     nn.GELU(),
-                    nn.BatchNorm1d(cfg.hidden_dim),
+                    # nn.BatchNorm1d(cfg.hidden_dim),
                     nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
                     nn.GELU(),
-                    nn.BatchNorm1d(cfg.hidden_dim),
+                    # nn.BatchNorm1d(cfg.hidden_dim),
                 )
             ) for _ in range(cfg.num_layers)
         ])
