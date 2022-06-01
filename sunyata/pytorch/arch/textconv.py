@@ -25,7 +25,7 @@ class ResConvCLM(BaseModule):
     Residual Convolution Neural Network for Causal Language Modeling
     """
     def __init__(self, cfg: TextConvCfg):
-        super().__init__()
+        super().__init__(cfg)
         self.save_hyperparameters("cfg")
 
         self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
