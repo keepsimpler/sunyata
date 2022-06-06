@@ -16,8 +16,8 @@ class TextConvCfg(BaseCfg):
 
     kernel_size: int = 3
 
-    # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True)
-    norm_layer: nn.Module = nn.BatchNorm1d 
+    # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True) nn.BatchNorm1d
+    norm_layer: nn.Module =  nn.BatchNorm1d
 
 
 class ResConvCLM(BaseModule):
@@ -37,11 +37,14 @@ class ResConvCLM(BaseModule):
                 Residual(nn.Sequential(
                     Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
                     nn.GELU(),
-                    nn.BatchNorm1d(cfg.hidden_dim)
+                    cfg.norm_layer(cfg.hidden_dim)
                 )),
-                nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
-                nn.GELU(),
-                nn.BatchNorm1d(cfg.hidden_dim)
+                Residual(nn.Sequential(
+                    nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
+                    nn.GELU(),
+                    # nn.Conv1d(cfg.hidden_dim*2, cfg.hidden_dim, kernel_size=1),
+                    cfg.norm_layer(cfg.hidden_dim)
+                ))
             ) for _ in range(cfg.num_layers)
         ])
 
@@ -78,8 +81,9 @@ class SumConvCLM(ResConvCLM):
                 Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
                 nn.GELU(),
                 nn.BatchNorm1d(cfg.hidden_dim),
-                nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
+                nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim*2, kernel_size=1),
                 nn.GELU(),
+                nn.Conv1d(cfg.hidden_dim*2, cfg.hidden_dim, kernel_size=1),
                 nn.BatchNorm1d(cfg.hidden_dim)
             ) for _ in range(cfg.num_layers)
         ])
@@ -106,14 +110,17 @@ class BayesConvCLM(ResConvCLM):
         nn.init.zeros_(self.embed.weight.data)
         self.layers = nn.Sequential(*[
             nn.Sequential(
-                nn.Sequential(
+                Residual(nn.Sequential(
                     Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
                     nn.GELU(),
-                    # nn.BatchNorm1d(cfg.hidden_dim),
-                    nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
+                    cfg.norm_layer(cfg.hidden_dim)
+                )),
+                Residual(nn.Sequential(
+                    nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim*2, kernel_size=1),
                     nn.GELU(),
-                    # nn.BatchNorm1d(cfg.hidden_dim),
-                )
+                    nn.Conv1d(cfg.hidden_dim*2, cfg.hidden_dim, kernel_size=1),
+                    cfg.norm_layer(cfg.hidden_dim)
+                ))
             ) for _ in range(cfg.num_layers)
         ])
 
@@ -153,15 +160,3 @@ class Conv1dWithLeftPad(nn.Module):
 
     def forward(self, x):
         return self.conv1d(F.pad(x, (self.kernel_size - 1, 0)))
-
-
-class LayerNorm1d(nn.Module):
-    def __init__(self, hidden_dim: int):
-        super().__init__()
-        self.layer_norm = nn.LayerNorm(hidden_dim)
-
-    def forward(self, x):
-        x = x.permute(0, 2, 1)
-        x = self.layer_norm(x)
-        x = x.permute(0, 2, 1)
-        return x

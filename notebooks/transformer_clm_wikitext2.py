@@ -14,22 +14,22 @@ from sunyata.pytorch.arch.clm import TransformerCLM, TransformerCLMCfg, Transfor
 
 # %%
 cfg = TransformerCLMCfg(
-    vocab_size = 1000,
+    vocab_size = 20000,
     seq_len = 128,
-    hidden_dim = 64,
+    hidden_dim = 84,
     transformer = TransformerCfg(
-        hidden_dim = 64,
-        num_heads = 2,
-        expanded_dim= 2*64,
+        hidden_dim = 84,
+        num_heads = 4,
+        expanded_dim= 2*84,
         is_softmax=True,
         is_ff=True,
         is_ff_layernorm=True,
     ),
 
     batch_size = 16,
-    num_layers = 8,
+    num_layers = 10,
     num_epochs = 1,
-    learning_rate = 3e-4 # 1e-3  3e-4
+    learning_rate = 1e-3 # 1e-3  3e-4
 )
 
 # %%
@@ -48,7 +48,7 @@ wikitext2.tokenizer.decode(wikitext2.train_data[0].tolist(), skip_special_tokens
 input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
-# %%
+# %%|
 transformer_clm = TransformerCLM(cfg)
 # transformer_clm = TransformerCLMNoShortcut(cfg)
 transformer_clm.summarize(max_depth=2)
