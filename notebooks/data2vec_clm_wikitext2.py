@@ -13,15 +13,16 @@ from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
 
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
-from sunyata.pytorch.arch.byol_clm import BYOL_CLM, BYOL_CLM_Cfg, BYOL_EMA
+from sunyata.pytorch.arch.data2vec import Data2VecCfg, Data2VecCLM, BYOL_EMA
 
 # %%
 hidden_dim = 64
-cfg = BYOL_CLM_Cfg(
-    vocab_size = 10000,
+cfg = Data2VecCfg(
+    vocab_size = 1000,
     seq_len = 128,
     hidden_dim = hidden_dim,
-    ema_tau = 0.9999,  # 0.9999
+    ema_tau = 0.999,  # 0.9999
+    normalize_targets = False,
     transformer = TransformerCfg(
         hidden_dim = hidden_dim,
         num_heads = 2,
@@ -29,8 +30,8 @@ cfg = BYOL_CLM_Cfg(
     ),
 
     batch_size = 64,
-    num_layers = 8,
-    num_epochs = 1,
+    num_layers = 6,
+    num_epochs = 10,
     learning_rate = 1e-3 # 1e-3  3e-4
 )
 
@@ -51,7 +52,7 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
-byol_clm = BYOL_CLM(cfg)
+byol_clm = Data2VecCLM(cfg)
 byol_clm.summarize(max_depth=2)
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
