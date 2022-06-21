@@ -63,8 +63,10 @@
 \usepackage{lipsum}
 
 % Author info
-\title{Latent representation learning by predicting future}
-\author{Wenfeng Feng$^1$\thanks{Author One was partially supported by Grant XXX} \and Xin Zhang$^1$}
+\title{
+	Latent representation learning by predicting near future
+	}
+\author{Wenfeng Feng$^1$ \and Xin Zhang$^1$}
 
 \date{
 	% $^1$Organization 1 \\ \texttt{\{auth1, auth3\}@org1.edu}\\%
@@ -90,49 +92,26 @@
 	Instead we model a density ratio which preserves the mutual information between $x_{t+k}$ and $x_{\le t}$.
 	\cite{van2018representation}
 	
-	\subsection{Preliminaries}
-	\label{sec:pre}
-	
-	\lipsum[3]
-	
-	\subsection{Previous Results}
-	\label{sec:prev-results}
-	
-	Null graphs are discussed in \cite{HararyR74}
-	The concept of ``internally stable set'' was used in \cite{Berge57, Berge58}.
-	
-	\begin{theorem}
-		\label{thrm:1}
-		\lipsum[4]
-	\end{theorem}
-	\begin{proof}
-		content...
-	\end{proof}
+	\subsection{Loss function}
+	\label{subsec:loss}
 
-	\begin{corollary}
-	\label{cor:1}
+	\paragraph*{Barlow Twins} \cite{zbontar2021barlow}
+	measuring the cross-correlation matrix between the outputs of two identical networks fed with distorted versions of a sample,
+	and making it as close to the identity matrix as possible.
+
 	
-	\lipsum[5]
-	\end{corollary}
+	\subsection{How to avoid collapse}
+	\label{subsec:avoid-collapse}
 
-	Unordered List (taken from Overleaf)
-	\begin{itemize}
-		\item The individual entries are indicated with a black dot, a so-called bullet.
-		\item The text in the entries may be of any length.
-	\end{itemize}
-
-	Ordered List (taken from Overleaf)
-	\begin{enumerate}
-		\item The labels consists of sequential numbers.
-		\item The numbers starts at 1 with every call to the enumerate environment.
-	\end{enumerate}
+	\paragraph*{BN}
+	Batch normal is a method of avoiding collapse.
 
 	\begin{table}[ht]
 		\centering
 		\begin{tabular}{|c|c|}
 			\hline
 			\textbf{Odd} & \textbf{Even} \\
-			\hline\hline
+			\hline
 			One & Two \\
 			\hline
 			Three & Four \\
@@ -144,20 +123,31 @@
 
 	Table~\ref*{tbl:1} is an example of a table.
 	
-	\section{More Examples}
-	\label{sec:examples}
+	\section{Related works}
+	\label{sec:related}
 	
-	Now we include a figure.
-	(See Figure~\ref{fig:example}.)
+	\subsection{How to generate positive sample pairs}
+
+	\paragraph*{Dropout} \cite{gao2021simcse} In sentence similarity, for creating positive sample pairs, the same input sentence e.g. 'Two dogs are running' is passed into the pre-trained encoder twice and two different embeddings are obtained by applying independently sampled dropout masks.  
+
+	\section{Method}
+
+	\subsection{Motivation and Intuitions}
+	Please see Figure~\ref{fig:example} for the visualization of our method.
 	\begin{figure}[ht]
 		\centering
 		\includegraphics[width=0.3\textwidth]{example}
 		\caption{An example of a figure}
 		\label{fig:example}
 	\end{figure}
-	
-	\paragraph{Acknowledgements} \lipsum[6]
-	
+
+	\cite{van2018representation}p2-3
+	When predicting future information using auto-regressive model $p(x_t|x_{<t})$, we instead encode the target $x_t$ and context $x_{<t}$ into a compact distributed vector representations $z_t$ and $z_{<t}$.
+	We learn the underlying shared information between the target and context by maximizing the mutual information of the latent representation between them $z_t$ and $z_{<t}$ defined as
+	\begin{equation}
+		I(z_t; z_{<t}) = 
+	\end{equation}
+
 %	\newpage
 	\bibliography{refs}
 		
