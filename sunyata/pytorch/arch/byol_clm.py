@@ -32,6 +32,14 @@ def across_loss_fn(x: torch.Tensor, y: torch.Tensor):
     # loss = (min_loss.sum() - max_loss.sum()) / (torch.numel(cosine_loss))
     loss = 2 + min_loss.mean() - max_loss.mean()    
 
+def infoNCE(z1:torch.Tensor, z2:torch.Tensor, temperature=0.1):
+    logits = torch.einsum('b s n, b t n -> b s t', z1, z2)   # z1 @ z2.T
+    logits /= temperature
+    batch_size, seq_len, _ = z1.shape
+    labels = torch.arange(0, seq_len, dtype=torch.long).repeat(batch_size).reshape(batch_size, seq_len).cuda()
+    loss = F.cross_entropy(logits, labels)
+    return loss
+
 
 @dataclass
 class BYOL_CLM_Cfg(BaseCfg):
@@ -71,7 +79,7 @@ class BYOL_CLM(BaseModule):
         # self.online_predictor = TransformerLayer(cfg.transformer)
         self.online_predictor = BatchNorm(cfg.hidden_dim)
 
-        self.loss_fn = loss_fn
+        self.loss_fn = loss_fn  # infoNCE
         self.cfg = cfg
 
     def forward(self, input, target):
@@ -89,7 +97,7 @@ class BYOL_CLM(BaseModule):
     def _step(self, batch, mode="train"):  # or "val"
         input, target = batch
         online_pred, target_proj = self.forward(input, target)
-        loss = self.loss_fn(online_pred, target_proj).mean()
+        loss = self.loss_fn(online_pred, target_proj).mean()  # sum()
         self.log(mode + "_loss", loss)
         return loss
 

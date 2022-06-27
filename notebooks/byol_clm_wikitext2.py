@@ -31,7 +31,7 @@ cfg = BYOL_CLM_Cfg(
 
     batch_size = 64,
     num_layers = 4,
-    num_epochs = 1,
+    num_epochs = 10,
     learning_rate = 1e-3 # 1e-3  3e-4
 )
 
