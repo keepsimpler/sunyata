@@ -65,6 +65,7 @@
 % Author info
 \title{
 	Latent representation learning by predicting near future
+	Self-distillation improve auto-regressive language modeling performance
 	}
 \author{Wenfeng Feng$^1$ \and Xin Zhang$^1$}
 
@@ -126,8 +127,22 @@
 	\section{Related works}
 	\label{sec:related}
 	
-	\subsection{How to generate positive sample pairs}
+	Most unsupervised methods for representation learning can be categorized as either generative or discriminative.
+	Many of generative approaches learn representation of data by building a distribution over data through first embedding data to latent space then map back.
+	While our method directly learn the representation of data in the latent space.
 
+	\subsection{Knowledge distillation}
+	Knowledge is a learned mapping from input vectors to output vectors \cite{hinton2015distilling} .
+	The most popular knowledge for image classification is known as soft targets. 
+	Soft targets contain the informative dark knowledge from the teacher model.
+	Generally, the distillation loss often employs Kullback-Leibler divergence loss.
+
+	However, soft targets are the output of the last layer of the teacher model, and thus fails to address the intermediate-level representation(supervision) from the teacher model, which turns out to be very important for representation learning using very deep neural networks.
+
+	
+
+	\subsection{How to generate positive sample pairs}
+	\paragraph*{Masking}
 	\paragraph*{Dropout} \cite{gao2021simcse} In sentence similarity, for creating positive sample pairs, the same input sentence e.g. 'Two dogs are running' is passed into the pre-trained encoder twice and two different embeddings are obtained by applying independently sampled dropout masks.  
 
 	\section{Method}
@@ -147,6 +162,9 @@
 	\begin{equation}
 		I(z_t; z_{<t}) = 
 	\end{equation}
+
+	The embedding layer maps words into semantic space. We minimize the distance between semantic representation.
+
 
 %	\newpage
 	\bibliography{refs}
