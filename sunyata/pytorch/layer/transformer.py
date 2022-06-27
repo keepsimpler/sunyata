@@ -2,10 +2,13 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 from sunyata.pytorch.layer.attention import Attention
+from .transformer import TransformerLayer  # import class that is below in the same file
 
 
 @dataclass
 class TransformerCfg:
+    model: type = TransformerLayer
+
     hidden_dim: int = None
 
      # attention
