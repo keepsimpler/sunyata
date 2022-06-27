@@ -45,10 +45,30 @@ class TransformerLayer(nn.Module):
         self.ff_layernorm = nn.LayerNorm(cfg.hidden_dim) if cfg.is_ff_layernorm else nn.Identity()
 
     def forward(self, x):
-        x = x + self.feed_forward(self.ff_layernorm(x))
-        x = x + self.attention(self.attn_layernorm(x))
+        x = self.attn_layernorm(x + self.attention(x))
+        x = self.ff_layernorm(x + self.feed_forward(x))
         return x
         
+
+class TransformerLayerPreNorm(TransformerLayer):
+    def __init__(self, cfg:TransformerCfg):
+        super().__init__(cfg)
+
+    def forward(self, x):
+        x = x + self.attention(self.attn_layernorm(x))
+        x = x + self.feed_forward(self.ff_layernorm(x))
+        return x
+
+
+class TransformerLayerPostNorm(TransformerLayer):
+    def __init__(self, cfg:TransformerCfg):
+        super().__init__(cfg)
+
+    def forward(self, x):
+        x = x + self.attn_layernorm(self.attention(x))
+        x = x + self.ff_layernorm(self.feed_forward(x))
+        return x
+
 
 class TransformerLayerNoShortcut(TransformerLayer):
     def __init__(self, cfg:TransformerCfg):
