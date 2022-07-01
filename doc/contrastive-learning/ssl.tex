@@ -1,0 +1,173 @@
+\documentclass[a4paper]{article}
+
+\usepackage[pages=all, color=black, position={current page.south}, placement=bottom, scale=1, opacity=1, vshift=5mm]{background}
+
+\usepackage[margin=1in]{geometry} % full-width
+
+% AMS Packages
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+
+% Unicode
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\hypersetup{
+	unicode,
+%	colorlinks,
+%	breaklinks,
+%	urlcolor=cyan, 
+%	linkcolor=blue, 
+	pdfauthor={Wenfeng Feng, Xin Zhang},
+	pdftitle={Learning by Predicting future},
+	pdfsubject={Learning by Predicting future},
+	pdfkeywords={Contrastive Learning, latent representation learning},
+	pdfproducer={LaTeX},
+	pdfcreator={pdflatex}
+}
+
+% Vietnamese
+%\usepackage{vntex}
+
+
+% Natbib
+\usepackage[sort&compress,numbers,square]{natbib}
+\bibliographystyle{mplainnat}
+
+% Theorem, Lemma, etc
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{claim}{Claim}[theorem]
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{fact}[theorem]{Fact}
+\newtheorem{hypothesis}[theorem]{Hypothesis}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{criterion}[theorem]{Criterion}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{principle}[theorem]{Principle}
+
+\usepackage{graphicx, color}
+\graphicspath{{fig/}}
+
+%\usepackage[linesnumbered,ruled,vlined,commentsnumbered]{algorithm2e} % use algorithm2e for typesetting algorithms
+\usepackage{algorithm, algpseudocode} % use algorithm and algorithmicx for typesetting algorithms
+\usepackage{mathrsfs} % for \mathscr command
+
+\usepackage{lipsum}
+
+% Author info
+\title{
+	Latent representation learning by predicting near future
+	Self-distillation improve auto-regressive language modeling performance
+	}
+\author{Wenfeng Feng$^1$ \and Xin Zhang$^1$}
+
+\date{
+	% $^1$Organization 1 \\ \texttt{\{auth1, auth3\}@org1.edu}\\%
+	% $^2$Organization 2 \\ \texttt{auth3@inst2.edu}\\[2ex]%
+	\today
+}
+
+\begin{document}
+	\maketitle
+	
+	\begin{abstract}
+		Learning representation directly in the latent space has make progress recently.
+		
+		\noindent\textbf{Keywords:} , , 
+	\end{abstract}
+
+	\tableofcontents
+	
+	\section{Introduction}
+	\label{sec:intro}
+	
+	We do not predict future observations $x_{t+k}$ directly with a generative model $p_k(x_{t+k}|x_{\le t})$.
+	Instead we model a density ratio which preserves the mutual information between $x_{t+k}$ and $x_{\le t}$.
+	\cite{van2018representation}
+	
+	\subsection{Loss function}
+	\label{subsec:loss}
+
+	\paragraph*{Barlow Twins} \cite{zbontar2021barlow}
+	measuring the cross-correlation matrix between the outputs of two identical networks fed with distorted versions of a sample,
+	and making it as close to the identity matrix as possible.
+
+	
+	\subsection{How to avoid collapse}
+	\label{subsec:avoid-collapse}
+
+	\paragraph*{BN}
+	Batch normal is a method of avoiding collapse.
+
+	\begin{table}[ht]
+		\centering
+		\begin{tabular}{|c|c|}
+			\hline
+			\textbf{Odd} & \textbf{Even} \\
+			\hline
+			One & Two \\
+			\hline
+			Three & Four \\
+			\hline
+		\end{tabular}
+		\caption{This is a table}
+		\label{tbl:1}
+	\end{table}
+
+	Table~\ref*{tbl:1} is an example of a table.
+	
+	\section{Related works}
+	\label{sec:related}
+	
+	Most unsupervised methods for representation learning can be categorized as either generative or discriminative.
+	Many of generative approaches learn representation of data by building a distribution over data through first embedding data to latent space then map back.
+	While our method directly learn the representation of data in the latent space.
+
+	\subsection{Knowledge distillation}
+	Knowledge is a learned mapping from input vectors to output vectors \cite{hinton2015distilling} .
+	The most popular knowledge for image classification is known as soft targets. 
+	Soft targets contain the informative dark knowledge from the teacher model.
+	Generally, the distillation loss often employs Kullback-Leibler divergence loss.
+
+	However, soft targets are the output of the last layer of the teacher model, and thus fails to address the intermediate-level representation(supervision) from the teacher model, which turns out to be very important for representation learning using very deep neural networks.
+
+	
+
+	\subsection{How to generate positive sample pairs}
+	\paragraph*{Masking}
+	\paragraph*{Dropout} \cite{gao2021simcse} In sentence similarity, for creating positive sample pairs, the same input sentence e.g. 'Two dogs are running' is passed into the pre-trained encoder twice and two different embeddings are obtained by applying independently sampled dropout masks.  
+
+	\section{Method}
+
+	\subsection{Motivation and Intuitions}
+	Please see Figure~\ref{fig:example} for the visualization of our method.
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[width=0.3\textwidth]{example}
+		\caption{An example of a figure}
+		\label{fig:example}
+	\end{figure}
+
+	\cite{van2018representation}p2-3
+	When predicting future information using auto-regressive model $p(x_t|x_{<t})$, we instead encode the target $x_t$ and context $x_{<t}$ into a compact distributed vector representations $z_t$ and $z_{<t}$.
+	We learn the underlying shared information between the target and context by maximizing the mutual information of the latent representation between them $z_t$ and $z_{<t}$ defined as
+	\begin{equation}
+		I(z_t; z_{<t}) = 
+	\end{equation}
+
+	The embedding layer maps words into semantic space. We minimize the distance between semantic representation.
+
+
+%	\newpage
+	\bibliography{refs}
+		
+\end{document}

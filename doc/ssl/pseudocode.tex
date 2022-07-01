@@ -1,0 +1,78 @@
+\documentclass{article}
+
+\usepackage[margin=1in]{geometry} % full-width
+\usepackage{xcolor,amsmath}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\DontPrintSemicolon
+
+% latex python pseudocode example
+
+% Define pseudocode formatting
+\renewcommand{\KwSty}[1]{\textnormal{\textcolor{blue!90!black}{\ttfamily\bfseries #1}}\unskip}
+\renewcommand{\ArgSty}[1]{\textnormal{\ttfamily #1}\unskip}
+\SetKwComment{Comment}{\color{green!50!black}// }{}
+\renewcommand{\CommentSty}[1]{\textnormal{\ttfamily\color{green!50!black}#1}\unskip}
+\newcommand{\assign}{\leftarrow}
+\newcommand{\var}{\texttt}
+\newcommand{\FuncCall}[2]{\texttt{\bfseries #1(#2)}}
+\SetKwProg{Function}{function}{}{}
+\renewcommand{\ProgSty}[1]{\texttt{\bfseries #1}}
+
+\definecolor{commentcolor}{RGB}{110,154,155}   % define comment color
+\newcommand{\PyComment}[1]{\ttfamily\textcolor{commentcolor}{\# #1}}  % add a "#" before the input text "#1"
+\newcommand{\PyCode}[1]{\ttfamily\textcolor{black}{#1}} % \ttfamily is the code font
+
+% Natbib
+\usepackage[sort&compress,numbers,square]{natbib}
+\bibliographystyle{mplainnat}
+
+\begin{document}
+
+\begin{algorithm}
+  \caption{Dynamic PCA}
+  \Comment{$\theta_{\mathrm{exp}}$ is globally given, and initially set to $\infty$.}
+  \Function{ExpandBasisIfInteresting($B$, $\Sigma$, $\vec{x}$)}{
+    \If{$\var{loss} > \theta_{\mathrm{exp}}$}{
+      $\var{loss} \assign \sqrt{\lVert \vec{x} \rVert^2 - \lVert \vec{x}^T B \rVert^2}$
+        \Comment{By Pythagoras}
+      $B, \Sigma \assign \FuncCall{Append}{$B$, $\Sigma$, $\vec{x}$}$\;
+      $B \assign \FuncCall{GramSchmidt}{$B$}$\;
+    }
+    $\theta_{\mathrm{exp}} \assign \FuncCall{UpdateLoss}{$\theta_{\mathrm{exp}}$, \var{loss}}$\;
+    \Return{$B$, $\Sigma$}\;
+  }
+  \Function{PeriodicDecompose($B$, $\Sigma$)}{
+    \If{\FuncCall{IsOneMinutePassed}{}}{
+      $B, \Sigma \assign \FuncCall{PCA}{$B$, $\Sigma$}$\;
+    }
+    \Return{$B$, $\Sigma$}\;
+  }
+  \Comment{The main function}
+  \Function{DynPCA($B$, $\Sigma$, $\vec{x}$, $s$)}{
+    $B, \Sigma \assign \FuncCall{ExpandBasisIfInteresting}{$B$, $\Sigma$, $\vec{x}$}$\;
+    $\Sigma \assign \FuncCall{UpdateCovMatrix}{$B$, $\Sigma$, $\vec{x}$, $s$}$\;
+    $B', \Sigma' \assign \FuncCall{PeriodicDecompose}{$B$, $\Sigma$}$\;
+    \Return{$B'$, $\Sigma'$}
+  }
+\end{algorithm}
+
+
+\begin{algorithm}[h]
+    \SetAlgoLined
+        \PyComment{this is a comment} \\
+        \PyComment{this is a comment} \\
+        \PyComment{} \\
+        \PyComment{going to have indentation} \\
+        \PyCode{for i in range(N):} \\
+        \Indp   % start indent
+            \PyComment{your comment} \\
+            \PyCode{your code} \PyComment{inline comment} \\ 
+        \Indm % end indent, must end with this, else all the below text will be indented
+        \PyComment{this is a comment} \\
+        \PyCode{your code}
+    \caption{PyTorch-style pseudocode for your-algo}
+    \label{algo:your-algo}
+\end{algorithm}
+
+    
+\end{document}

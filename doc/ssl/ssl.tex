@@ -1,6 +1,6 @@
 \documentclass[a4paper]{article}
 
-\usepackage[pages=all, color=black, position={current page.south}, placement=bottom, scale=1, opacity=1, vshift=5mm]{background}
+% \usepackage[pages=all, color=black, position={current page.south}, placement=bottom, scale=1, opacity=1, vshift=5mm]{background}
 
 \usepackage[margin=1in]{geometry} % full-width
 
@@ -12,53 +12,22 @@
 % Unicode
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
-\hypersetup{
-	unicode,
-%	colorlinks,
-%	breaklinks,
-%	urlcolor=cyan, 
-%	linkcolor=blue, 
-	pdfauthor={Wenfeng Feng, Xin Zhang},
-	pdftitle={Learning by Predicting future},
-	pdfsubject={Learning by Predicting future},
-	pdfkeywords={Contrastive Learning, latent representation learning},
-	pdfproducer={LaTeX},
-	pdfcreator={pdflatex}
-}
-
-% Vietnamese
-%\usepackage{vntex}
 
 % Natbib
 \usepackage[sort&compress,numbers,square]{natbib}
 \bibliographystyle{mplainnat}
 
-% Theorem, Lemma, etc
-\theoremstyle{plain}
-\newtheorem{theorem}{Theorem}
-\newtheorem{corollary}[theorem]{Corollary}
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{claim}{Claim}[theorem]
-\newtheorem{axiom}[theorem]{Axiom}
-\newtheorem{conjecture}[theorem]{Conjecture}
-\newtheorem{fact}[theorem]{Fact}
-\newtheorem{hypothesis}[theorem]{Hypothesis}
-\newtheorem{assumption}[theorem]{Assumption}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{criterion}[theorem]{Criterion}
-\theoremstyle{definition}
-\newtheorem{definition}[theorem]{Definition}
-\newtheorem{example}[theorem]{Example}
-\newtheorem{remark}[theorem]{Remark}
-\newtheorem{problem}[theorem]{Problem}
-\newtheorem{principle}[theorem]{Principle}
-
-\usepackage{graphicx, color}
+\usepackage{graphicx, xcolor}
 \graphicspath{{fig/}}
 
-%\usepackage[linesnumbered,ruled,vlined,commentsnumbered]{algorithm2e} % use algorithm2e for typesetting algorithms
-\usepackage{algorithm, algpseudocode} % use algorithm and algorithmicx for typesetting algorithms
+\usepackage[ruled, vlined]{algorithm2e} % use algorithm2e for typesetting algorithms linesnumbered, vlined,commentsnumbered
+% \usepackage{algorithm, algpseudocode} % use algorithm and algorithmicx for typesetting algorithms
 \usepackage{mathrsfs} % for \mathscr command
+% % Pytorch style pseudo code
+% \usepackage[ruled,vlined]{algorithm2e}
+
+\newcommand{\PyComment}[1]{\ttfamily\textcolor{green!50!black}{\# #1}}  % add a "#" before the input text "#1"
+\newcommand{\PyCode}[1]{\ttfamily\textcolor{black}{#1}} % \ttfamily is the code font
 
 \usepackage{lipsum}
 
@@ -72,7 +41,7 @@
 \date{
 	% $^1$Organization 1 \\ \texttt{\{auth1, auth3\}@org1.edu}\\%
 	% $^2$Organization 2 \\ \texttt{auth3@inst2.edu}\\[2ex]%
-%	\today
+	\today
 }
 
 \begin{document}
@@ -100,29 +69,44 @@
 	measuring the cross-correlation matrix between the outputs of two identical networks fed with distorted versions of a sample,
 	and making it as close to the identity matrix as possible.
 
-	
+	\begin{algorithm}[h]
+		% \LinesNotNumbered
+		% \SetAlgoLined
+		\SetInd{1em}{1em}
+			\PyComment{this is a comment} \\
+			\PyCode{for i in range(N):} \\
+			\Indp   % start indent
+				\PyComment{your comment} \\
+				\PyCode{your code} \PyComment{inline comment} \\ 
+			\Indm % end indent, must end with this, else all the below text will be indented
+			\PyComment{this is a comment} \\
+			\PyCode{your code}
+		\caption{PyTorch pseudocode for In}
+		\label{algo:your-algo}
+	\end{algorithm}
+		
 	\subsection{How to avoid collapse}
 	\label{subsec:avoid-collapse}
 
 	\paragraph*{BN}
 	Batch normal is a method of avoiding collapse.
 
-	\begin{table}[ht]
-		\centering
-		\begin{tabular}{|c|c|}
-			\hline
-			\textbf{Odd} & \textbf{Even} \\
-			\hline
-			One & Two \\
-			\hline
-			Three & Four \\
-			\hline
-		\end{tabular}
-		\caption{This is a table}
-		\label{tbl:1}
-	\end{table}
+	% \begin{table}[ht]
+	% 	\centering
+	% 	\begin{tabular}{|c|c|}
+	% 		\hline
+	% 		\textbf{Odd} & \textbf{Even} \\
+	% 		\hline
+	% 		One & Two \\
+	% 		\hline
+	% 		Three & Four \\
+	% 		\hline
+	% 	\end{tabular}
+	% 	\caption{This is a table}
+	% 	\label{tbl:1}
+	% \end{table}
 
-	Table~\ref*{tbl:1} is an example of a table.
+	% Table~\ref*{tbl:1} is an example of a table.
 	
 	\section{Related works}
 	\label{sec:related}
@@ -148,13 +132,13 @@
 	\section{Method}
 
 	\subsection{Motivation and Intuitions}
-	Please see Figure~\ref{fig:example} for the visualization of our method.
-	\begin{figure}[ht]
-		\centering
-		\includegraphics[width=0.3\textwidth]{example}
-		\caption{An example of a figure}
-		\label{fig:example}
-	\end{figure}
+	% Please see Figure~\ref{fig:example} for the visualization of our method.
+	% \begin{figure}[ht]
+	% 	\centering
+	% 	\includegraphics[width=0.3\textwidth]{example}
+	% 	\caption{An example of a figure}
+	% 	\label{fig:example}
+	% \end{figure}
 
 	\cite{van2018representation}p2-3
 	When predicting future information using auto-regressive model $p(x_t|x_{<t})$, we instead encode the target $x_t$ and context $x_{<t}$ into a compact distributed vector representations $z_t$ and $z_{<t}$.
