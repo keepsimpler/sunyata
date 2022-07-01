@@ -27,14 +27,6 @@ def across_loss_fn(x: torch.Tensor, y: torch.Tensor):
     # loss = (min_loss.sum() - max_loss.sum()) / (torch.numel(cosine_loss))
     loss = 2 + min_loss.mean() - max_loss.mean()    
 
-def infoNCE(z1:torch.Tensor, z2:torch.Tensor, temperature=0.1):
-    logits = torch.einsum('b s n, b t n -> b s t', z1, z2)   # z1 @ z2.T
-    logits /= temperature
-    batch_size, seq_len, _ = z1.shape
-    labels = torch.arange(0, seq_len, dtype=torch.long).repeat(batch_size).reshape(batch_size, seq_len).cuda()
-    loss = F.cross_entropy(logits, labels)
-    return loss
-
 
 @dataclass
 class BYOL_CLM_Cfg(BaseCfg):

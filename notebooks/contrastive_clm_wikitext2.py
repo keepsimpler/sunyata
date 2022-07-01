@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 import pytorch_lightning as pl
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.loss import infoNCE
 
 # %%
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
@@ -58,14 +59,6 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
-def infoNCE(z1:torch.Tensor, z2:torch.Tensor, temperature=1.):
-    logits = torch.einsum('b s n, b t n -> b s t', z1, z2) / 8  # z1 @ z2.T
-    logits /= temperature
-    batch_size, seq_len, _ = z1.shape
-    labels = torch.arange(0, seq_len, dtype=torch.long).repeat(batch_size).reshape(batch_size, seq_len).cuda()
-    loss = F.cross_entropy(logits, labels)
-    return loss
-
 # %%
 class LatentCLM(BaseModule):
     def __init__(self, cfg:LatentCLMCfg):
