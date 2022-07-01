@@ -56,3 +56,7 @@ class Residual(nn.Module):
         return self.fn(x) + x
 
 
+def set_requires_grad(model:nn.Module, val: bool):
+    for p in model.parameters():
+        p.requires_grad = val
+

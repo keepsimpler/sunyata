@@ -6,13 +6,8 @@ from torch import nn
 import torch.nn.functional as F
 from pytorch_lightning import Callback, LightningModule, Trainer
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, set_requires_grad
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
-
-
-def set_requires_grad(model, val):
-    for p in model.parameters():
-        p.requires_grad = val
 
 
 # loss function
@@ -128,11 +123,12 @@ class BatchNorm(nn.Module):
 
 
 class BYOL_EMA(Callback):
-    def __init__(self, initial_tau: float=0.999, do_tau_update: bool=True):
+    def __init__(self, initial_ema_tau: float=0.99, initial_center_tau: float=0.99, do_ema_tau_update: bool=True):
         super().__init__()
-        self.initial_tau = initial_tau
-        self.current_tau = initial_tau
-        self.do_tau_update = do_tau_update
+        self.initial_ema_tau = initial_ema_tau
+        self.current_ema_tau = initial_ema_tau
+        self.do_ema_tau_update = do_ema_tau_update
+        self.initial_center_tau = initial_center_tau
 
     def on_train_batch_end(
         self, 
@@ -148,14 +144,19 @@ class BYOL_EMA(Callback):
 
         self.update_weights(online_encoder, target_encoder)
 
-        if self.do_tau_update:
-            self.current_tau = self.update_tau(pl_module, trainer)
+        if self.do_ema_tau_update:
+            self.current_ema_tau = self.update_tau(pl_module, trainer)
+
+        old_teacher_centers = pl_module.teacher_centers
+        last_teacher_centers = pl_module.last_teacher_centers
+        new_teacher_centers = self.initial_center_tau * old_teacher_centers + (1 - self.initial_center_tau) * last_teacher_centers
+        pl_module.teacher_centers.copy_(new_teacher_centers)
 
     def update_tau(self, pl_module: LightningModule, trainer: Trainer) -> float:
         max_steps = len(trainer.train_dataloader) * trainer.max_epochs
-        tau = 1 - (1 - self.initial_tau) * (math.cos(math.pi * pl_module.global_step / max_steps) + 1) / 2
+        tau = 1 - (1 - self.initial_ema_tau) * (math.cos(math.pi * pl_module.global_step / max_steps) + 1) / 2
         return tau
 
     def update_weights(self, online_encoder: nn.Module, target_encoder: nn.Module):
         for online_params, target_params in zip(online_encoder.parameters(), target_encoder.parameters()):
-            target_params.data = self.current_tau * target_params.data + (1 - self.current_tau) * online_params.data
+            target_params.data = self.current_ema_tau * target_params.data + (1 - self.current_ema_tau) * online_params.data
