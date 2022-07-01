@@ -1,4 +1,4 @@
-# %%
+# %% https://pytorch-lightning.readthedocs.io/en/latest/notebooks/lightning_examples/barlow-twins.html
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -112,7 +112,7 @@ def show(imgs, ncols=8):
         axs[i//ncols, i%ncols].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
 
 # %%
-class BarlowTwinsLoss(nn.Module):
+class BarlowTwinsLoss2d(nn.Module):
     def __init__(self, batch_size, lambda_coeff=5e-3, z_dim=128):
         super().__init__()
 
@@ -137,3 +137,30 @@ class BarlowTwinsLoss(nn.Module):
 
         loss = on_diag + self.lambda_coeff * off_diag
         return loss
+
+
+class BarlowTwinsLoss3d(nn.Module):
+    def __init__(self, seq_len, lambda_coeff=5e-3):
+        super().__init__()
+
+        self.seq_len = seq_len
+        self.lambda_coeff = lambda_coeff
+
+    def off_diagonal_ele(self, x:torch.Tensor):
+        b, n, m = x.shape
+        assert n == m
+        return x.flatten(start_dim=1)[:,:-1].view(-1, n-1, n+1)[:,:,1:].flatten(start_dim=1)
+
+    def forward(self, z1, z2):
+        # N x S x D, where N is the batch_size, S is the sequence length and D is output dim of projection head
+        z1_norm = (z1 - torch.mean(z1, dim=(0,1))) / torch.std(z1, dim=(0,1))
+        z2_norm = (z2 - torch.mean(z2, dim=(0,1))) / torch.std(z2, dim=(0,1))
+
+        cross_corr = torch.einsum('b s n, b s m -> b n m', z1_norm, z2_norm)
+
+        on_diag = torch.diagonal(cross_corr, dim1=1, dim2=2).add_(-1).pow_(2).sum(-1).mean()
+        off_diag = self.off_diagonal_ele(cross_corr).pow_(2).sum(-1).mean()
+
+        loss = on_diag + self.lambda_coeff * off_diag
+        return loss
+
