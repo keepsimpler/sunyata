@@ -123,7 +123,10 @@
 
 	However, soft targets are the output of the last layer of the teacher model, and thus fails to address the intermediate-level representation(supervision) from the teacher model, which turns out to be very important for representation learning using very deep neural networks.
 
-	
+	\subsection{Contrastive learning in NLP}
+	\cite{rethmeier2021primer}
+	Contrastive self-supervised learning has recently success in image representation pretraining by learning to contrast input-input pairs of augmented images as either similar or dissimilar.
+	However, in NLP, automated creation of text input augmentations is still very challenging because a single token can invert the meaning of a sentence.
 
 	\subsection{How to generate positive sample pairs}
 	\paragraph*{Masking}
