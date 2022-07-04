@@ -13,6 +13,7 @@ def infoNCE(z1:torch.Tensor, z2:torch.Tensor, temperature:float=1.):
 
 class InfoNCE(nn.Module):
     def __init__(self, temperature:float = 1.):
+        super().__init__()
         self.temperature = temperature
 
     def forward(self, z1:torch.Tensor, z2:torch.Tensor):
