@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import pytorch_lightning as pl
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
-from sunyata.pytorch.arch.loss import infoNCE
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, set_requires_grad
+from sunyata.pytorch.arch.loss import InfoNCE
 
 # %%
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
@@ -21,13 +21,15 @@ class LatentCLMCfg(BaseCfg):
     vocab_size: int = None
     seq_len: int = None
     hidden_dim: int = None
+    temperature: float = None
+    alpha: float = None
     transformer: TransformerCfg = None
 
 # %%
 hidden_dim = 64
 cfg = LatentCLMCfg(
     vocab_size = 10000,
-    seq_len = 384,
+    seq_len = 256,
     hidden_dim = hidden_dim,
     transformer = TransformerCfg(
         hidden_dim = hidden_dim,
@@ -35,7 +37,8 @@ cfg = LatentCLMCfg(
         expanded_dim= 2*hidden_dim,
         is_softmax=True,
     ),
-
+    temperature = None,
+    alpha = 0.,
     batch_size = 64,
     num_layers = 8,
     num_epochs = 1,
@@ -59,6 +62,60 @@ input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 
 # %%
+class LatentAndCLM(BaseModule):
+    def __init__(self, cfg:LatentCLMCfg):
+        super().__init__(cfg)
+        self.save_hyperparameters('cfg')
+
+        self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
+        torch.nn.init.xavier_normal_(self.embed.weight.data)
+        self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
+        self.digup.weight = self.embed.weight  # do not add .data
+
+        self.layers = nn.Sequential(
+            nn.Sequential(*[
+                TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)
+            ]),
+        )
+        if cfg.temperature is None:
+            temperature = cfg.hidden_dim ** 0.5
+        else:
+            temperature = cfg.temperature
+        self.loss_fn = InfoNCE(temperature=temperature)
+
+    def forward(self, input, target):
+        # with torch.no_grad():
+        input_embedded = self.embed(input)
+        target_embedded = self.embed(target)
+
+        output_embedded = self.layers(input_embedded)
+        return output_embedded, target_embedded
+
+    def _step(self, batch, mode="train"):  # or "val"
+        input, target = batch
+        output_embedded, target_embedded = self.forward(input, target)
+        # target_embedded.detach_()
+        cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
+        self.log(mode + "_cosine_loss", cosine_loss)
+        infonce_loss = self.loss_fn(output_embedded, target_embedded)
+        logits = self.digup(output_embedded)  # output_embedded @ self.embed.weight.T  #
+        class_loss = F.cross_entropy(logits.permute(0, 2, 1), target)
+        loss = cfg.alpha * class_loss + (1 - cfg.alpha) * infonce_loss
+        self.log(mode + "_class_loss", class_loss)
+        self.log(mode + "_infonce_loss", infonce_loss)
+        self.log(mode + "_loss", loss)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        input, target = batch
+        output_embedded, target_embedded = self.forward(input, target)
+        # logits = output_embedded @ self.embed.weight.T
+        logits = self.digup(output_embedded)
+        loss = F.cross_entropy(logits.permute(0, 2, 1), target)
+        self.log("val_loss", loss)
+        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        self.log("val_accuracy", accuracy)
+
 # %%
 class LatentCLM(BaseModule):
     def __init__(self, cfg:LatentCLMCfg):
@@ -73,10 +130,12 @@ class LatentCLM(BaseModule):
                 TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)
             ]),
             # nn.LayerNorm(cfg.hidden_dim,elementwise_affine=False)
-            # BatchNorm(cfg.hidden_dim)
         )
-
-        self.loss_fn = infoNCE
+        if cfg.temperature is None:
+            temperature = cfg.hidden_dim ** 0.5
+        else:
+            temperature = cfg.temperature
+        self.loss_fn = InfoNCE(temperature=temperature)
 
     def forward(self, input, target):
         # with torch.no_grad():
@@ -99,6 +158,63 @@ class LatentCLM(BaseModule):
     def validation_step(self, batch, batch_idx):
         input, target = batch
         output_embedded, target_embedded = self.forward(input, target)
+        logits = output_embedded @ self.embed.weight.T
+        loss = F.cross_entropy(logits.permute(0, 2, 1), target)
+        self.log("val_loss", loss)
+        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        self.log("val_accuracy", accuracy)
+
+# %%
+class LatentRandCLM(BaseModule):
+    def __init__(self, cfg:LatentCLMCfg):
+        super().__init__(cfg)
+        self.save_hyperparameters('cfg')
+
+        self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
+        torch.nn.init.xavier_normal_(self.embed.weight.data)
+
+        self.layers = nn.Sequential(
+            nn.Sequential(*[
+                TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)
+            ]),
+            # nn.LayerNorm(cfg.hidden_dim,elementwise_affine=False)
+        )
+        if cfg.temperature is None:
+            self.temperature = cfg.hidden_dim ** 0.5
+        else:
+            self.temperature = cfg.temperature
+        self.loss_fn = InfoNCE(temperature=self.temperature)
+
+    def forward(self, input, target):
+        # with torch.no_grad():
+        input_embedded = self.embed(input)
+        target_embedded = self.embed(target)
+
+        output_embedded = self.layers(input_embedded)
+        return output_embedded, target_embedded
+
+    def _step(self, batch, mode="train"):  # or "val"
+        input, target = batch
+        output_embedded, target_embedded = self.forward(input, target)
+        batch_size, seq_len, hidden_dim = output_embedded.shape
+        shuffled_batch_idx = torch.randperm(batch_size, device=output_embedded.device)
+        target_embedded_shuffled = target_embedded[shuffled_batch_idx, :, :]  # .index_select(0, shuffled_batch_idx)
+        logits = torch.einsum('b s n, b t n -> b s t', output_embedded, target_embedded_shuffled)
+        # logits /= self.temperature
+        logits_diagonal = torch.einsum('b s n, b s n -> b s', output_embedded, target_embedded)
+        # logits_diagonal /= self.temperature
+        logits = logits.diagonal_scatter(logits_diagonal, dim1=1, dim2=2) / self.temperature
+        labels = torch.arange(0, seq_len, dtype=torch.long, device=output_embedded.device).repeat(batch_size).reshape(batch_size, seq_len)
+        loss = F.cross_entropy(logits, labels)
+        cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
+        self.log(mode + "cosine_loss", cosine_loss)
+        # loss = self.loss_fn(output_embedded, target_embedded)
+        self.log(mode + "_loss", loss)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        input, target = batch
+        output_embedded, target_embedded = self.forward(input, target)
         logits = output_embedded @ latent_clm.embed.weight.T
         loss = F.cross_entropy(logits.permute(0, 2, 1), target)
         self.log("val_loss", loss)
@@ -107,14 +223,14 @@ class LatentCLM(BaseModule):
 
 
 # %%
-latent_clm = LatentCLM(cfg)
+latent_clm = LatentAndCLM(cfg)
 latent_clm.summarize(max_depth=2)
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
     name="wikitext_2") # , version=2
 trainer = pl.Trainer(gpus=1, 
                      max_epochs=cfg.num_epochs, 
-                     enable_checkpointing=False,
+                     enable_checkpointing=True,
                     #  callbacks=[BYOL_EMA(cfg.ema_tau)],
                     #  limit_train_batches=100,  # 1.0 
                     #  limit_val_batches=10,  # 1.0 
@@ -123,6 +239,54 @@ trainer = pl.Trainer(gpus=1,
 
 # %%
 trainer.fit(latent_clm, wikitext2)
+checkpoint_version = latent_clm.logger.version
+
+# %%
+class LatentCLM2(BaseModule):
+    def __init__(self, cfg:LatentCLMCfg, checkpoint_path):
+        super().__init__(cfg)
+        self.save_hyperparameters('cfg')
+        self.latent_clm = LatentCLM.load_from_checkpoint(checkpoint_path)
+        set_requires_grad(self.latent_clm.layers, False)
+        self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
+        self.digup.weight.data = self.latent_clm.embed.weight.data
+
+    def forward(self, input):
+        input_embedded = self.latent_clm.embed(input)
+
+        output_embedded = self.latent_clm.layers(input_embedded)
+        logits = self.digup(output_embedded)
+        return logits
+
+    def _step(self, batch, mode="train"):  # or "val"
+        input, target = batch
+        logits = self.forward(input)
+        loss = F.cross_entropy(logits.permute(0, 2, 1), target)
+        self.log(mode + "_loss", loss)
+        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        self.log(mode + "_accuracy", accuracy)
+        return loss
+
+# %%
+import os
+checkpoint_path = os.path.join(f"./lightning_logs/wikitext_2/version_{checkpoint_version}/checkpoints/epoch=0-step=164.ckpt")
+latent_clm2 = LatentCLM2(cfg, checkpoint_path)
+# %%
+csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
+    name="wikitext_2") # , version=2
+trainer = pl.Trainer(gpus=1, 
+                     max_epochs=cfg.num_epochs, 
+                     enable_checkpointing=True,
+                    #  callbacks=[BYOL_EMA(cfg.ema_tau)],
+                    #  limit_train_batches=100,  # 1.0 
+                    #  limit_val_batches=10,  # 1.0 
+                     log_every_n_steps=50,
+                     logger=csv_logger)
+
+# %%
+trainer.fit(latent_clm2, wikitext2)
+checkpoint_version = latent_clm.logger.version
+
 
 # %%
 # for i, (input, target) in enumerate(wikitext2.train_dataloader()):
