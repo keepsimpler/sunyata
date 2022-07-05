@@ -1,0 +1,102 @@
+\documentclass[a4paper]{article}
+
+\usepackage[margin=1in]{geometry} % full-width
+
+% AMS Packages
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+
+% Unicode
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+
+% Natbib
+\usepackage[sort&compress,numbers,square]{natbib}
+\bibliographystyle{mplainnat}
+
+\usepackage{graphicx, xcolor}
+\graphicspath{{fig/}}
+
+% Author info
+\title{
+	Notes
+	}
+\author{Wenfeng Feng$^1$ \and Xin Zhang$^1$}
+
+\date{
+	% $^1$Organization 1 \\ \texttt{\{auth1, auth3\}@org1.edu}\\%
+	% $^2$Organization 2 \\ \texttt{auth3@inst2.edu}\\[2ex]%
+	\today
+}
+
+\begin{document}
+	\maketitle
+	
+	% \begin{abstract}
+	% 	\noindent\textbf{Keywords:} , , 
+	% \end{abstract}
+
+	\tableofcontents
+	
+	\section{Infomax principles}
+
+	\section{Knowledge distillation}
+	Most unsupervised methods for representation learning can be categorized as either generative or discriminative.
+	Many of generative approaches learn representation of data by building a distribution over data through first embedding data to latent space then map back.
+	While our method directly learn the representation of data in the latent space.
+
+	Knowledge is a learned mapping from input vectors to output vectors \cite{hinton2015distilling} .
+	The most popular knowledge for image classification is known as soft targets. 
+	Soft targets contain the informative dark knowledge from the teacher model.
+	Generally, the distillation loss often employs Kullback-Leibler divergence loss.
+
+	However, soft targets are the output of the last layer of the teacher model, and thus fails to address the intermediate-level representation(supervision) from the teacher model, which turns out to be very important for representation learning using very deep neural networks.
+	
+	\section{Contrastive learning}
+	\subsection{Contrastive learning in NLP}
+	\cite{rethmeier2021primer}
+	Contrastive self-supervised learning has recently success in image representation pretraining by learning to contrast input-input pairs of augmented images as either similar or dissimilar.
+	However, in NLP, automated creation of text input augmentations is still very challenging because a single token can invert the meaning of a sentence.
+	
+	\cite{kong2019mutual}
+	Many of these encoders are trained with a language modeling objective, where the representation of a context is trained to be predictive of a target token by maximizing the log likelihood of predicting this token.
+	In a casual language modeling objective, the target token is always the next token that follows the context.
+	The main idea behind contrastive learning is to divide an input data into multiple (possibly overlapping) views and maximize the mutual information between encoded representations of these views, using views derived from other inputs as negative samples.
+
+	In the contrastive learning methods that use the other samples in the same batch as negative samples, a large batch size is a key ingredient for their performance.
+	Similarly, in our contextual (structural) contrastive learning method, a large number of tokens around the target token is critical for its performance.
+	Luckily, a large number of tokens is just what we want.
+
+	\begin{equation}
+		L = -\frac{1}{S} \sum_{i=1}^S \text{log} \frac{\text{exp}(f(x_i, y_i) / \tau)}{\sum_{j} \text{exp}(f(x_i, y_j) / \tau)}
+	\end{equation}
+	where $S$ is the sequence length, $x_i \in R^d$ is the output feature vector of $i$-th token in the predicted sequence, 
+	$y_i \in R^n$ is the feature vector of $i$-th token int the target sequence,
+	$f$ is the similarity (dot product) between the output feature vector and the target feature vector.
+	If $X \in R^{s \times d}, Y \in R^{s \times d}$,
+	\begin{equation}
+		L = 
+	\end{equation}
+
+	\subsection{How to generate positive sample pairs}
+	\paragraph*{Masking}
+	\paragraph*{Dropout} \cite{gao2021simcse} In sentence similarity, for creating positive sample pairs, the same input sentence e.g. 'Two dogs are running' is passed into the pre-trained encoder twice and two different embeddings are obtained by applying independently sampled dropout masks.  
+
+
+	\subsection{Motivation and Intuitions}
+
+	\cite{van2018representation}p2-3
+	When predicting future information using auto-regressive model $p(x_t|x_{<t})$, we instead encode the target $x_t$ and context $x_{<t}$ into a compact distributed vector representations $z_t$ and $z_{<t}$.
+	We learn the underlying shared information between the target and context by maximizing the mutual information of the latent representation between them $z_t$ and $z_{<t}$ defined as
+	\begin{equation}
+		I(z_t; z_{<t}) = 
+	\end{equation}
+
+	The embedding layer maps words into semantic space. We minimize the distance between semantic representation.
+
+
+%	\newpage
+	\bibliography{refs}
+		
+\end{document}
