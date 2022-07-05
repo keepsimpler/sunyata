@@ -33,8 +33,9 @@
 
 % Author info
 \title{
-	Latent representation learning by predicting near future
-	Self-distillation improve auto-regressive language modeling performance
+	Contextual (Structural) contrastive learning in language models
+	% Latent representation learning by predicting near future
+	% Self-distillation improve auto-regressive language modeling performance
 	}
 \author{Wenfeng Feng$^1$ \and Xin Zhang$^1$}
 
@@ -127,6 +128,26 @@
 	\cite{rethmeier2021primer}
 	Contrastive self-supervised learning has recently success in image representation pretraining by learning to contrast input-input pairs of augmented images as either similar or dissimilar.
 	However, in NLP, automated creation of text input augmentations is still very challenging because a single token can invert the meaning of a sentence.
+	
+	\cite{kong2019mutual}
+	Many of these encoders are trained with a language modeling objective, where the representation of a context is trained to be predictive of a target token by maximizing the log likelihood of predicting this token.
+	In a casual language modeling objective, the target token is always the next token that follows the context.
+	The main idea behind contrastive learning is to divide an input data into multiple (possibly overlapping) views and maximize the mutual information between encoded representations of these views, using views derived from other inputs as negative samples.
+
+	In the contrastive learning methods that use the other samples in the same batch as negative samples, a large batch size is a key ingredient for their performance.
+	Similarly, in our contextual (structural) contrastive learning method, a large number of tokens around the target token is critical for its performance.
+	Luckily, a large number of tokens is just what we want.
+
+	\begin{equation}
+		L = -\frac{1}{S} \sum_{i=1}^S \text{log} \frac{\text{exp}(f(x_i, y_i) / \tau)}{\sum_{j} \text{exp}(f(x_i, y_j) / \tau)}
+	\end{equation}
+	where $S$ is the sequence length, $x_i \in R^d$ is the output feature vector of $i$-th token in the predicted sequence, 
+	$y_i \in R^n$ is the feature vector of $i$-th token int the target sequence,
+	$f$ is the similarity (dot product) between the output feature vector and the target feature vector.
+	If $X \in R^{s \times d}, Y \in R^{s \times d}$,
+	\begin{equation}
+		L = 
+	\end{equation}
 
 	\subsection{How to generate positive sample pairs}
 	\paragraph*{Masking}
