@@ -14,20 +14,10 @@ from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
 
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
-from sunyata.pytorch.arch.byol_clm import BatchNorm
-# %%
-@dataclass
-class LatentCLMCfg(BaseCfg):
-    vocab_size: int = None
-    seq_len: int = None
-    hidden_dim: int = None
-    temperature: float = None
-    alpha: float = None
-    transformer: TransformerCfg = None
-
+from sunyata.pytorch.arch.contrastive_clm import ContrastiveCLMCfg, ContrastiveCLM, ContrastiveCLMInBatch, ContrastiveCLMRandom
 # %%
 hidden_dim = 64
-cfg = LatentCLMCfg(
+cfg = ContrastiveCLMCfg(
     vocab_size = 10000,
     seq_len = 256,
     hidden_dim = hidden_dim,
@@ -37,7 +27,7 @@ cfg = LatentCLMCfg(
         expanded_dim= 2*hidden_dim,
         is_softmax=True,
     ),
-    temperature = None,
+    temperature = 1.,
     alpha = 0.,
     batch_size = 64,
     num_layers = 8,
@@ -63,7 +53,7 @@ input.shape, target.shape
 
 # %%
 class LatentAndCLM(BaseModule):
-    def __init__(self, cfg:LatentCLMCfg):
+    def __init__(self, cfg:ContrastiveCLMCfg):
         super().__init__(cfg)
         self.save_hyperparameters('cfg')
 
@@ -117,113 +107,7 @@ class LatentAndCLM(BaseModule):
         self.log("val_accuracy", accuracy)
 
 # %%
-class LatentCLM(BaseModule):
-    def __init__(self, cfg:LatentCLMCfg):
-        super().__init__(cfg)
-        self.save_hyperparameters('cfg')
-
-        self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
-        torch.nn.init.xavier_normal_(self.embed.weight.data)
-
-        self.layers = nn.Sequential(
-            nn.Sequential(*[
-                TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)
-            ]),
-            # nn.LayerNorm(cfg.hidden_dim,elementwise_affine=False)
-        )
-        if cfg.temperature is None:
-            temperature = cfg.hidden_dim ** 0.5
-        else:
-            temperature = cfg.temperature
-        self.loss_fn = InfoNCE(temperature=temperature)
-
-    def forward(self, input, target):
-        # with torch.no_grad():
-        input_embedded = self.embed(input)
-        target_embedded = self.embed(target)
-
-        output_embedded = self.layers(input_embedded)
-        return output_embedded, target_embedded
-
-    def _step(self, batch, mode="train"):  # or "val"
-        input, target = batch
-        output_embedded, target_embedded = self.forward(input, target)
-        # target_embedded.detach_()
-        cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
-        self.log(mode + "cosine_loss", cosine_loss)
-        loss = self.loss_fn(output_embedded, target_embedded)
-        self.log(mode + "_loss", loss)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        input, target = batch
-        output_embedded, target_embedded = self.forward(input, target)
-        logits = output_embedded @ self.embed.weight.T
-        loss = F.cross_entropy(logits.permute(0, 2, 1), target)
-        self.log("val_loss", loss)
-        accuracy = (logits.argmax(dim=-1) == target).float().mean()
-        self.log("val_accuracy", accuracy)
-
-# %%
-class LatentRandCLM(BaseModule):
-    def __init__(self, cfg:LatentCLMCfg):
-        super().__init__(cfg)
-        self.save_hyperparameters('cfg')
-
-        self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
-        torch.nn.init.xavier_normal_(self.embed.weight.data)
-
-        self.layers = nn.Sequential(
-            nn.Sequential(*[
-                TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)
-            ]),
-            # nn.LayerNorm(cfg.hidden_dim,elementwise_affine=False)
-        )
-        if cfg.temperature is None:
-            self.temperature = cfg.hidden_dim ** 0.5
-        else:
-            self.temperature = cfg.temperature
-        self.loss_fn = InfoNCE(temperature=self.temperature)
-
-    def forward(self, input, target):
-        # with torch.no_grad():
-        input_embedded = self.embed(input)
-        target_embedded = self.embed(target)
-
-        output_embedded = self.layers(input_embedded)
-        return output_embedded, target_embedded
-
-    def _step(self, batch, mode="train"):  # or "val"
-        input, target = batch
-        output_embedded, target_embedded = self.forward(input, target)
-        batch_size, seq_len, hidden_dim = output_embedded.shape
-        shuffled_batch_idx = torch.randperm(batch_size, device=output_embedded.device)
-        target_embedded_shuffled = target_embedded[shuffled_batch_idx, :, :]  # .index_select(0, shuffled_batch_idx)
-        logits = torch.einsum('b s n, b t n -> b s t', output_embedded, target_embedded_shuffled)
-        # logits /= self.temperature
-        logits_diagonal = torch.einsum('b s n, b s n -> b s', output_embedded, target_embedded)
-        # logits_diagonal /= self.temperature
-        logits = logits.diagonal_scatter(logits_diagonal, dim1=1, dim2=2) / self.temperature
-        labels = torch.arange(0, seq_len, dtype=torch.long, device=output_embedded.device).repeat(batch_size).reshape(batch_size, seq_len)
-        loss = F.cross_entropy(logits, labels)
-        cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
-        self.log(mode + "cosine_loss", cosine_loss)
-        # loss = self.loss_fn(output_embedded, target_embedded)
-        self.log(mode + "_loss", loss)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        input, target = batch
-        output_embedded, target_embedded = self.forward(input, target)
-        logits = output_embedded @ latent_clm.embed.weight.T
-        loss = F.cross_entropy(logits.permute(0, 2, 1), target)
-        self.log("val_loss", loss)
-        accuracy = (logits.argmax(dim=-1) == target).float().mean()
-        self.log("val_accuracy", accuracy)
-
-
-# %%
-latent_clm = LatentAndCLM(cfg)
+latent_clm = ContrastiveCLMRandom(cfg)
 latent_clm.summarize(max_depth=2)
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
@@ -243,10 +127,10 @@ checkpoint_version = latent_clm.logger.version
 
 # %%
 class LatentCLM2(BaseModule):
-    def __init__(self, cfg:LatentCLMCfg, checkpoint_path):
+    def __init__(self, cfg:ContrastiveCLMCfg, checkpoint_path):
         super().__init__(cfg)
         self.save_hyperparameters('cfg')
-        self.latent_clm = LatentCLM.load_from_checkpoint(checkpoint_path)
+        self.latent_clm = ContrastiveCLM.load_from_checkpoint(checkpoint_path)
         set_requires_grad(self.latent_clm.layers, False)
         self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
         self.digup.weight.data = self.latent_clm.embed.weight.data
