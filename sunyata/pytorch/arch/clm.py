@@ -163,7 +163,7 @@ class TransformerCLM(BaseModule):
         loss = F.cross_entropy(logits, target)
         self.log(mode + "_loss", loss)
         accuracy = (logits.argmax(dim=1) == target).float().mean()
-        self.log(mode + "_accuracy", accuracy)
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
 
 
