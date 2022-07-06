@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 import pytorch_lightning as pl
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule, set_requires_grad
-from sunyata.pytorch.arch.loss import InfoNCE
+from sunyata.pytorch.arch.loss import InfoNCE, ECELoss
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
 
@@ -37,6 +37,7 @@ class ContrastiveCLM(BaseModule):
         else:
             self.temperature = cfg.temperature
         self.loss_fn = InfoNCE(temperature=self.temperature)
+        self.ece_loss = ECELoss()
 
         self.cfg = cfg
 
@@ -65,6 +66,10 @@ class ContrastiveCLM(BaseModule):
         self.log("val_loss", loss, on_step=True, on_epoch=True)
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
         self.log("val_accuracy", accuracy, on_step=True, on_epoch=True)
+        ece_loss, avg_confidence, avg_accuracy = self.ece_loss(logits, target)
+        self.log("ece_loss", ece_loss, on_step=True, on_epoch=True)
+        self.log("avg_confidence", avg_confidence, on_step=True, on_epoch=True)
+        self.log("avg_accuracy", avg_accuracy, on_step=True, on_epoch=True)
 
 
 
@@ -77,6 +82,7 @@ class ContrastiveCLMInBatch(ContrastiveCLM):
         batch_size, seq_len, hidden_dim = output_embedded.shape
         shuffled_batch_idx = torch.randperm(batch_size, device=output_embedded.device)
         target_embedded_shuffled = target_embedded[shuffled_batch_idx, :, :]  # .index_select(0, shuffled_batch_idx)
+        
         logits = torch.einsum('b s n, b t n -> b s t', output_embedded, target_embedded_shuffled)
         logits_diagonal = torch.einsum('b s n, b s n -> b s', output_embedded, target_embedded)
         logits = logits.diagonal_scatter(logits_diagonal, dim1=1, dim2=2)
