@@ -55,7 +55,7 @@ class ContrastiveCLM(BaseModule):
         loss = self.loss_fn(output_embedded, target_embedded)
         self.log(mode + "_loss", loss)
         cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
-        self.log(mode + "cosine_loss", cosine_loss)
+        self.log(mode + "cosine_loss", cosine_loss, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -63,9 +63,9 @@ class ContrastiveCLM(BaseModule):
         output_embedded, target_embedded = self.forward(input, target)
         logits = output_embedded @ self.embed.weight.T
         loss = F.cross_entropy(logits.permute(0, 2, 1), target)
-        self.log("val_loss", loss, on_step=True, on_epoch=True)
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
-        self.log("val_accuracy", accuracy, on_step=True, on_epoch=True)
+        self.log("val_accuracy", accuracy, on_step=True, on_epoch=True, prog_bar=True)
         ece_loss, avg_confidence, avg_accuracy = self.ece_loss(logits, target)
         self.log("ece_loss", ece_loss, on_step=True, on_epoch=True)
         self.log("avg_confidence", avg_confidence, on_step=True, on_epoch=True)
