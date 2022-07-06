@@ -58,7 +58,7 @@ class ContrastiveCLM(BaseModule):
         self.log(mode + "cosine_loss", cosine_loss, prog_bar=True)
         logits = output_embedded @ self.embed.weight.T
         class_loss = F.cross_entropy(logits.permute(0, 2, 1), target)
-        self.log("train_loss", class_loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log("train_class_loss", class_loss, on_step=True, on_epoch=True, prog_bar=True)
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
         self.log("train_accuracy", accuracy, on_step=True, on_epoch=True, prog_bar=True)
         return loss
