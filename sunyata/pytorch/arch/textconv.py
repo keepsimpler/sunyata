@@ -19,7 +19,7 @@ class TextConvCfg(BaseCfg):
 
     embed_init_func: Callable = nn.init.xavier_normal_  # nn.init.zero_
 
-    grouped: bool = False
+    groups: int = 64
 
     is_ff: bool = False
     expansion: int = 2
@@ -44,7 +44,7 @@ class ResConvCLM(BaseModule):
         self.layers = nn.Sequential(*[
             nn.Sequential(
                 Residual(nn.Sequential(
-                    Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
+                    Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size, groups=cfg.groups),
                     nn.GELU(),
                     cfg.norm_layer(cfg.hidden_dim)
                 )),
@@ -120,7 +120,7 @@ class BayesConvCLM(ResConvCLM):
         self.layers = nn.Sequential(*[
             nn.Sequential(
                 Residual(nn.Sequential(
-                    Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size, grouped=cfg.grouped),
+                    Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size, groups=cfg.groups),
                     nn.GELU(),
                     cfg.norm_layer(cfg.hidden_dim)
                 )),
@@ -162,9 +162,9 @@ class BayesConvCLM(ResConvCLM):
 
 
 class Conv1dWithLeftPad(nn.Module):
-    def __init__(self, hidden_dim: int, kernel_size: int, grouped: bool=True):
+    def __init__(self, hidden_dim: int, kernel_size: int, groups: int):
         super().__init__()
-        self.conv1d = nn.Conv1d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim if grouped else 1)
+        self.conv1d = nn.Conv1d(hidden_dim, hidden_dim, kernel_size, groups=groups)
         self.kernel_size = kernel_size
 
     def forward(self, x):

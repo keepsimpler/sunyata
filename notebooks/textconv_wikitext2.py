@@ -16,8 +16,13 @@ cfg = TextConvCfg(
     hidden_dim = 184,
     vocab_size = 1000,
     seq_len = 128,
-    batch_size = 16,
+    batch_size = 64,
     kernel_size = 3,
+    grouped = False,
+
+    is_ff = True,
+    expansion = 2,
+
     num_layers = 4,
 
     num_epochs = 1,
