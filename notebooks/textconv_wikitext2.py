@@ -18,10 +18,11 @@ cfg = TextConvCfg(
     seq_len = 256,
     batch_size = 64,
     kernel_size = 3,
-    groups = 64,
+    groups = 1,
 
     is_ff = True,
     expansion = 2,
+    norm_layer = nn.BatchNorm1d,
 
     num_layers = 1,
 
@@ -64,7 +65,6 @@ trainer = pl.Trainer(gpus=1,
 
 # %%
 trainer.fit(textconv, wikitext2)
-
 
 
 # %%

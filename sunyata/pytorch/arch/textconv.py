@@ -17,7 +17,7 @@ class TextConvCfg(BaseCfg):
 
     kernel_size: int = 3
 
-    embed_init_func: Callable = nn.init.xavier_normal_  # nn.init.zero_
+    embed_init_func: Callable = nn.init.xavier_normal_  # nn.init.zeros_
 
     groups: int = 64
 
@@ -46,7 +46,8 @@ class ResConvCLM(BaseModule):
                 Residual(nn.Sequential(
                     Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size, groups=cfg.groups),
                     nn.GELU(),
-                    cfg.norm_layer(cfg.hidden_dim)
+                    cfg.norm_layer(cfg.hidden_dim),
+                    nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1)
                 )),
                 Residual(nn.Sequential(
                     nn.Conv1d(cfg.hidden_dim, cfg.expansion * cfg.hidden_dim if cfg.is_ff else cfg.hidden_dim, kernel_size=1),
@@ -82,20 +83,20 @@ class SumConvCLM(ResConvCLM):
     """
     Summed Convolution Neural Network for Causal Language Modeling
     """
-    def __init__(self, cfg:TextConvCfg):
-        super().__init__(cfg)
-        # nn.init.zeros_(self.embed.weight.data)
-        self.layers = nn.Sequential(*[
-            nn.Sequential(
-                Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
-                nn.GELU(),
-                nn.BatchNorm1d(cfg.hidden_dim),
-                nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim*2, kernel_size=1),
-                nn.GELU(),
-                nn.Conv1d(cfg.hidden_dim*2, cfg.hidden_dim, kernel_size=1),
-                nn.BatchNorm1d(cfg.hidden_dim)
-            ) for _ in range(cfg.num_layers)
-        ])
+    # def __init__(self, cfg:TextConvCfg):
+    #     super().__init__(cfg)
+    #     # nn.init.zeros_(self.embed.weight.data)
+    #     self.layers = nn.Sequential(*[
+    #         nn.Sequential(
+    #             Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
+    #             nn.GELU(),
+    #             nn.BatchNorm1d(cfg.hidden_dim),
+    #             nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim*2, kernel_size=1),
+    #             nn.GELU(),
+    #             nn.Conv1d(cfg.hidden_dim*2, cfg.hidden_dim, kernel_size=1),
+    #             nn.BatchNorm1d(cfg.hidden_dim)
+    #         ) for _ in range(cfg.num_layers)
+    #     ])
 
     def forward(self, x):
         x = self.embed(x)
