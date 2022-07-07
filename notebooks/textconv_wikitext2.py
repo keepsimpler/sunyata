@@ -13,17 +13,17 @@ from sunyata.pytorch.arch.textconv import ResConvCLM, SumConvCLM, BayesConvCLM, 
 
 # %%
 cfg = TextConvCfg(
-    hidden_dim = 184,
+    hidden_dim = 64,
     vocab_size = 1000,
-    seq_len = 128,
+    seq_len = 256,
     batch_size = 64,
     kernel_size = 3,
-    grouped = False,
+    groups = 64,
 
     is_ff = True,
     expansion = 2,
 
-    num_layers = 4,
+    num_layers = 1,
 
     num_epochs = 1,
     learning_rate = 1e-3
@@ -49,7 +49,7 @@ input.shape, target.shape
 textconv = ResConvCLM(cfg)
 # textconv = SumConvCLM(cfg)
 # textconv = BayesConvCLM(cfg)
-textconv.summarize(max_depth=2)
+textconv.summarize(max_depth=3)
 
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
@@ -64,6 +64,7 @@ trainer = pl.Trainer(gpus=1,
 
 # %%
 trainer.fit(textconv, wikitext2)
+
 
 
 # %%
