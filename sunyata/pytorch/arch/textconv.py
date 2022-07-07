@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Callable
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
@@ -16,6 +17,13 @@ class TextConvCfg(BaseCfg):
 
     kernel_size: int = 3
 
+    embed_init_func: Callable = nn.init.xavier_normal_  # nn.init.zero_
+
+    grouped: bool = False
+
+    is_ff: bool = False
+    expansion: int = 2
+
     # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True) nn.BatchNorm1d
     norm_layer: nn.Module =  nn.BatchNorm1d
 
@@ -29,8 +37,9 @@ class ResConvCLM(BaseModule):
         self.save_hyperparameters("cfg")
 
         self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
-        # nn.init.zeros_(self.embed.weight.data)
-        self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size)
+        cfg.embed_init_func(self.embed.weight.data)
+        self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
+        self.digup.weight = self.embed.weight
 
         self.layers = nn.Sequential(*[
             nn.Sequential(
@@ -40,9 +49,9 @@ class ResConvCLM(BaseModule):
                     cfg.norm_layer(cfg.hidden_dim)
                 )),
                 Residual(nn.Sequential(
-                    nn.Conv1d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
+                    nn.Conv1d(cfg.hidden_dim, cfg.expansion * cfg.hidden_dim if cfg.is_ff else cfg.hidden_dim, kernel_size=1),
                     nn.GELU(),
-                    # nn.Conv1d(cfg.hidden_dim*2, cfg.hidden_dim, kernel_size=1),
+                    nn.Conv1d(cfg.expansion * cfg.hidden_dim, cfg.hidden_dim, kernel_size=1) if cfg.is_ff else nn.Identity(),
                     cfg.norm_layer(cfg.hidden_dim)
                 ))
             ) for _ in range(cfg.num_layers)
@@ -65,7 +74,7 @@ class ResConvCLM(BaseModule):
         loss = F.cross_entropy(logits, target)
         self.log(mode + "_loss", loss)
         accuracy = (logits.argmax(dim=1) == target).float().mean()
-        self.log(mode + "_accuracy", accuracy)
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
 
 
@@ -111,7 +120,7 @@ class BayesConvCLM(ResConvCLM):
         self.layers = nn.Sequential(*[
             nn.Sequential(
                 Residual(nn.Sequential(
-                    Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size),
+                    Conv1dWithLeftPad(cfg.hidden_dim, cfg.kernel_size, grouped=cfg.grouped),
                     nn.GELU(),
                     cfg.norm_layer(cfg.hidden_dim)
                 )),
@@ -153,9 +162,9 @@ class BayesConvCLM(ResConvCLM):
 
 
 class Conv1dWithLeftPad(nn.Module):
-    def __init__(self, hidden_dim: int, kernel_size: int):
+    def __init__(self, hidden_dim: int, kernel_size: int, grouped: bool=True):
         super().__init__()
-        self.conv1d = nn.Conv1d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim)
+        self.conv1d = nn.Conv1d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim if grouped else 1)
         self.kernel_size = kernel_size
 
     def forward(self, x):

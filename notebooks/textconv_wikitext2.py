@@ -8,20 +8,20 @@ import pytorch_lightning as pl
 # %%
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
                                             shift_one_token,
-                                            split_to_two_parts)
+                                        )
 from sunyata.pytorch.arch.textconv import ResConvCLM, SumConvCLM, BayesConvCLM, TextConvCfg
 
 # %%
 cfg = TextConvCfg(
     hidden_dim = 184,
-    vocab_size = 10000,
+    vocab_size = 1000,
     seq_len = 128,
     batch_size = 16,
     kernel_size = 3,
-    num_layers = 10,
+    num_layers = 4,
 
     num_epochs = 1,
-    learning_rate = 5e-3
+    learning_rate = 1e-3
 )
 
 # %%
