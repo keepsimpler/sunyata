@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import repeat
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 from sunyata.pytorch.layer.transformer import TransformerLayer, TransformerLayerNoShortcut, TransformerLayerPostNorm, TransformerLayerPreNorm
 
 from sunyata.pytorch.layer.transformer import TransformerCfg
@@ -122,6 +123,49 @@ class SelfDistillationCLM(BaseModule):
         return loss
 
 
+class TransformerCLMBayes(BaseModule):
+    """
+    Transformer for Causal Language Modeling.    
+    """
+    def __init__(self, cfg: TransformerCLMCfg, model: type=TransformerLayer):
+        super().__init__(cfg)
+        self.save_hyperparameters("cfg")
+        self.layers = nn.Sequential(*[model(cfg.transformer) for _ in range(cfg.num_layers)])
+
+        self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
+        torch.nn.init.xavier_normal_(self.embed.weight.data)
+        self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
+        self.digup.weight = self.embed.weight
+
+        log_prior = torch.zeros(1, 1, cfg.vocab_size)
+        self.register_buffer('log_prior', log_prior)
+        
+        self.cfg = cfg
+        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        batch_size, seq_len = x.shape
+        log_prior = repeat(self.log_prior, '1 1 n -> b s n', b=batch_size, s=seq_len)
+
+        x = self.embed(x)
+
+        for layer in self.layers:
+            x = layer(x)
+            logits = self.digup(x)
+            log_prior = log_bayesian_iteration(log_prior, logits)
+
+        return log_prior
+
+    def _step(self, batch, mode="train"):  # or "val"
+        input, target = batch
+        log_posterior = self.forward(input)
+        log_posterior = log_posterior.permute(0, 2, 1)
+        loss = F.nll_loss(log_posterior, target)
+        self.log(mode + "_loss", loss, prog_bar=True)
+        accuracy = (log_posterior.argmax(dim=1) == target).float().mean()
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
+        return loss
+
+
 class TransformerCLM(BaseModule):
     """
     Transformer for Causal Language Modeling.    
@@ -132,7 +176,6 @@ class TransformerCLM(BaseModule):
         self.layers = nn.Sequential(*[model(cfg.transformer) for _ in range(cfg.num_layers)])
 
         self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
-        self.last_norm = nn.LayerNorm(cfg.hidden_dim)
         self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
         self.init_weights()
 
@@ -151,8 +194,6 @@ class TransformerCLM(BaseModule):
         for layer in self.layers:
             x = layer(x)
 
-        if self.cfg.is_last_norm:
-            x = self.last_norm(x)
         logits = self.digup(x)
         return logits
 
