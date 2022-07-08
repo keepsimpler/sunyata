@@ -10,7 +10,6 @@ def infoNCE(z1:torch.Tensor, z2:torch.Tensor, temperature:float=1.):
     loss = F.cross_entropy(logits, labels)
     return loss
 
-
 class InfoNCE(nn.Module):
     def __init__(self, temperature:float = 1.):
         super().__init__()
@@ -18,6 +17,24 @@ class InfoNCE(nn.Module):
 
     def forward(self, z1:torch.Tensor, z2:torch.Tensor):
         return infoNCE(z1, z2, self.temperature)
+
+
+def barlow_twins(z1:torch.Tensor, z2:torch.Tensor, temperature:float=1.):
+    logits = torch.einsum('b s n, b s m -> b n m', z1, z2)
+    logits /= temperature
+    batch_size, seq_len, hidden_dim = z1.shape
+    labels = torch.arange(0, hidden_dim, dtype=torch.long, device=z1.device).repeat(batch_size).reshape(batch_size, hidden_dim)
+    loss = F.cross_entropy(logits, labels)
+    return loss
+
+
+class BarlowTwins(nn.Module):
+    def __init__(self, temperature:float = 1.):
+        super().__init__()
+        self.temperature = temperature
+
+    def forward(self, z1:torch.Tensor, z2:torch.Tensor):
+        return barlow_twins(z1, z2, self.temperature)
 
 
 # copy from https://github.com/gpleiss/temperature_scaling/blob/126a50975e/temperature_scaling.py
