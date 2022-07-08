@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import StepLR, OneCycleLR, ReduceLROnPlateau
 from einops import repeat
 from einops.layers.torch import Rearrange
-import warmup_scheduler
+# import warmup_scheduler
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule
 
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
@@ -91,7 +91,7 @@ class ViT(BaseModule):
         loss = F.cross_entropy(logits, target)
         self.log(mode + "_loss", loss)
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
-        self.log(mode + "_accuracy", accuracy)
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
 
 
