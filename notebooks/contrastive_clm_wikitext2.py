@@ -1,12 +1,12 @@
 # %%
-from dataclasses import dataclass
+# from dataclasses import dataclass
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 import pytorch_lightning as pl
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule, set_requires_grad
-from sunyata.pytorch.arch.loss import InfoNCE
+from sunyata.pytorch.arch.loss import InfoNCE, BarlowTwins, ECELoss
 
 # %%
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
@@ -14,11 +14,11 @@ from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
 
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
-from sunyata.pytorch.arch.contrastive_clm import ContrastiveCLMCfg, ContrastiveCLM, ContrastiveCLMInBatch, ContrastiveCLMRandom
+from sunyata.pytorch.arch.contrastive_clm import ContrastiveCLMCfg, ContrastiveCLM, ContrastiveCLMCov
 # %%
 hidden_dim = 64
 cfg = ContrastiveCLMCfg(
-    vocab_size = 10000,
+    vocab_size = 1000,
     seq_len = 256,
     hidden_dim = hidden_dim,
     transformer = TransformerCfg(
@@ -30,7 +30,7 @@ cfg = ContrastiveCLMCfg(
     temperature = 1.,
     alpha = 0.,
     batch_size = 64,
-    num_layers = 8,
+    num_layers = 1,
     num_epochs = 1,
     learning_rate = 1e-3 # 1e-3  3e-4
 )
@@ -107,8 +107,8 @@ class LatentAndCLM(BaseModule):
         self.log("val_accuracy", accuracy)
 
 # %%
-latent_clm = ContrastiveCLMRandom(cfg)
-latent_clm.summarize(max_depth=2)
+contrastive_clm = ContrastiveCLMCov(cfg)
+contrastive_clm.summarize(max_depth=2)
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
     name="wikitext_2") # , version=2
@@ -122,23 +122,26 @@ trainer = pl.Trainer(gpus=1,
                      logger=csv_logger)
 
 # %%
-trainer.fit(latent_clm, wikitext2)
-checkpoint_version = latent_clm.logger.version
+trainer.fit(contrastive_clm, wikitext2)
+checkpoint_version = contrastive_clm.logger.version
 
 # %%
-class LatentCLM2(BaseModule):
-    def __init__(self, cfg:ContrastiveCLMCfg, checkpoint_path):
+class ContrastiveCLMTune(BaseModule):
+    def __init__(self, cfg:ContrastiveCLMCfg, checkpoint_path, is_fine_tune:bool=False):
         super().__init__(cfg)
         self.save_hyperparameters('cfg')
-        self.latent_clm = ContrastiveCLM.load_from_checkpoint(checkpoint_path)
-        set_requires_grad(self.latent_clm.layers, False)
+        self.contrastive_clm = ContrastiveCLM.load_from_checkpoint(checkpoint_path)
+        if is_fine_tune:
+            set_requires_grad(self.contrastive_clm, False)
         self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
-        self.digup.weight.data = self.latent_clm.embed.weight.data
+        torch.nn.init.xavier_normal_(self.digup.weight.data)
+
+        # self.digup.weight.data = self.contrastive_clm.embed.weight.clone().detach()
 
     def forward(self, input):
-        input_embedded = self.latent_clm.embed(input)
+        input_embedded = self.contrastive_clm.embed(input)
 
-        output_embedded = self.latent_clm.layers(input_embedded)
+        output_embedded = self.contrastive_clm.layers(input_embedded)
         logits = self.digup(output_embedded)
         return logits
 
@@ -154,7 +157,7 @@ class LatentCLM2(BaseModule):
 # %%
 import os
 checkpoint_path = os.path.join(f"./lightning_logs/wikitext_2/version_{checkpoint_version}/checkpoints/epoch=0-step=164.ckpt")
-latent_clm2 = LatentCLM2(cfg, checkpoint_path)
+latent_clm2 = ContrastiveCLMTune(cfg, checkpoint_path, is_fine_tune=False)
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 
     name="wikitext_2") # , version=2
@@ -169,12 +172,12 @@ trainer = pl.Trainer(gpus=1,
 
 # %%
 trainer.fit(latent_clm2, wikitext2)
-checkpoint_version = latent_clm.logger.version
+# checkpoint_version = contrastive_clm.logger.version
 
 
 # %%
 # for i, (input, target) in enumerate(wikitext2.train_dataloader()):
-output_embedded, target_embedded = latent_clm(input, target)
+output_embedded, target_embedded = contrastive_clm(input, target)
 output_embedded.shape, target_embedded.shape
 # %%
 torch.std(target_embedded, dim=1), torch.mean(target_embedded, dim=1)
