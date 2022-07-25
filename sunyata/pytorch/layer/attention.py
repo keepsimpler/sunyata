@@ -44,7 +44,7 @@ class Attention(nn.Module):
             attn_mask = torch.ones((seq_len, seq_len), device=x.device, dtype=x.dtype)
             attn_mask = torch.tril(attn_mask)
             dots = dots * attn_mask
-            dots = F.normalize(dots, dim=-1, p=2)
+            # dots = F.normalize(dots, dim=-1, p=2)
 
         attn = dots
         
