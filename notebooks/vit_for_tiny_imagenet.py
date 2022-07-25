@@ -61,3 +61,5 @@ trainer = pl.Trainer(gpus=1,
 
 # %%
 trainer.fit(vit, tiny_image_net_datamodule)
+
+# %%

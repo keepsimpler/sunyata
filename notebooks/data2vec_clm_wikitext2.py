@@ -19,7 +19,7 @@ from sunyata.pytorch.arch.data2vec import Data2VecCfg, Data2VecCLM, BYOL_EMA
 hidden_dim = 64
 cfg = Data2VecCfg(
     vocab_size = 1000,
-    seq_len = 128,
+    seq_len = 256,
     hidden_dim = hidden_dim,
     ema_tau = 0.999,  # 0.9999
     normalize_targets = False,
@@ -30,8 +30,8 @@ cfg = Data2VecCfg(
     ),
 
     batch_size = 64,
-    num_layers = 6,
-    num_epochs = 10,
+    num_layers = 4,
+    num_epochs = 1,
     learning_rate = 1e-3 # 1e-3  3e-4
 )
 

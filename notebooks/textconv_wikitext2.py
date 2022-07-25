@@ -10,6 +10,7 @@ from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
                                             shift_one_token,
                                         )
 from sunyata.pytorch.arch.textconv import ResConvCLM, SumConvCLM, BayesConvCLM, TextConvCfg
+from sunyata.pytorch.layer.norm import BatchNorm1d, LayerNorm1d
 
 # %%
 cfg = TextConvCfg(
