@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class BatchNorm1d(nn.Module):
+class BatchNorm1d(nn.Module):  # a bad implement
     def __init__(self, hidden_dim, mom=0.1, eps=1e-5):
         super().__init__()
         self.mom, self.eps = mom, eps
