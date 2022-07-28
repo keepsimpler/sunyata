@@ -6,7 +6,7 @@ from einops import rearrange
 
 class Attention(nn.Module):
     def __init__(self, hidden_dim: int, num_heads: int, scale: float=None, dropout=0.,
-                 is_mask=True, is_softmax=True):
+                 is_mask=True, is_softmax=True, fore_mask=True):
         super().__init__()
         head_dim = hidden_dim // num_heads
         assert head_dim * num_heads == hidden_dim, "hidden_dim must be divisible by num_heads"
@@ -23,7 +23,7 @@ class Attention(nn.Module):
             nn.Dropout(dropout),
          )
 
-        self.is_mask, self.is_softmax = is_mask, is_softmax
+        self.is_mask, self.is_softmax, self.fore_mask = is_mask, is_softmax, fore_mask
 
     def forward(self, x):
         _, seq_len, _ = x.shape
@@ -37,7 +37,10 @@ class Attention(nn.Module):
         dots = torch.einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
         if self.is_mask and self.is_softmax:
             attn_mask = torch.full((seq_len, seq_len), -float('Inf'), device=x.device, dtype=x.dtype)
-            attn_mask = torch.triu(attn_mask, diagonal=1)
+            if self.fore_mask:
+                attn_mask = torch.triu(attn_mask, diagonal=1)
+            else:
+                attn_mask = torch.tril(attn_mask, diagonal=-1)
             dots = dots + attn_mask
             dots = self.softmax(dots)
         elif self.is_mask and not self.is_softmax:
