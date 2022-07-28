@@ -15,6 +15,7 @@ class TransformerCfg:
     attn_dropout: float = 0.
     is_mask: bool = True
     is_softmax: bool = True
+    fore_mask: bool = True
 
     # feed forward
     is_ff: bool = True
@@ -35,7 +36,7 @@ class TransformerLayer(nn.Module):
     def __init__(self, cfg:TransformerCfg):
         super().__init__()
         self.attention = Attention(cfg.hidden_dim, cfg.num_heads, cfg.attn_scale, cfg.attn_dropout,
-                                    cfg.is_mask, cfg.is_softmax) if cfg.is_attn else nn.Identity()
+                                    cfg.is_mask, cfg.is_softmax, cfg.fore_mask) if cfg.is_attn else nn.Identity()
 
         self.feed_forward = FeedForward(cfg.hidden_dim, cfg.expanded_dim, cfg.ff_act_nn, 
                                         cfg.ff_dropout) if cfg.is_ff else nn.Identity()
@@ -49,6 +50,21 @@ class TransformerLayer(nn.Module):
         x = self.ff_layernorm(x + self.feed_forward(x))
         return x
         
+
+class RevTransformerLayer(TransformerLayer):
+    def __init__(self, cfg:TransformerCfg):
+        super().__init__(cfg)
+
+    def forward1(self, x1:torch.Tensor, x2:torch.Tensor):
+        y2 = x2 + self.attention(self.attn_layernorm(x1))
+        y1 = x1 + self.feed_forward(self.ff_layernorm(y2))
+        return y1, y2
+
+    def forward2(self, y1:torch.Tensor, y2:torch.Tensor):
+        x1 = y1 - self.feed_forward(self.ff_layernorm(y2))
+        x2 = y2 - self.attention(self.attn_layernorm(x1))
+        return x1, x2
+
 
 class TransformerLayerPreNorm(TransformerLayer):
     def __init__(self, cfg:TransformerCfg):
