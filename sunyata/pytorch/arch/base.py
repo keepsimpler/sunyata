@@ -1,9 +1,33 @@
 import math
+from typing import Callable, Iterable
 import torch
 import torch.nn as nn
 from dataclasses import dataclass
 import pytorch_lightning as pl
 
+class RevSGD(torch.optim.Optimizer):
+    def __init__(
+        self,
+        params: Iterable[nn.parameter.Parameter],
+        lr: float = 1e-3,
+    ):
+        # self.params = params
+        # self.lr = lr
+        defaults = dict(lr=lr)
+        super().__init__(params, defaults)
+
+    def step(self, closure: Callable=None):
+        loss = None
+        if closure is not None:
+            loss = closure()
+        
+        for group in self.param_groups:
+            for p in group["params"]:
+                if p.grad is None:
+                    continue
+                p.data.add_(p.grad.data * group["lr"])
+
+        return loss
 
 @dataclass
 class BaseCfg:
@@ -16,6 +40,7 @@ class BaseCfg:
     weight_decay: float = None
     optimizer_method: str = "Adam"
     learning_rate_scheduler: str = "CosineAnnealing"
+    warmup_epochs: int = None
 
 
 class BaseModule(pl.LightningModule):
@@ -30,15 +55,23 @@ class BaseModule(pl.LightningModule):
         return self._step(batch, mode="val")
 
     def configure_optimizers(self):
-        if self.cfg.optimizer_method == "Adam":
+        if self.cfg.optimizer_method == "RevSGD":
+            optimizer = RevSGD(self.parameters(), lr=self.cfg.learning_rate)
+        elif self.cfg.optimizer_method == "SGD":
+            optimizer = torch.optim.SGD(self.parameters(), lr=self.cfg.learning_rate)
+        elif self.cfg.optimizer_method == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.cfg.learning_rate)
         elif self.cfg.optimizer_method == "AdamW":
             optimizer = torch.optim.AdamW(self.parameters(), lr=self.cfg.learning_rate, weight_decay=self.cfg.weight_decay)
         else:
-            raise Exception("Only support Adam and AdamW optimizer till now.")
+            raise Exception("Only supportSGD, Adam and AdamW optimizer till now.")
 
         if self.cfg.learning_rate_scheduler == "CosineAnnealing":
             lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.cfg.num_epochs)
+        elif self.cfg.learning_rate_scheduler == "LinearWarmupCosineAnnealingLR":
+            import pl_bolts
+            lr_scheduler = pl_bolts.optimizers.LinearWarmupCosineAnnealingLR(
+                optimizer, warmup_epochs=self.cfg.warmup_epochs, max_epochs=self.cfg.num_epochs)
         else:
             lr_scheduler = None
 
