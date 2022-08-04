@@ -16,8 +16,6 @@ class ConvMixerCfg(BaseCfg):
     patch_size: int = 2
     num_classes: int = 10
 
-    # is_prior_as_params: bool = False
-
 
 class ConvMixer(BaseModule):
     def __init__(self, cfg:ConvMixerCfg):
@@ -60,9 +58,9 @@ class ConvMixer(BaseModule):
         input, target = batch
         logits = self.forward(input)
         loss = F.cross_entropy(logits, target)
-        self.log(mode + "_loss", loss)
+        self.log(mode + "_loss", loss, prog_bar=True)
         accuracy = (logits.argmax(dim=1) == target).float().mean()
-        self.log(mode + "_accuracy", accuracy)
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
 
 
@@ -95,15 +93,6 @@ class BayesConvMixer(ConvMixer):
     def __init__(self, cfg:ConvMixerCfg):
         super().__init__(cfg)
 
-        self.layers = nn.ModuleList([
-            nn.Sequential(
-                nn.Conv2d(cfg.hidden_dim, cfg.hidden_dim, cfg.kernel_size, groups=cfg.hidden_dim, padding="same"),
-                nn.GELU(),
-                nn.Conv2d(cfg.hidden_dim, cfg.hidden_dim, kernel_size=1),
-                nn.GELU(),
-            ) for _ in range(cfg.num_layers)
-        ])
-        
         log_prior = torch.zeros(1, cfg.num_classes)
         self.register_buffer('log_prior', log_prior) 
 
@@ -125,9 +114,9 @@ class BayesConvMixer(ConvMixer):
         input, target = batch
         log_posterior = self.forward(input)
         loss = F.nll_loss(log_posterior, target)
-        self.log(mode + "_loss", loss)
+        self.log(mode + "_loss", loss, prog_bar=True)
         accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
-        self.log(mode + "_accuracy", accuracy)
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
 
         
