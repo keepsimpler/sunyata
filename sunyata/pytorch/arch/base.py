@@ -41,6 +41,8 @@ class BaseCfg:
     optimizer_method: str = "Adam"
     learning_rate_scheduler: str = "CosineAnnealing"
     warmup_epochs: int = None
+    warmup_start_lr: float = None
+    steps_per_epoch: int = None
 
 
 class BaseModule(pl.LightningModule):
@@ -68,10 +70,13 @@ class BaseModule(pl.LightningModule):
 
         if self.cfg.learning_rate_scheduler == "CosineAnnealing":
             lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.cfg.num_epochs)
+        elif self.cfg.learning_rate_scheduler == "OneCycleLR":
+            lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.cfg.learning_rate,
+                steps_per_epoch=self.cfg.steps_per_epoch, epochs=self.cfg.num_epochs)
         elif self.cfg.learning_rate_scheduler == "LinearWarmupCosineAnnealingLR":
             import pl_bolts
             lr_scheduler = pl_bolts.optimizers.LinearWarmupCosineAnnealingLR(
-                optimizer, warmup_epochs=self.cfg.warmup_epochs, max_epochs=self.cfg.num_epochs)
+                optimizer, warmup_epochs=self.cfg.warmup_epochs, max_epochs=self.cfg.num_epochs, warmup_start_lr=self.cfg.warmup_start_lr)
         else:
             lr_scheduler = None
 
