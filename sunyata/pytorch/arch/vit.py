@@ -1,16 +1,12 @@
 from dataclasses import dataclass
-from typing import List
-import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import StepLR, OneCycleLR, ReduceLROnPlateau
 from einops import repeat
 from einops.layers.torch import Rearrange
-# import warmup_scheduler
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule
 
-from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration, DeepBayesInferCfg
+from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
 @dataclass
@@ -89,8 +85,49 @@ class ViT(BaseModule):
         input, target = batch
         logits = self.forward(input)
         loss = F.cross_entropy(logits, target)
-        self.log(mode + "_loss", loss)
+        self.log(mode + "_loss", loss, prog_bar=True)
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
+        return loss
+
+
+class BayesViT(ViT):
+    def __init__(self, cfg:ViTCfg):
+        super().__init__(cfg)
+        log_prior = torch.zeros(1, cfg.num_classes)
+        self.register_buffer('log_prior', log_prior) 
+
+    def forward(self, img):
+        batch_size, _, _, _ = img.shape
+        log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)
+
+        x = self.to_patch_embedding(img)
+        batch_size, num_patches, _ = x.shape
+
+        cls_tokens = repeat(self.cls_token, '1 1 d -> b 1 d', b = batch_size)
+
+        x = torch.cat((cls_tokens, x), dim=1)
+        x += self.pos_embedding[:, :(num_patches + 1)]
+        x = self.dropout(x)
+
+        for layer in self.layers:
+            x = layer(x)
+
+            x_chosen = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
+
+            logits = self.mlp_head(x_chosen)
+
+            log_posterior = log_bayesian_iteration(log_prior, logits)
+            log_prior = log_posterior
+
+        return log_posterior
+
+    def _step(self, batch, mode="train"):  # or "val"
+        input, target = batch
+        log_posterior = self.forward(input)
+        loss = F.nll_loss(log_posterior, target)
+        self.log(mode + "_loss", loss, prog_bar=True)
+        accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
 
