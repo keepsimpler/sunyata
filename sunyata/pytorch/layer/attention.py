@@ -16,7 +16,7 @@ class Attention(nn.Module):
 
         self.to_qkv = nn.Linear(hidden_dim, hidden_dim * 3)
         
-        self.softmax = nn.Softmax(dim=-1) # if is_softmax else nn.Identity()
+        self.attend = nn.Softmax(dim=-1) if is_softmax else nn.Identity()
 
         self.to_out = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
@@ -42,14 +42,13 @@ class Attention(nn.Module):
             else:
                 attn_mask = torch.tril(attn_mask, diagonal=-1)
             dots = dots + attn_mask
-            dots = self.softmax(dots)
         elif self.is_mask and not self.is_softmax:
             attn_mask = torch.ones((seq_len, seq_len), device=x.device, dtype=x.dtype)
             attn_mask = torch.tril(attn_mask)
             dots = dots * attn_mask
             # dots = F.normalize(dots, dim=-1, p=2)
 
-        attn = dots
+        attn = self.attend(dots)
         
         out = torch.einsum('b h i j, b h j d -> b h i d', attn, v)
         out = rearrange(out, 'b h n d -> b n (h d)')
