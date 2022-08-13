@@ -27,13 +27,16 @@ class TinyImageNetDataModule(pl.LightningDataModule):
         return DataLoader(
             self.train_data,
             batch_size=self.batch_size,
-            shuffle=True
+            shuffle=True,
+            num_workers=4
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.val_data,
             batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=4
         )
 
 
