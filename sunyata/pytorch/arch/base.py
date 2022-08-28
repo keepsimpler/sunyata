@@ -48,6 +48,7 @@ class BaseCfg:
 class BaseModule(pl.LightningModule):
     def __init__(self, cfg:BaseCfg):
         super().__init__()
+        self.save_hyperparameters("cfg")
         self.cfg = cfg
 
     def training_step(self, batch, batch_idx):
