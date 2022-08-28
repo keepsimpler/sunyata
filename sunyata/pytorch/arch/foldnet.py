@@ -96,13 +96,11 @@ class FoldBlock(nn.Module):
 
 
 class FoldNet(BaseModule):
-    def __init__(self, cfg:FoldNetCfg, fold_num: int):
+    def __init__(self, cfg:FoldNetCfg):
         super().__init__(cfg)
         
-        assert cfg.hidden_dim % fold_num == 0
-        
         self.layers = nn.ModuleList([
-            FoldBlock(Block, cfg.hidden_dim // fold_num, cfg.kernel_size, fold_num)
+            FoldBlock(Block, cfg.hidden_dim, cfg.kernel_size, cfg.fold_num)
             for _ in range(cfg.num_layers)
         ])
 
@@ -119,15 +117,14 @@ class FoldNet(BaseModule):
         )
 
         self.cfg = cfg
-        self.fold_num = fold_num
 
     def forward(self, x):
         x = self.embed(x)
-        x = torch.chunk(x, self.fold_num, dim = 1)
+        xs = [x for _ in range(self.cfg.fold_num)]
         for layer in self.layers:
-            x= layer(*x)
-        x = torch.cat(x, dim = 1)
-        x= self.digup(x)
+            xs= layer(*xs)
+        x = xs[-1]
+        x = self.digup(x)
         return x
 
     def _step(self, batch, mode="train"):  # or "val"
