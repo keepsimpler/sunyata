@@ -156,3 +156,15 @@ class FoldNetRepeat(FoldNet):
         xs = torch.cat(xs, dim = 1)
         x = self.digup(xs)
         return x
+
+
+class FoldNetRepeat2(FoldNet):
+    def forward(self, x):
+        x = self.embed(x)
+        xs = x.repeat(1, self.cfg.fold_num, 1, 1)
+        xs = torch.chunk(xs, self.cfg.fold_num, dim = 1)
+        for layer in self.layers:
+            xs = layer(*xs)
+        x = xs[-1]
+        x = self.digup(x)
+        return x
