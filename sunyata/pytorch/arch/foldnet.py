@@ -135,3 +135,24 @@ class FoldNet(BaseModule):
         accuracy = (logits.argmax(dim=1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
+
+
+class FoldNetRepeat(FoldNet):
+    def __init__(self, cfg:FoldNetCfg):
+        super().__init__(cfg)
+        
+        self.digup = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1,1)),
+            nn.Flatten(),
+            nn.Linear(cfg.hidden_dim * cfg.fold_num, cfg.num_classes)
+        )
+
+    def forward(self, x):
+        x = self.embed(x)
+        xs = x.repeat(1, self.cfg.fold_num, 1, 1)
+        xs = torch.chunk(xs, self.cfg.fold_num, dim = 1)
+        for layer in self.layers:
+            xs = layer(*xs)
+        xs = torch.cat(xs, dim = 1)
+        x = self.digup(xs)
+        return x
