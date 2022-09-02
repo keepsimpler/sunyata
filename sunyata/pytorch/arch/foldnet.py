@@ -14,6 +14,7 @@ class FoldNetCfg(BaseCfg):
     patch_size: int = 2
     num_classes: int = 10
     fold_num: int = 1
+    drop_rate: float = 0.
 
 
 class ResConvMixer(BaseModule):
@@ -63,25 +64,27 @@ class ResConvMixer(BaseModule):
 
 
 class Block(nn.Sequential):
-    def __init__(self, hidden_dim: int, kernel_size: int):
+    def __init__(self, hidden_dim: int, kernel_size: int, drop_rate: float=0.):
         super().__init__(
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim, padding="same"),
             nn.GELU(),
             nn.BatchNorm2d(hidden_dim),
+            nn.Dropout(drop_rate),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1),
             nn.GELU(),
-            nn.BatchNorm2d(hidden_dim)
+            nn.BatchNorm2d(hidden_dim),
+            nn.Dropout(drop_rate)
         )
 
 
 class FoldBlock(nn.Module):
     "Basic block of folded ResNet"
-    def __init__(self, Unit:nn.Module, hidden_dim: int, kernel_size: int, fold_num:int):
+    def __init__(self, Unit:nn.Module, hidden_dim: int, kernel_size: int, fold_num:int, drop_rate:float=0.):
         super(FoldBlock, self).__init__()
         self.fold_num = fold_num
         units = []
         for i in range(max(1, fold_num - 1)):
-            units += [Unit(hidden_dim, kernel_size)]
+            units += [Unit(hidden_dim, kernel_size, drop_rate)]
         self.units = nn.ModuleList(units)
         
     def forward(self, *xs):
@@ -100,7 +103,7 @@ class FoldNet(BaseModule):
         super().__init__(cfg)
         
         self.layers = nn.ModuleList([
-            FoldBlock(Block, cfg.hidden_dim, cfg.kernel_size, cfg.fold_num)
+            FoldBlock(Block, cfg.hidden_dim, cfg.kernel_size, cfg.fold_num, cfg.drop_rate)
             for _ in range(cfg.num_layers)
         ])
 
