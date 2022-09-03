@@ -82,6 +82,21 @@ class Block(nn.Sequential):
             nn.Dropout(drop_rate)
         )
 
+class Block2(nn.Sequential):
+    def __init__(self, hidden_dim: int, kernel_size: int, drop_rate: float=0.):
+        super().__init__(
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim, padding="same"),
+            nn.GELU(),
+            # GroupNorm with num_groups=1 is the same as LayerNorm but works for 2D data
+            nn.GroupNorm(num_groups=1, num_channels=hidden_dim),
+            nn.Dropout(drop_rate),
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1),
+            nn.GELU(),
+            # GroupNorm with num_groups=1 is the same as LayerNorm but works for 2D data
+            nn.GroupNorm(num_groups=1, num_channels=hidden_dim),
+            nn.Dropout(drop_rate)
+        )
+
 
 class FoldBlock(nn.Module):
     "Basic block of folded ResNet"
@@ -108,7 +123,7 @@ class FoldNet(BaseModule):
     def __init__(self, cfg:FoldNetCfg):
         super().__init__(cfg)
         
-        if cfg.block == Block:
+        if cfg.block == Block or cfg.block == Block2:
             fold_block = FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
         elif cfg.block == BottleNeckBlock:
             fold_block = FoldBlock(cfg.fold_num, cfg.block, in_features = cfg.hidden_dim, out_features = cfg.hidden_dim,
