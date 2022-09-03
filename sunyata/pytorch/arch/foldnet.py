@@ -5,16 +5,22 @@ import torch.nn.functional as F
 from einops import repeat
 import pytorch_lightning as pl
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual
+from sunyata.pytorch.arch.convnext import BottleNeckBlock
+from sunyata.pytorch.arch.patchconvnet import PatchConvBlock
 
 
 @dataclass
 class FoldNetCfg(BaseCfg):
+    block: nn.Module = None
+
     hidden_dim: int = 256
     kernel_size: int = 5
     patch_size: int = 2
     num_classes: int = 10
     fold_num: int = 1
     drop_rate: float = 0.
+    expansion: int = 1
+    layer_scaler_init_value: float = 1e-6
 
 
 class ResConvMixer(BaseModule):
@@ -79,12 +85,12 @@ class Block(nn.Sequential):
 
 class FoldBlock(nn.Module):
     "Basic block of folded ResNet"
-    def __init__(self, Unit:nn.Module, hidden_dim: int, kernel_size: int, fold_num:int, drop_rate:float=0.):
+    def __init__(self, fold_num:int, Unit:nn.Module, *args, **kwargs):  # , hidden_dim: int, kernel_size: int, drop_rate:float=0.
         super(FoldBlock, self).__init__()
         self.fold_num = fold_num
         units = []
         for i in range(max(1, fold_num - 1)):
-            units += [Unit(hidden_dim, kernel_size, drop_rate)]
+            units += [Unit(*args, **kwargs)]
         self.units = nn.ModuleList(units)
         
     def forward(self, *xs):
@@ -102,8 +108,17 @@ class FoldNet(BaseModule):
     def __init__(self, cfg:FoldNetCfg):
         super().__init__(cfg)
         
+        if cfg.block == Block:
+            fold_block = FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
+        elif cfg.block == BottleNeckBlock:
+            fold_block = FoldBlock(cfg.fold_num, cfg.block, in_features = cfg.hidden_dim, out_features = cfg.hidden_dim,
+                                kernel_size = cfg.kernel_size, expansion = cfg.expansion, drop_p = cfg.drop_rate, layer_scaler_init_value = cfg.layer_scaler_init_value
+            )
+        elif cfg.block == PatchConvBlock:
+            fold_block = FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.drop_rate, cfg.layer_scaler_init_value)
+
         self.layers = nn.ModuleList([
-            FoldBlock(Block, cfg.hidden_dim, cfg.kernel_size, cfg.fold_num, cfg.drop_rate)
+            fold_block
             for _ in range(cfg.num_layers)
         ])
 
