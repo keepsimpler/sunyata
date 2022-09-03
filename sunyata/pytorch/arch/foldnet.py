@@ -125,18 +125,23 @@ class FoldNet(BaseModule):
         super().__init__(cfg)
         
         if cfg.block == Block or cfg.block == Block2:
-            fold_block = FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
+            self.layers = nn.ModuleList([
+                FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
+                for _ in range(cfg.num_layers)
+            ])
         elif cfg.block == BottleNeckBlock:
-            fold_block = FoldBlock(cfg.fold_num, cfg.block, in_features = cfg.hidden_dim, out_features = cfg.hidden_dim,
+            self.layers = nn.ModuleList([
+                FoldBlock(cfg.fold_num, cfg.block, in_features = cfg.hidden_dim, out_features = cfg.hidden_dim,
                                 kernel_size = cfg.kernel_size, expansion = cfg.expansion, drop_p = cfg.drop_rate, layer_scaler_init_value = cfg.layer_scaler_init_value
-            )
+                )
+                for _ in range(cfg.num_layers)
+            ])
         elif cfg.block == PatchConvBlock:
-            fold_block = FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.drop_rate, cfg.layer_scaler_init_value)
+            self.layers = nn.ModuleList([
+                FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.drop_rate, cfg.layer_scaler_init_value)
+                for _ in range(cfg.num_layers)
+            ])
 
-        self.layers = nn.ModuleList([
-            fold_block
-            for _ in range(cfg.num_layers)
-        ])
 
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
