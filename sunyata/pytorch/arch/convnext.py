@@ -143,6 +143,7 @@ class BottleNeckBlock(nn.Module):
         self,
         in_features: int,
         out_features: int,
+        kernel_size: int = 7,
         expansion: int = 4,
         drop_p: float = .0,
         layer_scaler_init_value: float = 1e-6,
@@ -152,7 +153,7 @@ class BottleNeckBlock(nn.Module):
         self.block = nn.Sequential(
             # narrow -> wide (with depth-wise and bigger kernel)
             nn.Conv2d(
-                in_features, in_features, kernel_size=7, padding=3, bias=False, groups=in_features
+                in_features, in_features, kernel_size, padding="same", bias=False, groups=in_features
             ),
             # GroupNorm with num_groups=1 is the same as LayerNorm but works for 2D data
             nn.GroupNorm(num_groups=1, num_channels=in_features),
@@ -166,11 +167,11 @@ class BottleNeckBlock(nn.Module):
         self.drop_p = drop_p
 
     def forward(self, x: Tensor) -> Tensor:
-        res = x
+        # res = x
         x = self.block(x)
         x = self.layer_scaler(x)
-        x = stochastic_depth(x, self.drop_p, mode="batch")
-        x = x + res
+        x = stochastic_depth(x, self.drop_p, mode="row")
+        # x = x + res
         return x
 
 
