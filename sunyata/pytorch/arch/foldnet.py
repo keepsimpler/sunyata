@@ -82,6 +82,7 @@ class Block(nn.Sequential):
             nn.Dropout(drop_rate)
         )
 
+
 class Block2(nn.Sequential):
     def __init__(self, hidden_dim: int, kernel_size: int, drop_rate: float=0.):
         super().__init__(
