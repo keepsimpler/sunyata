@@ -2,6 +2,8 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.ops import StochasticDepth
+
 from einops import repeat
 import pytorch_lightning as pl
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual
@@ -75,11 +77,12 @@ class Block(nn.Sequential):
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim, padding="same"),
             nn.GELU(),
             nn.BatchNorm2d(hidden_dim),
-            nn.Dropout(drop_rate),
+            # nn.Dropout(drop_rate),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1),
             nn.GELU(),
             nn.BatchNorm2d(hidden_dim),
-            nn.Dropout(drop_rate)
+            # nn.Dropout(drop_rate)
+            StochasticDepth(drop_rate, 'row'),
         )
 
 
@@ -141,7 +144,6 @@ class FoldNet(BaseModule):
                 FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.drop_rate, cfg.layer_scaler_init_value)
                 for _ in range(cfg.num_layers)
             ])
-
 
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
