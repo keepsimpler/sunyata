@@ -2,6 +2,7 @@ import math
 from typing import Callable, Iterable
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from dataclasses import dataclass
 import pytorch_lightning as pl
 
@@ -145,3 +146,19 @@ class BYOL_EMA(pl.Callback):
             teacher_params.data = self.current_tau * teacher_params.data + (1 - self.current_tau) * student_params.data
 
             
+class LayerScaler(nn.Module):
+    def __init__(self, init_value: float, dimensions: int):
+        super().__init__()
+        self.gamma = nn.Parameter(init_value * torch.ones((dimensions)),
+                                    requires_grad=True)
+
+    def forward(self, x):
+        return self.gamma[None,...,None,None] * x
+
+
+class LayerNorm2d(nn.LayerNorm):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.permute(0, 2, 3, 1)
+        x = F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
+        x = x.permute(0, 3, 1, 2)
+        return x
