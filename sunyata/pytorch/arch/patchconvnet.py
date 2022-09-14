@@ -7,7 +7,7 @@ from sunyata.pytorch.arch.base import LayerScaler, LayerNorm2d
 from torchvision.ops.misc import SqueezeExcitation
 from torchvision.ops import StochasticDepth
 # %%
-class PatchBNConvBlock(nn.Module):
+class PatchConvBlock(nn.Module):
     def __init__(self, 
                 hidden_dim:int, 
                 drop_rate:float=0.3, 
