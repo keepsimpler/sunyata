@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import pytorch_lightning as pl
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, BYOL_EMA
 
 # %%
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
@@ -13,15 +13,15 @@ from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
 
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
-from sunyata.pytorch.arch.byol_clm import BYOL_CLM, BYOL_CLM_Cfg, BYOL_EMA
+from sunyata.pytorch.arch.byol_clm import BYOL_CLM, BYOL_CLM_Cfg #, BYOL_EMA
 
 # %%
 hidden_dim = 64
 cfg = BYOL_CLM_Cfg(
-    vocab_size = 10000,
-    seq_len = 128,
+    vocab_size = 2000,
+    seq_len = 256,
     hidden_dim = hidden_dim,
-    ema_tau = 0.999,  # 0.9999
+    ema_tau = 0.99,  # 0.9999
     transformer = TransformerCfg(
         hidden_dim = hidden_dim,
         num_heads = 2,
@@ -31,7 +31,7 @@ cfg = BYOL_CLM_Cfg(
 
     batch_size = 64,
     num_layers = 4,
-    num_epochs = 10,
+    num_epochs = 1,
     learning_rate = 1e-3 # 1e-3  3e-4
 )
 
@@ -59,8 +59,8 @@ csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/",
     name="wikitext_2") # , version=2
 trainer = pl.Trainer(gpus=1, 
                      max_epochs=cfg.num_epochs, 
-                     enable_checkpointing=False,
-                     callbacks=[BYOL_EMA(cfg.ema_tau)],
+                     enable_checkpointing=True,
+                     callbacks=[BYOL_EMA("online_encoder", "target_encoder", cfg.ema_tau)],
                     #  limit_train_batches=100,  # 1.0 
                     #  limit_val_batches=10,  # 1.0 
                      log_every_n_steps=50,

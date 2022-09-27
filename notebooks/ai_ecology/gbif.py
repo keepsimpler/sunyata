@@ -82,7 +82,7 @@ len(lon), len(lat)
 import numpy as np
 df_selected.shape
 # %%
-df_selected.to_csv('.data/gbif/nl.csv')
+df_selected.to_csv('.data/gbif/nl.csv', index=False)
 # %%
 df_selected = pd.read_csv('.data/gbif/nl.csv')
 # %%

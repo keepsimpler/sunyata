@@ -7,12 +7,10 @@ import torch.nn.functional as F
 from einops import repeat
 from einops.layers.torch import Rearrange, Reduce
 
-from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
-
 pair = lambda x: x if isinstance(x, tuple) else (x, x)
 
 @dataclass
-class DeepBayesInferMlpMixerCfg:
+class MlpMixerCfg:
     image_size: int = 32  # 224
     patch_size: int = 4  # 16
     hidden_dim: int = 128
@@ -36,7 +34,7 @@ class DeepBayesInferMlpMixerCfg:
 
 
 class DeepBayesInferMlpMixer(pl.LightningModule):
-    def __init__(self, cfg:DeepBayesInferMlpMixerCfg):
+    def __init__(self, cfg:MlpMixerCfg):
         super().__init__()
 
         image_h, image_w = pair(cfg.image_size)

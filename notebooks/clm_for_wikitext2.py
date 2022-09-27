@@ -8,16 +8,16 @@ from sunyata.pytorch.arch.byol_clm import BYOL_EMA
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,
                                             shift_one_token)
 
-from sunyata.pytorch.arch.clm import TransformerCLM, TransformerCLMCfg, TransformerCLMSplit, SelfDistillationCLM
+from sunyata.pytorch.arch.clm import TransformerCLM, TransformerCLMCfg, TransformerCLMBayes, SelfDistillationCLM
 from sunyata.pytorch.layer.transformer import TransformerLayer, TransformerCfg, TransformerLayerPreNorm, TransformerLayerPostNorm
 
 # %%
 hidden_dim = 64
 cfg = TransformerCLMCfg(
-    vocab_size = 10000,
-    seq_len = 256,
+    vocab_size = 1000,
+    seq_len = 512,
     hidden_dim = hidden_dim,
-    is_sharing_weight = True,
+    is_sharing_weight = False,
     transformer = TransformerCfg(
         hidden_dim = hidden_dim,
         num_heads = 2,
@@ -25,14 +25,14 @@ cfg = TransformerCLMCfg(
         is_softmax=True,
     ),
 
-    alpha = 1.,
-    student_temp = 0.9,
-    teacher_temp= 0.04,
-    ema_tau = 0.99,
-    center_tau=0.99,
+    # alpha = 0.,
+    # student_temp = 0.9,
+    # teacher_temp= 0.04,
+    # ema_tau = 0.99,
+    # center_tau=0.99,
 
-    batch_size = 64,
-    num_layers = 8,
+    batch_size = 32,
+    num_layers = 4,
     num_epochs = 1,
     learning_rate = 1e-3 # 1e-3  3e-4
 )
@@ -42,7 +42,8 @@ wikitext2 = WikiTextDataModule(subset="2",
                    batch_size=cfg.batch_size,
                    vocab_size=cfg.vocab_size,
                    seq_len=cfg.seq_len,
-                   collate_fn=shift_one_token)  # shift_one_token  None
+                   collate_fn=shift_one_token,
+                   is_shuffle=False)  # shift_one_token  None
 # %%
 wikitext2.tokenizer.decode(wikitext2.train_data[0].tolist(), skip_special_tokens=False)
 # https://colab.research.google.com/github/huggingface/notebooks/blob/master/examples/tokenizer_training.ipynb
@@ -52,8 +53,8 @@ wikitext2.tokenizer.decode(wikitext2.train_data[0].tolist(), skip_special_tokens
 input, target = next(iter(wikitext2.train_dataloader()))
 input.shape, target.shape
 # %%
-transformer_clm = TransformerCLM(cfg, model = TransformerLayer)
-transformer_clm.summarize(max_depth=2)
+transformer_clm = TransformerCLM(cfg)
+transformer_clm.summarize(max_depth=3)
 
 # %%
 csv_logger = pl.loggers.CSVLogger(save_dir="lightning_logs/", 

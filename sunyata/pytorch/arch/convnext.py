@@ -9,7 +9,7 @@ import pytorch_lightning as pl
 from torchvision.ops import stochastic_depth
 
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration 
-
+from sunyata.pytorch.arch.base import LayerScaler
 
 class ConvNextForImageClassification(pl.LightningModule):
     def __init__(
@@ -175,11 +175,3 @@ class BottleNeckBlock(nn.Module):
         return x
 
 
-class LayerScaler(nn.Module):
-    def __init__(self, init_value: float, dimensions: int):
-        super().__init__()
-        self.gamma = nn.Parameter(init_value * torch.ones((dimensions)),
-                                    requires_grad=True)
-
-    def forward(self, x):
-        return self.gamma[None,...,None,None] * x

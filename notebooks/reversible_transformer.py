@@ -1,5 +1,6 @@
 # %%
 from dataclasses import dataclass
+from typing import Iterable, Callable
 from sunyata.pytorch.data.wikitext import WikiTextDataModule, shift_one_token
 from sunyata.pytorch.layer.transformer import RevTransformerLayer, TransformerCfg
 
@@ -9,36 +10,36 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 # %%
-batch_size, seq_len, hidden_dim = 2, 3, 4
-# %%
-cfg = TransformerCfg(
-    hidden_dim=hidden_dim,
-    num_heads=1,
-    expanded_dim=2,
-)
-# %%
-rev_transformer = RevTransformerLayer(cfg)
-# %%
-rev_transformer
-# %%
-x1 = torch.randn(batch_size, seq_len, hidden_dim)
-x2 = torch.randn(batch_size, seq_len, hidden_dim)
-# %%
-y1, y2 = rev_transformer.forward1(x1, x2)
-# %%
-recovered_x1, recovered_x2 = rev_transformer.forward2(y1, y2)
-# %%
-assert torch.allclose(x1, recovered_x1) and torch.allclose(x2, recovered_x2)
-# %%
-rev_transformers = nn.Sequential(
-    *[RevTransformerLayer(cfg) for _ in range(3)]
-)
-# %%
-for rev_transformer in rev_transformers:
-    x1, x2 = rev_transformer.forward1(x1, x2)
-# %%
-for rev_transformer in rev_transformers[::-1]:
-    x1, x2 = rev_transformer.forward2(x1, x2)
+# batch_size, seq_len, hidden_dim = 2, 3, 4
+# # %%
+# cfg = TransformerCfg(
+#     hidden_dim=hidden_dim,
+#     num_heads=1,
+#     expanded_dim=2,
+# )
+# # %%
+# rev_transformer = RevTransformerLayer(cfg)
+# # %%
+# rev_transformer
+# # %%
+# x1 = torch.randn(batch_size, seq_len, hidden_dim)
+# x2 = torch.randn(batch_size, seq_len, hidden_dim)
+# # %%
+# y1, y2 = rev_transformer.forward1(x1, x2)
+# # %%
+# recovered_x1, recovered_x2 = rev_transformer.forward2(y1, y2)
+# # %%
+# assert torch.allclose(x1, recovered_x1) and torch.allclose(x2, recovered_x2)
+# # %%
+# rev_transformers = nn.Sequential(
+#     *[RevTransformerLayer(cfg) for _ in range(3)]
+# )
+# # %%
+# for rev_transformer in rev_transformers:
+#     x1, x2 = rev_transformer.forward1(x1, x2)
+# # %%
+# for rev_transformer in rev_transformers[::-1]:
+#     x1, x2 = rev_transformer.forward2(x1, x2)
 # %%
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule
 # %%
@@ -62,14 +63,16 @@ class RevTransformerCLM(BaseModule):
         self.layers = nn.Sequential(*[RevTransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)])
 
         self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
+        # torch.nn.init.normal_(self.embed.weight, std=0.1)
         # torch.nn.init.xavier_normal_(self.embed.weight)
         self.digup = nn.Linear(cfg.hidden_dim, cfg.vocab_size, bias=False)
         self.digup.weight = self.embed.weight
         
         self.cfg = cfg
         
-    def forward1(self, input:torch.Tensor):
-        input_embedded = self.embed(input)
+    def forward1(self, input_embedded:torch.Tensor):
+        # with torch.no_grad():
+        #     input_embedded = self.embed(input)
         batch_size, seq_len, hidden_dim = input_embedded.shape
         assert hidden_dim % 2 == 0
         x1 = input_embedded[:,:,:hidden_dim//2]
@@ -81,8 +84,9 @@ class RevTransformerCLM(BaseModule):
         output_embedded = torch.cat((x1, x2), dim=-1)
         return output_embedded
 
-    def forward2(self, input:torch.Tensor):
-        input_embedded = self.embed(input)
+    def forward2(self, input_embedded:torch.Tensor):
+        # with torch.no_grad():
+        #     input_embedded = self.embed(input)
         batch_size, seq_len, hidden_dim = input_embedded.shape
         assert hidden_dim % 2 == 0
         x1 = input_embedded[:,:,:hidden_dim//2]
@@ -96,35 +100,46 @@ class RevTransformerCLM(BaseModule):
 
     def _step(self, batch, mode="train"):  # or "val"
         input, target = batch
-        for layer in self.layers:
-            layer.attention.fore_mask = False
+        # for layer in self.layers:
+        #     layer.attention.fore_mask = False
 
-        output_embedded = self.forward1(target)
         with torch.no_grad():
             input_embedded = self.embed(input)
-            input_embedded.detach_()
+        output_embedded = self.forward1(input_embedded)
+        with torch.no_grad():
+            target_embedded = self.embed(target)
+            # target_embedded.detach_()
+        output_embedded_2 = self.forward2(target_embedded)
 
         # cosine_loss = nn.SmoothL1Loss()(output_embedded, target_embedded)
-        # cosine_loss = nn.MSELoss()(output_embedded, target_embedded)
-        cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, input_embedded).mean()
+        cosine_loss = nn.MSELoss()(output_embedded, target_embedded)
+        # cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
         # cosine_loss = 2 - 2 * (output_embedded * target_embedded).sum(dim=(-1,)).mean()
-        self.log(mode + "_cosine_loss", cosine_loss)
-        return cosine_loss
-
-    def validation_step(self, batch, batch_idx):
-        input, target = batch
-        for layer in self.layers:
-            layer.attention.is_mask = False
-        output_embedded = self.forward1(input)
-        target_embedded = self.embed(target)
-        # logits = output_embedded @ self.embed.weight.T
+        self.log(mode + "_cosine_loss", cosine_loss, prog_bar=True)
+        cosine_loss_2 = nn.MSELoss()(output_embedded_2, input_embedded)
+        # cosine_loss_2 = - nn.CosineSimilarity(dim=-1)(output_embedded_2, input_embedded).mean()
+        self.log(mode + "_cosine_loss_2", cosine_loss_2, prog_bar=True)
         logits = self.digup(output_embedded)
         loss = F.cross_entropy(logits.permute(0, 2, 1), target)
         self.log("val_loss", loss, prog_bar=True)
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
         self.log("val_accuracy", accuracy, prog_bar=True)
-        cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
-        self.log("val_cosine_loss", cosine_loss, prog_bar=True)
+        return cosine_loss
+
+    # def validation_step(self, batch, batch_idx):
+    #     input, target = batch
+    #     for layer in self.layers:
+    #         layer.attention.is_mask = False
+    #     output_embedded = self.forward1(input)
+    #     target_embedded = self.embed(target)
+    #     # logits = output_embedded @ self.embed.weight.T
+    #     logits = self.digup(output_embedded)
+    #     loss = F.cross_entropy(logits.permute(0, 2, 1), target)
+    #     self.log("val_loss", loss, prog_bar=True)
+    #     accuracy = (logits.argmax(dim=-1) == target).float().mean()
+    #     self.log("val_accuracy", accuracy, prog_bar=True)
+    #     cosine_loss = - nn.CosineSimilarity(dim=-1)(output_embedded, target_embedded).mean()
+    #     self.log("val_cosine_loss", cosine_loss, prog_bar=True)
 
 
 # %%
@@ -142,9 +157,10 @@ cfg = RevTransformerCLMCfg(
     ),
 
     batch_size = 64,
-    num_layers = 4,
-    num_epochs = 5,
-    learning_rate = 1e-3 # 1e-3  3e-4
+    num_layers = 1,
+    num_epochs = 2,
+    learning_rate = 1e-1, # 1e-3  3e-4
+    optimizer_method = "RevSGD",
 )
 # %%
 wikitext2 = WikiTextDataModule(subset="2", 

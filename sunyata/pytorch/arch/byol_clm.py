@@ -13,8 +13,8 @@ from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 # loss function
 
 def loss_fn(x, y):
-    x = F.normalize(x, dim=-1, p=2)
-    y = F.normalize(y, dim=-1, p=2)
+    # x = F.normalize(x, dim=-1, p=2)
+    # y = F.normalize(y, dim=-1, p=2)
     return 2 - 2 * (x * y).sum(dim=-1)
 
 def across_loss_fn(x: torch.Tensor, y: torch.Tensor):
@@ -45,37 +45,37 @@ class BYOL_CLM(BaseModule):
         super().__init__(cfg)
         self.save_hyperparameters('cfg')
 
-        self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
+        # self.embed = nn.Embedding(cfg.vocab_size, cfg.hidden_dim)
 
         self.online_encoder = nn.Sequential(
-            # nn.Embedding(cfg.vocab_size, cfg.hidden_dim),
+            nn.Embedding(cfg.vocab_size, cfg.hidden_dim),
             nn.Sequential(*[
                 TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)
             ]),
-            BatchNorm(cfg.hidden_dim)
+            # BatchNorm(cfg.hidden_dim)
         )
-        torch.nn.init.xavier_normal_(self.embed.weight.data)  # online_encoder[0]
+        torch.nn.init.xavier_normal_(self.online_encoder[0].weight.data)  # online_encoder[0]
 
         self.target_encoder = copy.deepcopy(self.online_encoder)
         # self.target_encoder.eval()
         set_requires_grad(self.target_encoder, False)
 
-        for layer in self.target_encoder[0]:
+        for layer in self.target_encoder[1]:
             layer.attention.is_mask = False
 
-        # self.online_predictor = TransformerLayer(cfg.transformer)
-        self.online_predictor = BatchNorm(cfg.hidden_dim)
+        self.online_predictor = TransformerLayer(cfg.transformer)
+        # self.online_predictor = BatchNorm(cfg.hidden_dim)
 
         self.loss_fn = loss_fn  # infoNCE
         self.cfg = cfg
 
     def forward(self, input, target):
-        input = self.embed(input)
+        # input = self.embed(input)
         online_proj = self.online_encoder(input)
         online_pred = self.online_predictor(online_proj)
 
         with torch.no_grad():
-            target = self.embed(target)
+            # target = self.embed(target)
             target_proj = self.target_encoder(target)
             target_proj.detach_()
 
@@ -88,30 +88,15 @@ class BYOL_CLM(BaseModule):
         self.log(mode + "_loss", loss)
         return loss
 
+    def validation_step(self, batch, batch_idx):
+        input, target = batch
+        online_pred, target_proj = self.forward(input, target)
+        logits = online_pred @ self.online_encoder[0].weight.T
+        loss = F.cross_entropy(logits.permute(0, 2, 1), target)
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
+        accuracy = (logits.argmax(dim=-1) == target).float().mean()
+        self.log("val_accuracy", accuracy, on_step=True, on_epoch=True, prog_bar=True)
 
-class BatchNorm(nn.Module):
-    def __init__(self, hidden_dim, mom=0.1, eps=1e-5):
-        super().__init__()
-        self.mom, self.eps = mom, eps
-        self.mults = nn.Parameter(torch.ones(1, hidden_dim))
-        self.adds = nn.Parameter(torch.zeros(1, hidden_dim))
-        self.register_buffer('vars', torch.ones(1, 1, hidden_dim))
-        self.register_buffer('means', torch.zeros(1, 1, hidden_dim))
-
-    def update_stats(self, x):
-        # x has dims (batch_size, seq_len, hidden_dim)
-        m = x.mean((0,1), keepdim=True)
-        v = x.var((0,1), keepdim=True)
-        self.means.lerp_(m, self.mom)
-        self.vars.lerp_(v, self.mom)
-        return m, v
-
-    def forward(self, x):
-        if self.training:
-            with torch.no_grad(): m, v = self.update_stats(x)
-        else: m,v = self.means, self.vars
-        x = (x-m) / (v+self.eps).sqrt()
-        return x * self.mults + self.adds
 
 
 class BYOL_EMA(Callback):
