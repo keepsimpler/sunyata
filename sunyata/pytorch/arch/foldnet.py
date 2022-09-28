@@ -82,7 +82,7 @@ class Block(nn.Sequential):
             nn.GELU(),
             nn.BatchNorm2d(hidden_dim),
             # nn.Dropout(drop_rate)
-            # StochasticDepth(drop_rate, 'row'),
+            StochasticDepth(drop_rate, 'row'),
         )
 
 
