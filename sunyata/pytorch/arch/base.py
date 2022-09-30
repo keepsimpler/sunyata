@@ -149,9 +149,9 @@ class BYOL_EMA(pl.Callback):
 
             
 class LayerScaler(nn.Module):
-    def __init__(self, init_value: float, dimensions: int):
+    def __init__(self, init_scale: float, dim: int):
         super().__init__()
-        self.gamma = nn.Parameter(init_value * torch.ones((dimensions)),
+        self.gamma = nn.Parameter(init_scale * torch.ones(dim),
                                     requires_grad=True)
 
     def forward(self, x):
