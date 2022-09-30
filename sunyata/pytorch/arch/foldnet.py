@@ -2,11 +2,10 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.ops import StochasticDepth
 
 from einops import repeat
 import pytorch_lightning as pl
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual, Block
 from sunyata.pytorch.arch.convnext import BottleNeckBlock
 from sunyata.pytorch.arch.patchconvnet import PatchConvBlock
 
@@ -69,21 +68,6 @@ class ResConvMixer(BaseModule):
         accuracy = (logits.argmax(dim=1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
-
-
-class Block(nn.Sequential):
-    def __init__(self, hidden_dim: int, kernel_size: int, drop_rate: float=0.):
-        super().__init__(
-            nn.Conv2d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim, padding="same"),
-            nn.GELU(),
-            nn.BatchNorm2d(hidden_dim),
-            # nn.Dropout(drop_rate),
-            nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1),
-            nn.GELU(),
-            nn.BatchNorm2d(hidden_dim),
-            # nn.Dropout(drop_rate)
-            StochasticDepth(drop_rate, 'row'),
-        )
 
 
 class Block2(nn.Sequential):

@@ -5,6 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from dataclasses import dataclass
 import pytorch_lightning as pl
+from torchvision.ops import StochasticDepth
+
 
 class RevSGD(torch.optim.Optimizer):
     def __init__(
@@ -162,3 +164,19 @@ class LayerNorm2d(nn.LayerNorm):
         x = F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
         x = x.permute(0, 3, 1, 2)
         return x
+
+
+class Block(nn.Sequential):
+    def __init__(self, hidden_dim: int, kernel_size: int, drop_rate: float=0.):
+        super().__init__(
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim, padding="same"),
+            nn.GELU(),
+            nn.BatchNorm2d(hidden_dim),
+            # nn.Dropout(drop_rate),
+            nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1),
+            nn.GELU(),
+            nn.BatchNorm2d(hidden_dim),
+            # nn.Dropout(drop_rate)
+            StochasticDepth(drop_rate, 'row'),
+        )
+
