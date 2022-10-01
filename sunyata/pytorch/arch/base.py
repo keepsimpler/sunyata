@@ -154,7 +154,7 @@ class LayerScaler(nn.Module):
         self.gamma = nn.Parameter(init_scale * torch.ones(dim))
 
     def forward(self, x):
-        return self.gamma[None,...,None,None] * x
+        return self.gamma[None,...] * x
 
 
 class LayerNorm2d(nn.LayerNorm):

@@ -20,8 +20,8 @@ class Attn(nn.Module):
         self.squeezes = [
             nn.Sequential(
                 nn.AdaptiveAvgPool2d((1, 1)),
-                LayerScaler(init_scale, hidden_dim),
                 nn.Flatten(),
+                LayerScaler(init_scale, hidden_dim),
             ) for _ in range(attn_depth)
             ]
         self.temperature = temperature
