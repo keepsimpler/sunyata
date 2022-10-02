@@ -102,7 +102,7 @@ class DeepAttn(BaseModule):
             for query_idx in query_idxs[:-1]
         ])
         
-        self.final_attn = Attn(cfg.hidden_dim, is_attn=cfg.is_attn, query_idx=query_idxs[-1], temperature=cfg.temperature, init_scale=cfg.init_scale)
+        self.final_attn = Attn(cfg.hidden_dim, temperature=cfg.temperature, init_scale=cfg.init_scale, query_idx=query_idxs[-1])
         
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
