@@ -163,7 +163,7 @@ class BottleNeckBlock(nn.Module):
             # wide -> narrow
             nn.Conv2d(expanded_features, out_features, kernel_size=1),
         )
-        self.layer_scaler = LayerScaler(layer_scaler_init_value, out_features)
+        self.layer_scaler = LayerScaler(out_features, layer_scaler_init_value)
         self.drop_p = drop_p
 
     def forward(self, x: Tensor) -> Tensor:

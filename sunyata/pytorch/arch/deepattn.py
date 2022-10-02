@@ -21,7 +21,7 @@ class Attn(nn.Module):
             nn.Sequential(
                 nn.AdaptiveAvgPool2d((1, 1)),
                 nn.Flatten(),
-                LayerScaler(init_scale, hidden_dim),
+                LayerScaler(hidden_dim, init_scale),
             ) for _ in range(attn_depth)
             ]
         self.temperature = temperature
