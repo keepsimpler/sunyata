@@ -77,6 +77,7 @@ class DeepAttnCfg(BaseCfg):
     kernel_size: int = 5
     patch_size: int = 2
     num_classes: int = 10
+    drop_rate: float=0.
     
     is_attn: bool = True
     query_idx_exp: float = 1.
@@ -96,8 +97,8 @@ class DeepAttn(BaseModule):
             for current_depth in range(cfg.num_layers + 1)
         ]
         self.layers = nn.ModuleList([
-            Layer(hidden_dim=cfg.hidden_dim, kernel_size=cfg.kernel_size, is_attn=cfg.is_attn, query_idx=query_idx, 
-                  temperature=cfg.temperature, init_scale=cfg.init_scale)
+            AttnLayer(cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate,
+                      cfg.temperature, cfg.init_scale, query_idx)
             for query_idx in query_idxs[:-1]
         ])
         
@@ -140,47 +141,3 @@ class DeepAttn(BaseModule):
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
 
-
-class DeepAttn(BaseModule):
-    def __init__(self, cfg: DeepAttnCfg):
-        super().__init__(cfg)
-
-        self.attn_layers = nn.ModuleList([
-            AttnLayer(cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate,
-                      cfg.temperature, cfg.init_scale, cfg.query_idx)
-            for _ in range(cfg.num_layers)
-        ])
-
-        self.final_attn = Attn(cfg.hidden_dim, cfg.temperature, cfg.init_scale, cfg.attn_depth)
-
-        self.embed = nn.Sequential(
-            nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
-            nn.GELU(),
-            nn.BatchNorm2d(cfg.hidden_dim, eps=7e-5),  # eps>6.1e-5 to avoid nan in half precision
-        )
-        
-        self.digup = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1,1)),
-            nn.Flatten(),
-            nn.Linear(cfg.hidden_dim, cfg.num_classes)
-        )
-
-        self.cfg = cfg
-        
-    def forward(self, x):
-        x = self.embed(x)
-        xs = (x,)
-        for attn_layer in self.attn_layers:
-            xs = attn_layer(*xs)
-        x = self.final_attn(*xs)
-        x = self.digup(x)
-        return x
-
-    def _step(self, batch, mode="train"):  # or "val"
-        input, target = batch
-        logits = self.forward(input)
-        loss = F.cross_entropy(logits, target)
-        self.log(mode + "_loss", loss, prog_bar=True)
-        accuracy = (logits.argmax(dim=1) == target).float().mean()
-        self.log(mode + "_accuracy", accuracy, prog_bar=True)
-        return loss    
