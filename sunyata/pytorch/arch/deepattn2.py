@@ -107,7 +107,7 @@ class DeepAttn(BaseModule):
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
             nn.GELU(),
-            nn.BatchNorm2d(cfg.hidden_dim),  # , eps=7e-5
+            nn.BatchNorm2d(cfg.hidden_dim, eps=7e-5),  # 
         )
         
         self.digup = nn.Sequential(
