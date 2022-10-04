@@ -8,46 +8,32 @@ from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Block, LayerScaler
 
 
 class Attn(nn.Module):
-    def __init__(self, hidden_dim:int, temperature: float=1., init_scale: float=1., query_idx:int=-1):
+    def __init__(
+        self,
+        hidden_dim: int,
+        temperature: float = 1.,
+        init_scale: float = 1.,
+        query_index: int = -1,
+    ):
         super().__init__()
         self.squeeze = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1,1)),
+            nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-#             nn.Linear(hidden_dim, hidden_dim)
-            LayerScaler(hidden_dim, init_scale)
-            # BottleFC(hidden_dim, 16, init_scale)
+            LayerScaler(hidden_dim, init_scale),
         )
-        self.query_idx = query_idx
         self.temperature = temperature
+        self.query_index = query_index
         
     def forward(self, *xs):
-        # if self.is_attn:
-        # xs shape (current_depth, batch_size, hidden_dim, height, width)
         squeezed = [self.squeeze(x) for x in xs]
         squeezed = torch.stack(squeezed)  
-#             current_depth, batch_size, hidden_dim, _, _ = xs.shape
-#             xs2 = Rearrange('d b h w1 w2 -> (d b) h w1 w2', d = current_depth, b = batch_size)(xs)
-#             squeezed = self.squeeze(xs2)
-#             squeezed = Rearrange('(d b) h -> d b h', d = current_depth, b = batch_size)(squeezed)
-
-#             query_idx = max(- current_depth, self.query_idx)
-#             query_idx = current_depth // 2
-        # query_idx = random.randint(0, current_depth-1)
-        # squeezed_mean = squeezed.mean(dim=0)
-        attn = torch.einsum('d b h, b h -> d b', squeezed, squeezed[self.query_idx,:,:])  # 
+        attn = torch.einsum('d b h, b h -> b d', squeezed, squeezed[self.query_idx,:,:])
         attn = attn / self.temperature
-        attn = F.softmax(attn, dim=0)
-
-        next_x = xs[0] * attn[0, :, None, None, None]
+        attn = F.softmax(attn, dim=-1)
+        
+        next_x = xs[0] * attn[:, 0, None, None, None]
         for i, x in enumerate(xs[1:]):
-            next_x = next_x + x * attn[i, :, None, None, None]
-
-#             next_x = torch.einsum('d b h v w, d b -> b h v w', xs, attn)
-#         else:
-#             next_x = xs[0]
-#             for x in xs[1:]:
-#                 next_x = next_x + x
-# #             next_x = torch.einsum('d b h v w -> b h v w', xs)
+            next_x = next_x + x * attn[:, i, None, None, None]
         return next_x
 
 
@@ -59,7 +45,7 @@ class AttnLayer(nn.Module):
         drop_rate: float = 0.,
         temperature: float = 1.,
         init_scale: float = 1.,
-        query_idx: int = 1,
+        query_idx: int = -1,
     ):
         super().__init__()
         self.attn = Attn(hidden_dim, temperature, init_scale, query_idx)
@@ -79,13 +65,11 @@ class DeepAttnCfg(BaseCfg):
     num_classes: int = 10
     drop_rate: float=0.
     
-    is_attn: bool = True
     query_idx_exp: float = 1.
     query_idx_denominator: int = 1
     query_idx_shift: int = 0
     temperature: float = 1.
     init_scale: float = 1.
-
 
 
 class DeepAttn(BaseModule):
@@ -124,11 +108,6 @@ class DeepAttn(BaseModule):
         for layer in self.layers:
             xs = layer(*xs)
         x = self.final_attn(*xs)
-
-#         xs = x.unsqueeze(0)
-#         for layer in self.layers:
-#             xs = layer(xs)
-#         x= self.final_attn(xs)
         x= self.digup(x)
         return x
 
@@ -140,4 +119,3 @@ class DeepAttn(BaseModule):
         accuracy = (logits.argmax(dim=1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
-
