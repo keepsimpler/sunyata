@@ -13,7 +13,7 @@ class Attn(nn.Module):
         hidden_dim: int,
         temperature: float = 1.,
         init_scale: float = 1.,
-        query_index: int = -1,
+        query_idx: int = -1,
     ):
         super().__init__()
         self.squeeze = nn.Sequential(
@@ -22,7 +22,7 @@ class Attn(nn.Module):
             LayerScaler(hidden_dim, init_scale),
         )
         self.temperature = temperature
-        self.query_index = query_index
+        self.query_idx = query_idx
         
     def forward(self, *xs):
         squeezed = [self.squeeze(x) for x in xs]
