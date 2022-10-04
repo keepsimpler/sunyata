@@ -8,7 +8,7 @@ from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Block
 
 
 @dataclass
-class DeepAttnCfg(BaseCfg):
+class IsotropicCfg(BaseCfg):
     hidden_dim: int = 128
     kernel_size: int = 5
     patch_size: int = 2
@@ -17,8 +17,8 @@ class DeepAttnCfg(BaseCfg):
     drop_rate: float = 0.    
 
 
-class DeepAttn(BaseModule):
-    def __init__(self, cfg: DeepAttnCfg):
+class Isotropic(BaseModule):
+    def __init__(self, cfg: IsotropicCfg):
         super().__init__(cfg)
 
         self.layers = nn.ModuleList([
