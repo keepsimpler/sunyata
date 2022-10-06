@@ -69,20 +69,21 @@ class AttnNet(nn.Module):
 
     def forward(self, x: torch.Tensor):
         batch_size, hidden_dim, height, width = x.shape
-        all_output = torch.empty(
-            self.num_layers + 1, batch_size, hidden_dim, height, width,
-            dtype=x.dtype,
-            device=x.device
-        )
-        all_output[0] = x
+        # all_output = torch.empty(
+        #     self.num_layers + 1, batch_size, hidden_dim, height, width,
+        #     dtype=x.dtype,
+        #     device=x.device
+        # )
+        all_output = x.unsqueeze(0)
         all_squeezed = self.first_squeeze(x).unsqueeze(0)
         next_x = x
         for i, (block, squeeze, attn) in enumerate(zip(self.blocks, self.squeezes, self.attentions)):
-            all_output[i + 1] = block(next_x)
+            next_output = block(next_x)
+            all_output = torch.cat([all_output, next_output.unsqueeze(0)])
             squeezed = squeeze(all_output[i+1])
             all_squeezed = torch.cat([all_squeezed, squeezed.unsqueeze(0)])
             attended = attn(query = squeezed, keys = all_squeezed)
-            next_x = torch.einsum('d b h v w, d b -> b h v w', all_output[:i+2], attended)
+            next_x = torch.einsum('d b h v w, d b -> b h v w', all_output, attended)
 
         return next_x
 
