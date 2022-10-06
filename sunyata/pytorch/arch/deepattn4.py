@@ -75,7 +75,7 @@ class AttnNet(nn.Module):
     def forward(self, x: torch.Tensor):
         batch_size, hidden_dim, height, width = x.shape
         all_output = x.unsqueeze(0)
-        all_squeezed = self.first_squeeze(x).unsqueeze(0)
+        # all_squeezed = self.first_squeeze(all_output).unsqueeze(0)
         next_x = x
         for i, (block, squeeze, attn) in enumerate(zip(self.blocks, self.squeezes, self.attentions)):
             next_output = block(next_x)
