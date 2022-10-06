@@ -48,12 +48,13 @@ class AttnNet(nn.Module):
         num_layers: int,
         hidden_dim: int,
         kernel_size: int,
+        drop_rate: float = 0.,
         temperature: float = 1.,
         init_scale: float = 1.,
     ):
         super().__init__()
         self.blocks = nn.ModuleList([
-            Block(hidden_dim, kernel_size)
+            Block(hidden_dim, kernel_size, drop_rate)
             for _ in range(num_layers)
         ])
         self.squeezes = nn.ModuleList([
@@ -104,7 +105,7 @@ class DeepAttn(BaseModule):
     def __init__(self, cfg: DeepAttnCfg):
         super().__init__(cfg)
 
-        self.attn_net = AttnNet(cfg.num_layers, cfg.hidden_dim, cfg.kernel_size, cfg.temperature, cfg.init_scale)
+        self.attn_net = AttnNet(cfg.num_layers, cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate, cfg.temperature, cfg.init_scale)
 
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
