@@ -39,7 +39,7 @@ class TinyImageNetDataModule(pl.LightningDataModule):
         return DataLoader(
             self.val_data,
             batch_size=self.batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             drop_last=True,
