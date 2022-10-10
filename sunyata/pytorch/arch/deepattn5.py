@@ -49,7 +49,10 @@ class Attn(nn.Module):
 class AttnLayer(nn.Module):
     def __init__(
         self,
-        hidden_dim: int
+        hidden_dim: int,
+        query_idx: int = -1,
+        
+
     )
 
 
