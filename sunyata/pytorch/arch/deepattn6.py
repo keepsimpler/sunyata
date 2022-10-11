@@ -136,7 +136,7 @@ class DeepAttn(BaseModule):
         all_squeezed = torch.zeros(0, device=x.device)
         for layer in self.layers:
             xs, all_squeezed = layer(xs, all_squeezed)
-        x,_ = self.final_attn(xs)
+        x, all_squeezed = self.final_attn(xs, all_squeezed)
         x = self.digup(x)
         return x
 
