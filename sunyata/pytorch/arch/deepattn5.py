@@ -51,51 +51,46 @@ class AttnLayer(nn.Module):
         self,
         hidden_dim: int,
         query_idx: int = -1,
-        
-
-    )
-
-
-class AttnNet(nn.Module):
-    def __init__(
-        self,
-        num_layers: int,
-        hidden_dim: int,
-        kernel_size: int,
-        drop_rate: float = 0.,
         temperature: float = 1.,
         init_scale: float = 1.,
     ):
         super().__init__()
-        self.blocks = nn.ModuleList([
-            Block(hidden_dim, kernel_size, drop_rate)
-            for _ in range(num_layers)
-        ])
-        self.squeezes = nn.ModuleList([
-            Squeeze(hidden_dim, init_scale)
-            for _ in range(num_layers)
-        ])
-        self.attentions = nn.ModuleList([
-            Attn(temperature)
-            for _ in range(num_layers)
-        ])
-        self.first_squeeze = Squeeze(hidden_dim, init_scale)
-        self.num_layers = num_layers
+        self.squeeze = Squeeze(hidden_dim, init_scale)
+        self.attn = Attn(temperature)
+        self.query_idx = query_idx
 
-    def forward(self, x: torch.Tensor):
-        batch_size, hidden_dim, height, width = x.shape
-        all_output = x.unsqueeze(0)
-        # all_squeezed = self.first_squeeze(all_output).unsqueeze(0)
-        next_x = x
-        for i, (block, squeeze, attn) in enumerate(zip(self.blocks, self.squeezes, self.attentions)):
-            next_output = block(next_x)
-            all_output = torch.cat([all_output, next_output.unsqueeze(0)])
-            squeezed = squeeze(all_output)
-            # all_squeezed = torch.cat([all_squeezed, squeezed.unsqueeze(0)])
-            attended = attn(query = squeezed[-1], keys = squeezed)
-            next_x = torch.einsum('d b h v w, d b -> b h v w', all_output, attended)
+    def forward(self, xs):
+        # x shape (current_depth, batch_size, hidden_dim, height, width)
+        squeezed = self.squeeze(xs)
+        # squeezed shape (current_depth, batch_size, hidden_dim)
+        query = squeezed[self.query_idx,:,:]
+        keys = squeezed
+        attended = self.attn(query, keys)
+        # attended shape (current_depth, batch_size)
+        x_new = torch.einsum('d b h v w, d b -> b h v w', xs, attended)
+        # x_new shape (batch_size, hidden_dim, height, width)
+        return x_new
 
-        return next_x
+
+class Layer(nn.Module):
+    def __init__(
+        self,
+        hidden_dim: int,
+        kernel_size: int,
+        query_idx: int = -1,
+        temperature: float = 1.,
+        init_scale: float = 1.,
+    ):
+        super().__init__()
+        self.attn_layer = AttnLayer(hidden_dim, query_idx, temperature, init_scale)
+        self.block = Block(hidden_dim, kernel_size)
+
+    def forward(self, xs):
+        x_new = self.attn_layer(xs)
+        # x_new shape (batch_size, hidden_dim, height, width)
+        x_next = self.block(x_new)
+        x_next = x_next.unsqueeze(0)
+        return torch.cat((xs, x_next), dim=0)        
 
 
 @dataclass
@@ -105,7 +100,8 @@ class DeepAttnCfg(BaseCfg):
     patch_size: int = 2
     num_classes: int = 10
 
-    drop_rate: float = 0.    
+    drop_rate: float = 0. 
+    query_idx: int = -1   
     temperature: float = 1.
     init_scale: float = 1.
 
@@ -114,7 +110,12 @@ class DeepAttn(BaseModule):
     def __init__(self, cfg: DeepAttnCfg):
         super().__init__(cfg)
 
-        self.attn_net = AttnNet(cfg.num_layers, cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate, cfg.temperature, cfg.init_scale)
+        self.layers = nn.ModuleList([
+            Layer(cfg.hidden_dim, cfg.kernel_size, cfg.query_idx, cfg.temperature, cfg.init_scale)
+            for _ in range(cfg.num_layers)
+        ])
+
+        self.final_attn = AttnLayer(cfg.hidden_dim, cfg.query_idx, cfg.temperature, cfg.init_scale)
 
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
@@ -132,7 +133,10 @@ class DeepAttn(BaseModule):
         
     def forward(self, x):
         x = self.embed(x)
-        x = self.attn_net(x)
+        xs = x.unsqueeze(0)
+        for layer in self.layers:
+            xs = layer(xs)
+        x = self.final_attn(xs)
         x = self.digup(x)
         return x
 
