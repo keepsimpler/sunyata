@@ -31,8 +31,7 @@ class TinyImageNetDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.num_workers,
-            pin_memory=self.pin_memory,
-            drop_last=True,
+            pin_memory=self.pin_memory
         )
 
     def val_dataloader(self):
@@ -41,8 +40,7 @@ class TinyImageNetDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
-            pin_memory=self.pin_memory,
-            drop_last=True,
+            pin_memory=self.pin_memory
         )
 
 
