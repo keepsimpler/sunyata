@@ -69,7 +69,10 @@ class BaseModule(pl.LightningModule):
         elif self.cfg.optimizer_method == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.cfg.learning_rate)
         elif self.cfg.optimizer_method == "AdamW":
-            optimizer = torch.optim.AdamW(self.parameters(), lr=self.cfg.learning_rate, weight_decay=self.cfg.weight_decay)
+            optimizer = torch.optim.AdamW(
+                [{'params': self.parameters(), 'initial_lr': self.cfg.learning_rate}], 
+                lr=self.cfg.learning_rate, 
+                weight_decay=self.cfg.weight_decay)
         else:
             raise Exception("Only supportSGD, Adam and AdamW optimizer till now.")
 
