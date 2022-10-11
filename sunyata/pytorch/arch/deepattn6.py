@@ -130,13 +130,13 @@ class DeepAttn(BaseModule):
 
         self.cfg = cfg
         
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         x = self.embed(x)
         xs = x.unsqueeze(0)
-        all_squeezed = torch.zeros(0)
+        all_squeezed = torch.zeros(0, device=x.device)
         for layer in self.layers:
             xs, all_squeezed = layer(xs, all_squeezed)
-        x = self.final_attn(xs)
+        x,_ = self.final_attn(xs)
         x = self.digup(x)
         return x
 
