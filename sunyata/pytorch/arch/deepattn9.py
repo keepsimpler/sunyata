@@ -1,4 +1,6 @@
-
+"""
+Based on deepattn7, add squeeze with a shift.
+"""
 from dataclasses import dataclass
 import torch
 import torch.nn as nn

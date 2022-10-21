@@ -1,3 +1,6 @@
+"""
+Squeeze of all the previous xs as keys and queries. Initialize empty tensor to save all xs.
+"""
 
 from dataclasses import dataclass
 import torch

@@ -1,3 +1,6 @@
+"""
+Squeeze of all the previous xs as keys and queries.
+"""
 
 from dataclasses import dataclass
 import torch

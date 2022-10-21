@@ -1,4 +1,6 @@
-
+"""
+Based on deepattn6, add multiple heads
+"""
 from dataclasses import dataclass
 import torch
 import torch.nn as nn

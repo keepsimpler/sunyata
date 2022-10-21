@@ -1,4 +1,8 @@
 
+"""
+xs as list to save memory. with keys of keys of keys of x.
+attn_depth
+"""
 from dataclasses import dataclass
 import torch
 import torch.nn as nn

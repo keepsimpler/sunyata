@@ -1,4 +1,6 @@
-
+"""
+Based on deepattn7, add query_squeeze.
+"""
 from dataclasses import dataclass
 import torch
 import torch.nn as nn
