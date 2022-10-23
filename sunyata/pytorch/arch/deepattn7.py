@@ -92,10 +92,11 @@ class Layer(nn.Module):
         query_idx: int = -1,
         temperature: float = 1.,
         init_scale: float = 1.,
+        drop_rate: float = 0.,
     ):
         super().__init__()
         self.attn_layer = AttnLayer(hidden_dim, num_heads, query_idx, temperature, init_scale)
-        self.block = Block(hidden_dim, kernel_size)
+        self.block = Block(hidden_dim, kernel_size, drop_rate)
 
     def forward(self, xs, all_squeezed):
         x_new, all_squeezed = self.attn_layer(xs, all_squeezed)
@@ -124,7 +125,7 @@ class DeepAttn(BaseModule):
         super().__init__(cfg)
 
         self.layers = nn.ModuleList([
-            Layer(cfg.hidden_dim, cfg.num_heads, cfg.kernel_size, cfg.query_idx, cfg.temperature, cfg.init_scale)
+            Layer(cfg.hidden_dim, cfg.num_heads, cfg.kernel_size, cfg.query_idx, cfg.temperature, cfg.init_scale, cfg.drop_rate)
             for _ in range(cfg.num_layers)
         ])
 
