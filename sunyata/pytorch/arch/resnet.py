@@ -8,10 +8,10 @@ import torchvision
 from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Block
 
 
-def create_model(num_classes: int, first_conv: bool=True):
+def create_model(num_classes: int, stem_downsample: bool=True):
     model = torchvision.models.resnext50_32x4d(pretrained=False, num_classes=num_classes)
-    if not first_conv:
-        model.conv1 = nn.Identity()
+    if not stem_downsample:
+        model.conv1 = nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
     model.maxpool = nn.Identity()
     return model
 
@@ -19,14 +19,14 @@ def create_model(num_classes: int, first_conv: bool=True):
 @dataclass
 class ResNext50Cfg(BaseCfg):
     num_classes: int = 200
-    first_conv: bool = True
+    stem_downsample: bool = True
 
 
 class ResNext50(BaseModule):
     def __init__(self, cfg: ResNext50Cfg):
         super().__init__(cfg)
 
-        self.model = create_model(cfg.num_classes, cfg.first_conv)
+        self.model = create_model(cfg.num_classes, cfg.stem_downsample)
 
         self.cfg = cfg
         
