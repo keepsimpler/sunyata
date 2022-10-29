@@ -148,4 +148,4 @@ lightning_logs/
 *.synctex.gz
 *.toc
 *.pdf
-*.png
+doc/**/*.png
