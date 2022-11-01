@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pandas import DataFrame
 from tokenizers import NormalizedString
 import torch
@@ -140,3 +141,88 @@ def convnext_small(pretrained=False, **kwargs):
     if pretrained:
         raise NotImplementedError
     return model
+
+
+@dataclass
+class ConvNextCfg:
+    batch_size: int = 64 # Per GPU batch size
+    epochs: int = 300
+    update_freq: int = 1  # gradient accumulation steps
+
+    drop_path: float = 0.  # drop path rate
+    input_size: int = 224  # image input size
+    layer_scale_init_value: float = 1e-6
+
+    # EMA related parameters
+    model_ema: bool = False
+    model_ema_decay: float = 0.9999
+    model_ema_force_cpu: bool = False
+    model_ema_eval: bool = False  # using ema to eval during training
+
+    # Optimization parameters
+    opt: str = "adamw"  # Optimizer
+    opt_eps: float = 1e-8  # Optimizer Epsilon
+    opt_betas: float = None  # Optimizer Betas (default: None, use opt default)
+    clip_grad: float = None  # Clip gradient norm (default: None, no clipping)
+    momentum: float = 0.9  # SGD momentum (default: 0.9)
+    weight_decay: float = 0.05  #
+    weight_decay_end: float = None # Final value of the weight decay. We use a cosine schedule for WD
+
+    lr: float = 4e-3  # learning rate (default: 4e-3), with total batch size 4096
+    layer_decay: float = 1.0
+    min_lr: float = 1e-6  # lower lr bound for cyclic schedulers that hit 0 (1e-6)
+    warmup_epochs: int = 20 # epochs to warmup LR, if scheduler supports
+    warmup_steps: int = -1 # num of steps to warmup LR, will overload warmup_epochs if set > 0
+
+    # Augmentation parameters
+    color_jitter: float = 0.4 # Color jitter factor
+    aa: str = "rand-m9-mstd0.5-incl" # use AutoAugment policy. "v0" or "original"
+    smoothing: float = 0.1 # label smoothing
+    train_interpolation: str = 'bicubic' # training interpolation (random, bilinear, bicubic)
+
+    # Evaluation parameters
+    crop_pct: float = None
+
+    # Random Erase params
+    reprob: float = 0.25 # random erase prob
+    remode: str = 'pixel' # random erase mode
+    recount: int = 1 # random erase count
+    resplit: bool = False # do not random erase first (clean) augmentation split
+
+    # Mixup params
+    mixup: float = 0.8 # mixup alpha, mixup enabled if > 0
+    cutmix: float = 1.0 # cutmix alpha, cutmix enabled if > 0
+    cutmix_minmax: float = None # cutmix min/max ratio, overrides alpha and enables cutmix if set
+    mixup_prob: float = 1.0 # probability of performing mixup or cutmix when either/both is enabled
+    mixup_switch_prob: float = 0.5 # probability of switching to cutmix when both mixup and cutmix enabled
+    mixup_mode: str = 'batch' # how to apply mixup/cutmix params, Per 'batch', 'pair' or 'elem'
+
+    # Finetuning params
+    finetune: str = '' # finetune from checkpoint
+    head_init_scale: float = 1.0 # classifier head initial scale, typically adjusted in fine-tuning
+    # model_key, model_prefix
+
+    # Dataset params
+    data_path: str = None # dataset path
+    eval_data_path: str = None # evaluation dataset path
+    nb_classes: int = 1000 # number of the classification types
+    imagenet_default_mean_and_std: bool = True
+    data_set: str = 'IMNET'
+    output_dir: str = '' # where to save, empty for no saving
+    log_dir: str = None # where to tensorboard log
+    device: str = 'cuda' # device to use for training / testing
+    seed: int = 0
+
+    resume: str = '' # resume from checkpoint
+    auto_resume: bool = True
+    save_ckpt: bool = True
+    save_ckpt_freq: int = 1
+    save_ckpt_num: int = 3
+
+    start_epoch: int = 0
+    eval: bool = False # perform evaluation only
+    dist_eval: bool = True # enabling distributed evaluation
+    disable_eval: bool = False # disabling eval during training
+    num_workers: int = 10
+    pin_mem: bool = True
+    
