@@ -1,0 +1,1 @@
+python main.py --model convnext_tiny --drop_path 0.1 --batch_size 256 --lr 4e-3 --update_freq 16 --model_ema true --model_ema_eval true --data_path /notebooks/imagenet --output_dir /notebooks/logs --num_workers 8
