@@ -1,7 +1,7 @@
 # %%
 import torch
 
-from sunyata.pytorch.arch.deepattn import DeepAttn, DeepAttnCfg, Attn, AttnLayer
+from sunyata.pytorch.arch.deepattn1 import DeepAttn, DeepAttnCfg, Attn, AttnLayer
 
 # %%
 def test_DeepAttn():
