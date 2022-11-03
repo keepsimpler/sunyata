@@ -128,7 +128,7 @@ class ConvNext(nn.Module):
 
 
 @register_model
-def convnext_tiny(pretrained=False, **kwargs):
+def convnext_tiny(pretrained=False, pretrained_cfg=None, **kwargs):
     model = ConvNext(depths=[3, 3, 9, 3], dims=[96, 192, 384, 768], **kwargs)
     if pretrained:
         raise NotImplementedError
@@ -136,7 +136,7 @@ def convnext_tiny(pretrained=False, **kwargs):
 
 
 @register_model
-def convnext_small(pretrained=False, **kwargs):
+def convnext_small(pretrained=False, pretrained_cfg=None, **kwargs):
     model = ConvNext(depths=[3, 3, 27, 3], dims=[96, 192, 384, 768], **kwargs)
     if pretrained:
         raise NotImplementedError
