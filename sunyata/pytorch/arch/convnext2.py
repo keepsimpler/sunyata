@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from timm.models.layers import trunc_normal_, DropPath
 from timm.models.registry import register_model
 from sunyata.pytorch.arch.base import Residual
+from sunyata.pytorch.arch.deepattn import AttnLayer, Squeeze
 
 
 class LayerNorm(nn.Module):
@@ -130,6 +131,97 @@ class ConvNext(nn.Module):
         x = self.forward_features(x)
         x = self.head(x)
         return x
+
+
+class Layer(nn.Module):
+    def __init__(
+        self,
+        hidden_dim: int,
+        num_heads: int,
+        query_idx: int = -1,
+        temperature: float = 1.,
+        init_scale: float = 1.,
+        drop_path:float=0., 
+        layer_scale_init_value:float=1e-6,
+    ):
+        super().__init__()
+        self.attn_layer = AttnLayer(hidden_dim, num_heads, query_idx, temperature, init_scale)
+        self.block = Block(hidden_dim, drop_path, layer_scale_init_value)
+
+    def forward(self, xs, all_squeezed):
+        x_new, all_squeezed = self.attn_layer(xs, all_squeezed)
+        # x_new shape (batch_size, hidden_dim, height, width)
+        x_next = self.block(x_new)
+        x_next = x_next.unsqueeze(0)
+        return torch.cat((xs, x_next), dim=0), all_squeezed
+
+
+class Stage(nn.Module):
+    def __init__(
+        self,
+        num_layers: int,
+        hidden_dim: int,
+        num_heads: int,
+        query_idx: int = -1,
+        temperature: float = 1.,
+        init_scale: float = 1.,
+        drop_paths:tuple = None, 
+        layer_scale_init_value:float=1e-6,
+    ):
+        super().__init__()
+        assert num_layers > 1
+        self.first_block = Block(hidden_dim, drop_paths[0], layer_scale_init_value)
+        self.first_squeeze = Squeeze(hidden_dim, init_scale)
+        self.layers = nn.ModuleList([
+            Layer(hidden_dim, num_heads, query_idx, temperature, init_scale, drop_paths[i + 1], layer_scale_init_value)
+            for i in range(num_layers - 1)
+        ])
+        self.final_attn = AttnLayer(hidden_dim, num_heads, query_idx, temperature, init_scale)
+
+    def forward(self, x):
+        xs = torch.stack([x, self.first_block(x)], dim=0)
+        all_squeezed = self.first_squeeze(x).unsqueeze(0)
+        for layer in self.layers:
+            xs, all_squeezed = layer(xs, all_squeezed)
+        x, all_squeezed = self.final_attn(xs, all_squeezed)
+        return x
+
+
+class AttnConvNext(ConvNext):
+    def __init__(
+        self,
+        in_chans=3,
+        num_classes=1000,
+        depths=[3, 3, 9, 3],
+        dims=[96, 192, 384, 768],
+        drop_path_rate=0.,
+        layer_scale_init_value=1e-6,
+        head_init_scale=1.,
+        num_heads: int = 1,
+        query_idx: int = -1,
+        temperature: float = 1.,
+        init_scale: float = 1.,
+
+    ):
+        super().__init__(in_chans,num_classes, depths, dims, drop_path_rate, layer_scale_init_value, head_init_scale)
+
+        self.stages = nn.ModuleList() # 4 feature resolution stages, each consisting of multiple residual blocks
+        drop_rates = (x.item() for x in torch.linspace(0, drop_path_rate, sum(depths)))
+        cur = 0
+        for i in range(4):
+            stage = Stage(depths[i], dims[i], 
+                num_heads, query_idx, temperature, init_scale, drop_rates[cur:cur+depths[i]], layer_scale_init_value)
+            self.stages.append(stage)
+            cur += depths[i]
+
+
+@register_model
+def attnconvnext_tiny(pretrained=False, pretrained_cfg=None, **kwargs):
+    model = AttnConvNext(depths=[3, 3, 9, 3], dims=[96, 192, 384, 768], **kwargs)
+
+    if pretrained:
+        raise NotImplementedError
+    return model
 
 
 @register_model
