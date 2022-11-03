@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from timm.models.layers import trunc_normal_, DropPath
 from timm.models.registry import register_model
+from sunyata.pytorch.arch.base import Residual
 
 
 class LayerNorm(nn.Module):
@@ -35,7 +36,6 @@ class LayerNorm(nn.Module):
             return x
 
 
-
 class Block(nn.Module):
     def __init__(self, dim:int, drop_path:float=0., layer_scale_init_value:float=1e-6):
         super().__init__()
@@ -49,7 +49,7 @@ class Block(nn.Module):
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
 
     def forward(self, x):
-        input = x
+        # input = x
         x = self.dwconv(x)
         x = x.permute(0, 2, 3, 1) # (N, C, H, W) -> (N, H, W, C)
         x = self.norm(x)
@@ -60,8 +60,18 @@ class Block(nn.Module):
             x = self.gamma * x
         x = x.permute(0, 3, 1, 2) # (N, H, W, C) -> (N, C, H, W)
 
-        x = input + self.drop_path(x)
+        x = self.drop_path(x)
         return x
+
+
+class ConvStage(nn.Sequential):
+    def __init__(self, num_blocks:int, dim:int, drop_paths:tuple, layer_scale_init_value:float=1e-6):
+        super().__init__(
+            *[
+                Residual(Block(dim, drop_paths[i], layer_scale_init_value))
+                for i in range(num_blocks)
+            ]
+        )
 
 
 class ConvNext(nn.Module):
@@ -91,15 +101,10 @@ class ConvNext(nn.Module):
             self.downsample_layers.append(downsample_layer)
 
         self.stages = nn.ModuleList() # 4 feature resolution stages, each consisting of multiple residual blocks
-        drop_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
+        drop_rates = (x.item() for x in torch.linspace(0, drop_path_rate, sum(depths)))
         cur = 0
         for i in range(4):
-            stage = nn.Sequential(
-                *[
-                    Block(dim=dims[i], drop_path=drop_rates[cur + j], layer_scale_init_value=layer_scale_init_value)
-                    for j in range(depths[i])
-                ]
-            )
+            stage = ConvStage(depths[i], dims[i], drop_rates[cur:cur+depths[i]], layer_scale_init_value)
             self.stages.append(stage)
             cur += depths[i]
 
