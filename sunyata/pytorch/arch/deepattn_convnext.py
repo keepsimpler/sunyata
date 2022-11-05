@@ -14,7 +14,6 @@ class Layer(nn.Module):
         self,
         hidden_dim: int,
         num_heads: int,
-        kernel_size: int,
         query_idx: int = -1,
         temperature: float = 1.,
         init_scale: float = 1.,
@@ -46,15 +45,19 @@ class DeepAttnCfg(BaseCfg):
     temperature: float = 1.
     init_scale: float = 1.
     layer_scale_init_value: float = 1e-6
+    head_init_scale: float = 1.
 
 
 class DeepAttn(BaseModule):
     def __init__(self, cfg: DeepAttnCfg):
         super().__init__(cfg)
 
+        drop_rates = [x.item() for x in torch.linspace(0, cfg.drop_rate, cfg.num_layers)]
+
         self.layers = nn.ModuleList([
-            Layer(cfg.hidden_dim, cfg.num_heads, cfg.kernel_size, cfg.query_idx, cfg.temperature, cfg.init_scale, cfg.drop_rate)
-            for _ in range(cfg.num_layers)
+            Layer(cfg.hidden_dim, cfg.num_heads, cfg.query_idx, 
+                cfg.temperature, cfg.init_scale, drop_rates[i], cfg.layer_scale_init_value)
+            for i in range(cfg.num_layers)
         ])
 
         self.final_attn = AttnLayer(cfg.hidden_dim, cfg.num_heads, cfg.query_idx, cfg.temperature, cfg.init_scale)
@@ -64,15 +67,25 @@ class DeepAttn(BaseModule):
             LayerNorm(cfg.hidden_dim, eps=1e-6, data_format="channels_first"),
         )
         
+        self.head = nn.Linear(cfg.hidden_dim, cfg.num_classes)
         self.digup = nn.Sequential(
             nn.AdaptiveAvgPool2d((1,1)),
             nn.Flatten(),
-            LayerNorm(cfg.hidden_dim, eps=1e-6, data_format="channels_last")
-            nn.Linear(cfg.hidden_dim, cfg.num_classes)
+            LayerNorm(cfg.hidden_dim, eps=1e-6, data_format="channels_last"),
+            self.head
         )
+
+        self.apply(self._init_weights)
+        self.head.weight.data.mul_(cfg.head_init_scale)
+        self.head.bias.data.mul_(cfg.head_init_scale)
 
         self.cfg = cfg
         
+    def _init_weights(self,m):
+        if isinstance(m, (nn.Conv2d, nn.Linear)):
+            nn.init.trunc_normal_(m.weight, std=0.02)
+            nn.init.constant_(m.bias, 0)
+
     def forward(self, x: torch.Tensor):
         x = self.embed(x)
         xs = x.unsqueeze(0)
