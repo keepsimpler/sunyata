@@ -38,13 +38,14 @@ class LayerNorm(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, dim:int, drop_path:float=0., layer_scale_init_value:float=1e-6):
+    def __init__(self, dim:int, drop_path:float=0., layer_scale_init_value:float=1e-6,
+                        kernel_size:int=7, expansion:int=4):
         super().__init__()
-        self.dwconv = nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim)
+        self.dwconv = nn.Conv2d(dim, dim, kernel_size=kernel_size, padding=kernel_size//2, groups=dim)
         self.norm = LayerNorm(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(dim, 4 * dim)
+        self.pwconv1 = nn.Linear(dim, expansion * dim)
         self.act = nn.GELU()
-        self.pwconv2 = nn.Linear(4 * dim, dim)
+        self.pwconv2 = nn.Linear(expansion * dim, dim)
         self.gamma = nn.Parameter(layer_scale_init_value * torch.ones((dim)),
                     requires_grad=True) if layer_scale_init_value > 0. else None
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()

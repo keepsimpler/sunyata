@@ -24,6 +24,8 @@ class IsotropicCfg(BaseCfg):
     layer_scale_init_value: float = 1e-6
     head_init_scale: float = 1.
 
+    expansion: int = 4
+
 
 class Isotropic(BaseModule):
     def __init__(self, cfg: IsotropicCfg):
@@ -32,7 +34,7 @@ class Isotropic(BaseModule):
         drop_rates = [x.item() for x in torch.linspace(0, cfg.drop_rate, cfg.num_layers)]
 
         self.layers = nn.ModuleList([
-            Residual(Block(cfg.hidden_dim, drop_rates[i], cfg.layer_scale_init_value))
+            Residual(Block(cfg.hidden_dim, drop_rates[i], cfg.layer_scale_init_value, cfg.kernel_size, cfg.expansion))
             for i in range(cfg.num_layers)
         ])
 
