@@ -102,7 +102,7 @@ class ConvNext(nn.Module):
             self.downsample_layers.append(downsample_layer)
 
         self.stages = nn.ModuleList() # 4 feature resolution stages, each consisting of multiple residual blocks
-        drop_rates = (x.item() for x in torch.linspace(0, drop_path_rate, sum(depths)))
+        drop_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
         cur = 0
         for i in range(4):
             stage = ConvStage(depths[i], dims[i], drop_rates[cur:cur+depths[i]], layer_scale_init_value)
@@ -206,7 +206,7 @@ class AttnConvNext(ConvNext):
         super().__init__(in_chans,num_classes, depths, dims, drop_path_rate, layer_scale_init_value, head_init_scale)
 
         self.stages = nn.ModuleList() # 4 feature resolution stages, each consisting of multiple residual blocks
-        drop_rates = (x.item() for x in torch.linspace(0, drop_path_rate, sum(depths)))
+        drop_rates = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
         cur = 0
         for i in range(4):
             stage = Stage(depths[i], dims[i], 
