@@ -69,7 +69,7 @@ class AttnLayer(nn.Module):
         # all_squeezed shape (current_depth, batch_size, hidden_dim)
         query = all_squeezed[self.query_idx,:,:]
         keys = all_squeezed
-        attended = self.attn(query, keys) * xs.shape[0]
+        attended = self.attn(query, keys) # * xs.shape[0]
         # attended shape (current_depth, batch_size, num_heads)
         xs = Rearrange('d b (heads head_dim) v w -> d b heads head_dim v w', heads=self.num_heads)(xs)
         x_new = torch.einsum('d b e h v w, d b e -> b e h v w', xs, attended)
