@@ -142,13 +142,15 @@ class DeepAttnCfg(BaseCfg):
     is_ff: bool = False
     expansion: int = 2
 
-    # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True) nn.BatchNorm1d
-    norm_layer =  nn.BatchNorm1d
-
+    drop_rate: float = 0.
     num_heads: int = 1
     query_idx: int = -1   
     temperature: float = 1.
     init_scale: float = 1.
+
+    # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True) nn.BatchNorm1d
+    norm_layer =  nn.BatchNorm1d,
+
 
 
 class DeepAttn(BaseModule):
@@ -156,7 +158,8 @@ class DeepAttn(BaseModule):
         super().__init__(cfg)
 
         self.layers = nn.ModuleList([
-            Layer(cfg.hidden_dim, cfg.num_heads, cfg.kernel_size, cfg.query_idx, cfg.temperature, cfg.init_scale, cfg.drop_rate)
+            Layer(cfg.hidden_dim, cfg.num_heads, cfg.kernel_size, cfg.query_idx, cfg.temperature, cfg.init_scale, 
+                    cfg.expansion, cfg.is_ff, cfg.groups, cfg.norm_layer)
             for _ in range(cfg.num_layers)
         ])
 
