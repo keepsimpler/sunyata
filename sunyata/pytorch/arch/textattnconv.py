@@ -188,6 +188,7 @@ class DeepAttn(BaseModule):
     def _step(self, batch, mode="train"):  # or "val"
         input, target = batch
         logits = self.forward(input)
+        logits = logits.permute(0, 2, 1)
         loss = F.cross_entropy(logits, target)
         self.log(mode + "_loss", loss, prog_bar=True)
         accuracy = (logits.argmax(dim=1) == target).float().mean()
