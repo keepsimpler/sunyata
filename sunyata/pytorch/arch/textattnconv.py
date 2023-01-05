@@ -19,7 +19,7 @@ class Squeeze(nn.Module):
     ):
         super().__init__()
         self.squeeze = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1, 1)),
+            nn.AdaptiveAvgPool1d((1,)),
             nn.Flatten(),
             LayerScaler(hidden_dim, init_scale),
         )
@@ -69,7 +69,7 @@ class AttnLayer(nn.Module):
         self.query_idx = query_idx
 
     def forward(self, xs, all_squeezed):
-        # xs shape (current_depth, batch_size, hidden_dim, height, width)
+        # xs shape (current_depth, batch_size, hidden_dim, seq_len)
         squeezed = self.squeeze(xs[-1]).unsqueeze(0)
         all_squeezed = torch.cat([all_squeezed, squeezed])
         # all_squeezed shape (current_depth, batch_size, hidden_dim)
@@ -77,10 +77,10 @@ class AttnLayer(nn.Module):
         keys = all_squeezed
         attended = self.attn(query, keys)
         # attended shape (current_depth, batch_size, num_heads)
-        xs = Rearrange('d b (heads head_dim) v w -> d b heads head_dim v w', heads=self.num_heads)(xs)
-        x_new = torch.einsum('d b e h v w, d b e -> b e h v w', xs, attended)
-        x_new = Rearrange('b heads head_dim v w -> b (heads head_dim) v w')(x_new)
-        # x_new shape (batch_size, hidden_dim, height, width)
+        xs = Rearrange('d b (heads head_dim) s -> d b heads head_dim s', heads=self.num_heads)(xs)
+        x_new = torch.einsum('d b e h s, d b e -> b e h s', xs, attended)
+        x_new = Rearrange('b heads head_dim s -> b (heads head_dim) s')(x_new)
+        # x_new shape (batch_size, hidden_dim, seq_len)
         return x_new, all_squeezed
 
 
@@ -121,7 +121,7 @@ class Layer(nn.Module):
 
     def forward(self, xs, all_squeezed):
         x_new, all_squeezed = self.attn_layer(xs, all_squeezed)
-        # x_new shape (batch_size, hidden_dim, height, width)
+        # x_new shape (batch_size, hidden_dim, seq_len)
         x_next = self.block(x_new)
         x_next = x_next.unsqueeze(0)
         return torch.cat((xs, x_next), dim=0), all_squeezed
@@ -149,7 +149,7 @@ class DeepAttnCfg(BaseCfg):
     init_scale: float = 1.
 
     # LayerNorm1d nn.GroupNorm(1, cfg.hidden_dim) nn.InstanceNorm1d(cfg.hidden_dim, affine=True) nn.BatchNorm1d
-    norm_layer =  nn.BatchNorm1d,
+    norm_layer: nn.Module =  nn.BatchNorm1d
 
 
 
@@ -175,11 +175,13 @@ class DeepAttn(BaseModule):
         
     def forward(self, x: torch.Tensor):
         x = self.embed(x)
+        x = x.permute(0, 2, 1)
         xs = x.unsqueeze(0)
         all_squeezed = torch.zeros(0, device=x.device)
         for layer in self.layers:
             xs, all_squeezed = layer(xs, all_squeezed)
         x, all_squeezed = self.final_attn(xs, all_squeezed)
+        x = x.permute(0, 2, 1)
         x = self.digup(x)
         return x
 
