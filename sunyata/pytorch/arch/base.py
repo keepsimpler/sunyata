@@ -82,8 +82,8 @@ class BaseModule(pl.LightningModule):
             lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.cfg.learning_rate,
                 steps_per_epoch=self.cfg.steps_per_epoch, epochs=self.cfg.num_epochs, last_epoch=self.cfg.last_epoch)
         elif self.cfg.learning_rate_scheduler == "LinearWarmupCosineAnnealingLR":
-            import pl_bolts
-            lr_scheduler = pl_bolts.optimizers.LinearWarmupCosineAnnealingLR(
+            from pl_bolts.optimizers import LinearWarmupCosineAnnealingLR
+            lr_scheduler = LinearWarmupCosineAnnealingLR(
                 optimizer, warmup_epochs=self.cfg.warmup_epochs, max_epochs=self.cfg.num_epochs,
                 warmup_start_lr=self.cfg.warmup_start_lr, last_epoch=self.cfg.last_epoch)
         else:
