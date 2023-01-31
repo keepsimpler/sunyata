@@ -73,7 +73,7 @@ class ResConvCLM(BaseModule):
         logits = self.forward(input)
         logits = logits.permute(0, 2, 1)
         loss = F.cross_entropy(logits, target)
-        self.log(mode + "_loss", loss)
+        self.log(mode + "_loss", loss, prog_bar=True)
         accuracy = (logits.argmax(dim=1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
