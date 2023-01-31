@@ -55,6 +55,7 @@ class CLA2d(nn.Module):
     ):
         super().__init__()
         groups = hidden_dim if groups is None else groups
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
         self.keys = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1, groups=groups)
         self.query = nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1, groups=groups)
         self.temperature = temperature
@@ -65,9 +66,10 @@ class CLA2d(nn.Module):
         stacked_features = torch.stack(inputs, dim=0)
         depth, batch_size, hidden_dim, height, width = stacked_features.shape
         concated_features = stacked_features.view(-1, *stacked_features.shape[2:])
+        concated_features = self.pool(concated_features)
         keys = self.keys(concated_features)
-        keys = keys.view(stacked_features.shape)
-        query = self.query(inputs[-1])
+        keys = keys.view(depth, batch_size, hidden_dim, 1, 1)
+        query = self.query(concated_features[-batch_size:])
         attn = torch.einsum('b h v w, d b h v w -> d b v w', query, keys)
         attn = attn / self.temperature
         attn = F.softmax(attn, dim=0)
