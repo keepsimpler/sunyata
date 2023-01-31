@@ -114,15 +114,15 @@ class CLAConvMixer(BaseModule):
     def __init__(self, cfg:CLAConvMixerCfg):
         super().__init__(cfg)
         
-        self.cla_layers = [
+        self.cla_layers = nn.ModuleList([
             CLA2d(cfg.hidden_dim, cfg.groups, cfg.temperature, cfg.multiply_depth, cfg.memory_efficient)
             for _ in range(cfg.num_layers)
-        ]
+        ])
 
-        self.convmixer_layers = [
+        self.convmixer_layers = nn.ModuleList([
             ConvMixerLayer(cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
             for _ in range(cfg.num_layers)
-        ]
+        ])
 
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
@@ -160,6 +160,7 @@ class CLAConvMixer(BaseModule):
         return loss
 
 
+# %%
 if __name__ == "__main__":
     # %%
     batch_size, hidden_dim, height, width = 3, 8, 6, 6
