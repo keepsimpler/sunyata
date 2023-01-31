@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Block
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, ConvMixerLayer
 
 
 @dataclass
@@ -22,7 +22,7 @@ class Isotropic(BaseModule):
         super().__init__(cfg)
 
         self.layers = nn.ModuleList([
-            Block(cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
+            ConvMixerLayer(cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
             for _ in range(cfg.num_layers)
         ])
 

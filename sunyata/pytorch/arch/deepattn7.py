@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops.layers.torch import Rearrange
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Block, LayerScaler
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, ConvMixerLayer, LayerScaler
 
 
 class Squeeze(nn.Module):
@@ -96,7 +96,7 @@ class Layer(nn.Module):
     ):
         super().__init__()
         self.attn_layer = AttnLayer(hidden_dim, num_heads, query_idx, temperature, init_scale)
-        self.block = Block(hidden_dim, kernel_size, drop_rate)
+        self.block = ConvMixerLayer(hidden_dim, kernel_size, drop_rate)
 
     def forward(self, xs, all_squeezed):
         x_new, all_squeezed = self.attn_layer(xs, all_squeezed)

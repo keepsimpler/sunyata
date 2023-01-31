@@ -77,12 +77,12 @@ class NodeOP(nn.Module):
         output = self.unit(sum_xs)
         return output
 # %%
-from sunyata.pytorch.arch.foldnet import Block
+from sunyata.pytorch.arch.foldnet import ConvMixerLayer
 # %%
 x = torch.randn(2,8,8,8)
-Block(hidden_dim=8, kernel_size=3)(x).shape
+ConvMixerLayer(hidden_dim=8, kernel_size=3)(x).shape
 # %%
-NodeOP(Block, hidden_dim=8, kernel_size=3)(*[x]).shape
+NodeOP(ConvMixerLayer, hidden_dim=8, kernel_size=3)(*[x]).shape
 # %%
 class Network(nn.Module):
     def __init__(self, num_layers:int, Unit:nn.Module, *args, **kwargs):
@@ -98,6 +98,6 @@ class Network(nn.Module):
             xs = xs + (x,)
         return xs
 # %%
-output = Network(num_layers=2, Unit=Block, hidden_dim=8, kernel_size=3)(x)
+output = Network(num_layers=2, Unit=ConvMixerLayer, hidden_dim=8, kernel_size=3)(x)
 len(output)
 # %%

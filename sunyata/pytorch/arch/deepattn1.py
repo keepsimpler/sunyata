@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Block, LayerScaler
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, ConvMixerLayer, LayerScaler
 
 
 class Attn(nn.Module):
@@ -61,7 +61,7 @@ class AttnLayer(nn.Module):
     ):
         super().__init__()
         self.attn = Attn(hidden_dim, temperature, init_scale, attn_depth)
-        self.unit = Block(hidden_dim, kernel_size, drop_rate)
+        self.unit = ConvMixerLayer(hidden_dim, kernel_size, drop_rate)
 
     def forward(self, *xs):
         x = self.attn(*xs)

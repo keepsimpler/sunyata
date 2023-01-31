@@ -170,7 +170,7 @@ class LayerNorm2d(nn.LayerNorm):
         return x
 
 
-class Block(nn.Sequential):
+class ConvMixerLayer(nn.Sequential):
     def __init__(self, hidden_dim: int, kernel_size: int, drop_rate: float=0.):
         super().__init__(
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim, padding=kernel_size//2),

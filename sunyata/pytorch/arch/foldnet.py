@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from einops import repeat
 import pytorch_lightning as pl
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual, Block
+from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual, ConvMixerLayer
 from sunyata.pytorch.arch.convnext import BottleNeckBlock
 from sunyata.pytorch.arch.patchconvnet import PatchConvBlock
 
@@ -111,7 +111,7 @@ class FoldNet(BaseModule):
     def __init__(self, cfg:FoldNetCfg):
         super().__init__(cfg)
         
-        if cfg.block == Block or cfg.block == Block2:
+        if cfg.block == ConvMixerLayer or cfg.block == Block2:
             self.layers = nn.ModuleList([
                 FoldBlock(cfg.fold_num, cfg.block, cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
                 for _ in range(cfg.num_layers)
