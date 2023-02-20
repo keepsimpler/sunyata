@@ -6,8 +6,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import pytorch_lightning as pl
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, set_requires_grad, BYOL_EMA
+from sunyata.pytorch.arch.base import BaseCfg, set_requires_grad, BYOL_EMA
 from sunyata.pytorch.arch.loss import InfoNCE, BarlowTwins, ECELoss, BarlowTwinsLoss3d
+from sunyata.pytorch_lightning.base import BaseModule
 
 # %%
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,

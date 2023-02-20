@@ -5,7 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import pytorch_lightning as pl
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, BYOL_EMA
+from sunyata.pytorch.arch.base import BaseCfg, BYOL_EMA
+from sunyata.pytorch_lightning.base import BaseModule
 
 # %%
 from sunyata.pytorch.data.wikitext import (WikiTextDataModule,

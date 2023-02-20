@@ -8,7 +8,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops.layers.torch import Rearrange
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, LayerScaler, Residual
+from sunyata.pytorch.arch.base import BaseCfg, LayerScaler, Residual
+from sunyata.pytorch_lightning.base import BaseModule
+
 from sunyata.pytorch.arch.textconv import Conv1dWithLeftPad
 
 class Squeeze(nn.Module):

@@ -41,7 +41,9 @@ import torch.nn.functional as F
 # for rev_transformer in rev_transformers[::-1]:
 #     x1, x2 = rev_transformer.forward2(x1, x2)
 # %%
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.base import BaseCfg
+from sunyata.pytorch_lightning.base import BaseModule
+
 # %%
 @dataclass
 class RevTransformerCLMCfg(BaseCfg):

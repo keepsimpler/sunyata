@@ -9,7 +9,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import repeat
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.base import BaseCfg
+from sunyata.pytorch_lightning.base import BaseModule
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 from sunyata.pytorch.layer.transformer import TransformerLayer, TransformerLayerNoShortcut, TransformerLayerPostNorm, TransformerLayerPreNorm
 

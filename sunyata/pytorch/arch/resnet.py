@@ -5,7 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, ConvMixerLayer
+from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer
+from sunyata.pytorch_lightning.base import BaseModule
 
 
 def create_model(num_classes: int, stem_downsample: bool=True):

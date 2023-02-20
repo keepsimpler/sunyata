@@ -11,7 +11,9 @@ from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import CSVLogger
-from sunyata.pytorch.arch.base import BaseModule, Residual
+from sunyata.pytorch.arch.base import Residual
+from sunyata.pytorch_lightning.base import BaseModule
+
 # %%
 
 pl.seed_everything(7)

@@ -9,7 +9,8 @@ from collections import OrderedDict
 from typing import List, Optional
 from dataclasses import dataclass
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, ConvMixerLayer
+from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer
+from sunyata.pytorch_lightning.base import BaseModule
 
 #  %%
 class Attn(nn.Module):

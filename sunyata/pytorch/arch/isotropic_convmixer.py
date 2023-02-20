@@ -4,7 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, ConvMixerLayer
+from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer
+from sunyata.pytorch_lightning.base import BaseModule
 
 
 @dataclass

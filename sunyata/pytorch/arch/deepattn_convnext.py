@@ -4,7 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.base import BaseCfg
+from sunyata.pytorch_lightning.base import BaseModule
+
 from sunyata.pytorch.arch.deepattn import AttnLayer
 from sunyata.pytorch.arch.convnext2 import Block, LayerNorm
 

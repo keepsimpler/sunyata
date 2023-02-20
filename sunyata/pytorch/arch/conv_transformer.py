@@ -4,7 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule, Residual
+from sunyata.pytorch.arch.base import BaseCfg, Residual
+from sunyata.pytorch_lightning.base import BaseModule
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 from sunyata.pytorch.arch.textconv import Conv1dWithLeftPad
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer

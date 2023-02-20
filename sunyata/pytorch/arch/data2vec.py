@@ -6,7 +6,8 @@ from torch import nn
 import torch.nn.functional as F
 from pytorch_lightning import Callback, LightningModule, Trainer
 
-from sunyata.pytorch.arch.base import BaseCfg, BaseModule
+from sunyata.pytorch.arch.base import BaseCfg
+from sunyata.pytorch_lightning.base import BaseModule
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
 
