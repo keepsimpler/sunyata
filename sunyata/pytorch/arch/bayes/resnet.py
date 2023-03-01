@@ -68,3 +68,66 @@ class BayesResNet(ResNet):
         return log_prior
 
 # %%
+class BayesResNet2(ResNet):
+    def __init__(
+        self,
+        block: Type[Union[BasicBlock, Bottleneck]],
+        layers: List[int],
+        num_classes: int = 1000,
+        zero_init_residual: bool = False,
+        groups: int = 1,
+        width_per_group: int = 64,
+        replace_stride_with_dilation: Optional[List[bool]] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+    ) -> None:
+        super().__init__(
+            block,
+            layers,
+            num_classes,
+            zero_init_residual,
+            groups,
+            width_per_group,
+            replace_stride_with_dilation,
+            norm_layer,
+        )
+
+        expansion = block.expansion
+        self.digups = nn.ModuleList([
+            *[nn.Sequential(
+                nn.AdaptiveAvgPool2d((1, 1)),
+                nn.Flatten(),
+                nn.Linear(64 * i * expansion, num_classes)
+                ) for i in (1, 2, 4) 
+                ],
+            nn.Sequential(
+                self.avgpool,
+                nn.Flatten(),
+                self.fc,
+            )
+        ])
+
+        log_prior = torch.zeros(1, num_classes)
+        self.register_buffer('log_prior', log_prior)
+        self.logits_bias = Parameter(torch.zeros(1, num_classes))
+
+    def _forward_impl(self, x: Tensor) -> Tensor:
+        batch_size, _, _, _ = x.shape
+        log_prior = self.log_prior.repeat(batch_size, 1)
+
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        for i, layer in enumerate([
+            self.layer1, self.layer2,
+            self.layer3, self.layer4
+        ]):
+            for block in layer:
+                x = block(x)
+                logits = self.digups[i](x)
+                log_prior = log_prior + logits
+                log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
+                log_prior = F.log_softmax(log_prior, dim=-1)
+        return log_prior
+
