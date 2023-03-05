@@ -244,7 +244,7 @@ class bayes_vit_models(vit_models):
         self.register_buffer('log_prior', log_prior)
         self.logits_bias = nn.Parameter(torch.zeros(1, num_classes))
         # self.logits_layer_norm = nn.LayerNorm(num_classes)
-        self.identity = nn.Identity()
+        self.norm = None
 
     def forward(self, x):
         B = x.shape[0]
@@ -260,8 +260,7 @@ class bayes_vit_models(vit_models):
         for i, blk in enumerate(self.blocks):
             x = blk(x)
 #             logits = self.norm(x)
-            logits = self.identity(x)
-            logits = logits[:, 0]
+            logits = x[:, 0]
             logits = self.head(logits)
             log_prior = log_prior + logits
             log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
