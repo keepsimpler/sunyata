@@ -262,9 +262,9 @@ class bayes_vit_models(vit_models):
             logits = logits[:, 0]
             logits = self.head(logits)
             log_prior = log_prior + logits
+            log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
             log_prior = F.log_softmax(log_prior, dim=-1)
             # log_prior = self.logits_layer_norm(log_prior)
-            log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
         
         return log_prior
 
