@@ -242,7 +242,7 @@ class bayes_vit_models(vit_models):
 
         log_prior = torch.zeros(1, num_classes)
         self.register_buffer('log_prior', log_prior)
-        self.logits_bias = nn.Parameter(torch.zeros(1, num_classes))
+#         self.logits_bias = nn.Parameter(torch.zeros(1, num_classes))
         # self.logits_layer_norm = nn.LayerNorm(num_classes)
 
     def forward(self, x):
@@ -262,7 +262,7 @@ class bayes_vit_models(vit_models):
             logits = logits[:, 0]
             logits = self.head(logits)
             log_prior = log_prior + logits
-            log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
+#             log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
             log_prior = F.log_softmax(log_prior, dim=-1)
             # log_prior = self.logits_layer_norm(log_prior)
         
