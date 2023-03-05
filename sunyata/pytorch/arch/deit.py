@@ -258,8 +258,8 @@ class bayes_vit_models(vit_models):
 
         for i, blk in enumerate(self.blocks):
             x = blk(x)
-            logits = self.norm(x)
-            logits = logits[:, 0]
+#             logits = self.norm(x)
+            logits = x[:, 0]
             logits = self.head(logits)
             log_prior = log_prior + logits
 #             log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
