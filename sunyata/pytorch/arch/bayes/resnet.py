@@ -108,8 +108,8 @@ class BayesResNet2(ResNet):
 
         log_prior = torch.zeros(1, num_classes)
         self.register_buffer('log_prior', log_prior)
-        self.logits_layer_norm = nn.LayerNorm(num_classes)
-        # self.logits_bias = Parameter(torch.zeros(1, num_classes))
+        # self.logits_layer_norm = nn.LayerNorm(num_classes)
+        self.logits_bias = Parameter(torch.zeros(1, num_classes), requires_grad=True)
 
     def _forward_impl(self, x: Tensor) -> Tensor:
         batch_size, _, _, _ = x.shape
@@ -128,8 +128,8 @@ class BayesResNet2(ResNet):
                 x = block(x)
                 logits = self.digups[i](x)
                 log_prior = log_prior + logits
-                log_prior = self.logits_layer_norm(log_prior)
-                # log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) # + self.logits_bias
+                # log_prior = self.logits_layer_norm(log_prior)
+                log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
                 # log_prior = F.log_softmax(log_prior, dim=-1)
         return log_prior
 
