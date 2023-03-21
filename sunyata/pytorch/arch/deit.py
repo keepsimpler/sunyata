@@ -2,10 +2,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from functools import partial
 
 from timm.models.vision_transformer import Mlp, PatchEmbed
 
 from timm.models.layers import DropPath, trunc_normal_
+from timm.models.registry import register_model
 
 # %%
 class Attention(nn.Module):
@@ -244,7 +246,7 @@ class bayes_vit_models(vit_models):
         self.register_buffer('log_prior', log_prior)
 #         self.logits_bias = nn.Parameter(torch.zeros(1, num_classes))
         self.logits_layer_norm = nn.LayerNorm(num_classes)
-        self.norm = None
+        # self.norm = None
         self.apply(self._init_weights)
 
 
@@ -261,16 +263,32 @@ class bayes_vit_models(vit_models):
 
         for i, blk in enumerate(self.blocks):
             x = blk(x)
-#             logits = self.norm(x)
+            logits = self.norm(x)
             logits = x[:, 0]
             logits = self.head(logits)
-            log_prior = self.logits_layer_norm(log_prior)
             log_prior = log_prior + logits
+            log_prior = self.logits_layer_norm(log_prior)
             # log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
             # log_prior = F.log_softmax(log_prior, dim=-1)
         
         return log_prior
 
-
-
+# %%
+@register_model
+def deit_tiny_patch16_LS(pretrained=False, pretrained_cfg=None, img_size=224, pretrained_21k = False,   **kwargs):
+    model = vit_models(
+        img_size=img_size, patch_size=16, embed_dim=192, depth=12, num_heads=3, mlp_ratio=4, qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6), block_layers=Layer_scale_init_Block,
+        **kwargs
+    )
+    return model
+# %%
+@register_model
+def bayes_deit_tiny_patch16_LS(pretrained=False, pretrained_cfg=None, img_size=224, pretrained_21k = False,   **kwargs):
+    model = bayes_vit_models(
+        img_size=img_size, patch_size=16, embed_dim=192, depth=12, num_heads=3, mlp_ratio=4, qkv_bias=True,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6), block_layers=Layer_scale_init_Block,
+        **kwargs
+    )
+    return model
 # %%
