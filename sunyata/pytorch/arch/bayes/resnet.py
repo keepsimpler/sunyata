@@ -135,3 +135,47 @@ class BayesResNet2(ResNet):
                 # log_prior = F.log_softmax(log_prior, dim=-1)
         return log_priors
 
+# %%
+class ResNet2(ResNet):
+    def __init__(
+        self,
+        block: Type[Union[BasicBlock, Bottleneck]],
+        layers: List[int],
+        num_classes: int = 1000,
+        zero_init_residual: bool = False,
+        groups: int = 1,
+        width_per_group: int = 64,
+        replace_stride_with_dilation: Optional[List[bool]] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+    ) -> None:
+        super().__init__(
+            block,
+            layers,
+            num_classes,
+            zero_init_residual,
+            groups,
+            width_per_group,
+            replace_stride_with_dilation,
+            norm_layer,
+        )
+
+
+    def _forward_impl(self, x: Tensor) -> Tensor:
+        # See note [TorchScript super()]
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        multi_logits = torch.empty(0)
+        for block in self.layer4:
+            x = block(x)
+            logits = self.avgpool(x)
+            logits = torch.flatten(logits, 1)
+            logits = self.fc(logits)
+            multi_logits = torch.cat([multi_logits, logits])
+        return multi_logits
