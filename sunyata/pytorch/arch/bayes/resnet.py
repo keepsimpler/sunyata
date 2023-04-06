@@ -170,7 +170,7 @@ class ResNet2(ResNet):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-        x = self.layer4(x)
+        # x = self.layer4(x)
         multi_logits = torch.empty(0)
         for block in self.layer4:
             x = block(x)
