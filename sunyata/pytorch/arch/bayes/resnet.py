@@ -127,7 +127,7 @@ class BayesResNet2(ResNet):
         ]):
             for block in layer:
                 x = block(x)
-                logits = self.digups[i](x)
+                log_prior = self.digups[i](x)
                 # log_prior = log_prior + logits
                 log_prior = self.logits_layer_norm(log_prior)
                 log_priors = torch.cat([log_priors, log_prior])
