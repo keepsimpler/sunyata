@@ -129,7 +129,7 @@ class BayesResNet2(ResNet):
                 x = block(x)
                 log_prior = self.digups[i](x)
                 # log_prior = log_prior + logits
-                log_prior = self.logits_layer_norm(log_prior)
+                # log_prior = self.logits_layer_norm(log_prior)
                 log_priors = torch.cat([log_priors, log_prior])
                 # log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
                 # log_prior = F.log_softmax(log_prior, dim=-1)
