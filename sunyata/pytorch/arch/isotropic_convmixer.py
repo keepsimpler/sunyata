@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer
+from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer, ConvMixerLayer2
 from sunyata.pytorch_lightning.base import BaseModule
 
 
@@ -56,6 +56,22 @@ class Isotropic(BaseModule):
         accuracy = (logits.argmax(dim=1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss    
+
+# %%
+class Isotropic2(Isotropic):
+    def __init__(self, cfg: IsotropicCfg):
+        super().__init__(cfg)
+        self.layers = nn.Sequential(*[
+            ConvMixerLayer2(cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
+            for _ in range(cfg.num_layers)
+        ])
+
+    def forward(self, x):
+        x = self.embed(x)
+        x= self.layers(x)
+        x= self.digup(x)
+        return x
+
 
 # %%
 class BayesIsotropic(Isotropic):
