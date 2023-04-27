@@ -79,7 +79,8 @@ class BayesIsotropic(Isotropic):
         super().__init__(cfg)
 
         self.logits_layer_norm = nn.LayerNorm(cfg.hidden_dim)
-
+        self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
+        
         self.digup = nn.Sequential(
             nn.AdaptiveAvgPool2d((1,1)),
             nn.Flatten(),
@@ -122,12 +123,14 @@ class BayesIsotropic2(Isotropic2):
         return logits
 
 # %%
-# input = torch.randn(2, 3, 256, 256)
-# cfg = IsotropicCfg(
-#     patch_size = 8,
-# )
-# model = BayesIsotropic(cfg)
+input = torch.randn(2, 3, 256, 256)
+cfg = IsotropicCfg(
+    patch_size = 8,
+)
+model = BayesIsotropic(cfg)
 
 # model = Isotropic(cfg)
-# output = model(input)
-# output.shape
+output = model(input)
+output.shape
+
+# %%
