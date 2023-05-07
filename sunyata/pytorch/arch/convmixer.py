@@ -17,6 +17,7 @@ class ConvMixerCfg(BaseCfg):
     drop_rate: float = 0.    
 
     layer_norm_zero_init: bool = True
+    skip_connection: bool = True
 
 # %%
 class ConvMixer(nn.Module):
@@ -79,12 +80,16 @@ class BayesConvMixer(ConvMixer):
             nn.Flatten(),
         )
         self.fc = nn.Linear(cfg.hidden_dim, cfg.num_classes)
+        self.skip_connection = cfg.skip_connection
 
     def forward(self, x):
         x = self.embed(x)
         logits = self.digup(x)
         for layer in self.layers:
-            x = x + layer(x)
+            if self.skip_connection:
+                x = x + layer(x)
+            else:
+                x = layer(x)
             logits = logits + self.digup(x)
             logits = self.logits_layer_norm(logits)
         logits = self.fc(logits)
