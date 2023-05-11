@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from einops import rearrange
 
 
-class Attention(nn.Module):
+class SelfAttention(nn.Module):
     def __init__(self, hidden_dim: int, num_heads: int, scale: float=None, dropout=0.,
                  is_mask=True, is_softmax=True, fore_mask=True):
         super().__init__()

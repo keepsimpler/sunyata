@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import torch
 import torch.nn as nn
-from sunyata.pytorch.layer.attention import Attention
+from sunyata.pytorch.layer.attention import SelfAttention
 
 
 @dataclass
@@ -35,7 +35,7 @@ class TransformerCfg:
 class TransformerLayer(nn.Module):
     def __init__(self, cfg:TransformerCfg):
         super().__init__()
-        self.attention = Attention(cfg.hidden_dim, cfg.num_heads, cfg.attn_scale, cfg.attn_dropout,
+        self.attention = SelfAttention(cfg.hidden_dim, cfg.num_heads, cfg.attn_scale, cfg.attn_dropout,
                                     cfg.is_mask, cfg.is_softmax, cfg.fore_mask) if cfg.is_attn else nn.Identity()
 
         self.feed_forward = FeedForward(cfg.hidden_dim, cfg.expanded_dim, cfg.ff_act_nn, 
