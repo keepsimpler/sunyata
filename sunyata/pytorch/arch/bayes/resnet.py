@@ -94,27 +94,27 @@ class BayesResNet2(ResNet):
         expansion = block.expansion
         self.digups = nn.ModuleList([
             *[nn.Sequential(
+                nn.Conv2d(64 * i * expansion, 2048, kernel_size=1),
                 nn.AdaptiveAvgPool2d((1, 1)),
                 nn.Flatten(),
-                nn.Linear(64 * i * expansion, num_classes)
                 ) for i in (1, 2, 4) 
                 ],
             nn.Sequential(
                 self.avgpool,
                 nn.Flatten(),
-                self.fc,
+                # self.fc,
             )
         ])
 
-        log_prior = torch.zeros(1, num_classes)
+        log_prior = torch.zeros(1, 2048)
         self.register_buffer('log_prior', log_prior)
-        self.logits_layer_norm = nn.LayerNorm(num_classes)
+        self.logits_layer_norm = nn.LayerNorm(2048)
         # self.logits_bias = Parameter(torch.zeros(1, num_classes), requires_grad=True)
 
     def _forward_impl(self, x: Tensor) -> Tensor:
         batch_size, _, _, _ = x.shape
         log_prior = self.log_prior.repeat(batch_size, 1)
-        log_priors = torch.empty(0)
+        # log_priors = torch.empty(0)
 
         x = self.conv1(x)
         x = self.bn1(x)
@@ -127,13 +127,13 @@ class BayesResNet2(ResNet):
         ]):
             for block in layer:
                 x = block(x)
-                log_prior = self.digups[i](x)
-                # log_prior = log_prior + logits
-                # log_prior = self.logits_layer_norm(log_prior)
-                log_priors = torch.cat([log_priors, log_prior])
+                logits = self.digups[i](x)
+                log_prior = log_prior + logits
+                log_prior = self.logits_layer_norm(log_prior)
+                # log_priors = torch.cat([log_priors, log_prior])
                 # log_prior = log_prior - torch.mean(log_prior, dim=-1, keepdim=True) + self.logits_bias
                 # log_prior = F.log_softmax(log_prior, dim=-1)
-        return log_priors
+        return self.fc(log_prior)
 
 # %%
 class ResNet2(ResNet):
@@ -179,3 +179,9 @@ class ResNet2(ResNet):
             logits = self.fc(logits)
             multi_logits = torch.cat([multi_logits, logits])
         return multi_logits
+
+# %%
+model = BayesResNet2(Bottleneck, [3, 4, 6, 3])
+input = torch.randn(2, 3, 224, 224)
+output = model(input)
+# %%
