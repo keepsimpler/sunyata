@@ -5,9 +5,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer, ConvMixerLayer2
+from sunyata.pytorch.layer.attention import Attention
 
 # %%
 class eca_layer(nn.Module):
+    """
+    
+    Refs
+    -----
+    ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks
+    """
     def __init__(self, kernel_size: int = 3):
         super(eca_layer, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -138,13 +145,46 @@ class BayesConvMixer2(ConvMixer2):
         return logits
 
 # %%
+class BayesConvMixer3(ConvMixer):
+    def __init__(self, cfg: ConvMixerCfg):
+        super().__init__(cfg)
+
+        self.logits_layer_norm = nn.LayerNorm(cfg.hidden_dim)
+        if cfg.layer_norm_zero_init:
+            self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
+        
+        self.digup = nn.Sequential(
+            Attention(query_dim=cfg.hidden_dim,
+                      context_dim=cfg.hidden_dim,
+                      heads=1, 
+                      dim_head=cfg.hidden_dim
+                      ),
+            nn.Flatten(),
+        )
+        # self.digup = eca_layer(kernel_size=cfg.eca_kernel_size)
+        self.fc = nn.Linear(cfg.hidden_dim, cfg.num_classes)
+        self.skip_connection = cfg.skip_connection
+
+    def forward(self, x):
+        x = self.embed(x)
+        logits = self.digup(x)
+        for layer in self.layers:
+            if self.skip_connection:
+                x = x + layer(x)
+            else:
+                x = layer(x)
+            logits = logits + self.digup(x)
+            logits = self.logits_layer_norm(logits)
+        logits = self.fc(logits)
+        return logits
+
+# %%
 input = torch.randn(2, 3, 256, 256)
 cfg = ConvMixerCfg(
     patch_size = 8,
 )
-model = BayesConvMixer(cfg)
+model = BayesConvMixer3(cfg)
 
-# model = Isotropic(cfg)
 output = model(input)
 output.shape
 
