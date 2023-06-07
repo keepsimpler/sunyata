@@ -149,3 +149,6 @@ lightning_logs/
 *.toc
 *.pdf
 doc/**/*.png
+
+# MDPI
+MDPI_template/
