@@ -13,7 +13,7 @@ class eca_layer(nn.Module):
     
     Refs
     -----
-    ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks
+    ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks. https://github.com/BangguWu/ECANet
     """
     def __init__(self, kernel_size: int = 3):
         super(eca_layer, self).__init__()
