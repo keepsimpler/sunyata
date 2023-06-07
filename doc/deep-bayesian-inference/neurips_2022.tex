@@ -1,27 +1,21 @@
 \documentclass{article}
 
-
 % if you need to pass options to natbib, use, e.g.:
 %     \PassOptionsToPackage{numbers, compress}{natbib}
 % before loading neurips_2022
 
-
 % ready for submission
 % \usepackage{neurips_2022}
-
 
 % to compile a preprint version, e.g., for submission to arXiv, add add the
 % [preprint] option:
 \usepackage[preprint]{neurips_2022}
 
-
 % to compile a camera-ready version, add the [final] option, e.g.:
 %     \usepackage[final]{neurips_2022}
 
-
 % to avoid loading the natbib package, add option nonatbib:
 %    \usepackage[nonatbib]{neurips_2022}
-
 
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
@@ -30,16 +24,17 @@
 \usepackage{booktabs}       % professional-quality tables
 \usepackage{amsfonts}       % blackboard math symbols
 \usepackage{amsmath, bm}
+\usepackage{amssymb}
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{xcolor}         % colors
 \usepackage{graphicx}
 
 \title{
-  Deep Bayesian Inference: \\ a natural coupling to deep neural networks
+  Deep Iterative Learning for Image Recognition
+  % Deep Bayesian Inference: \\ a natural coupling to deep neural networks
   % Deep Bayesian inference naturally couples to deep neural networks.
 }
-
 
 \author{%
   Wenfeng Feng\\
@@ -54,18 +49,14 @@
   \texttt{zhangxin@hpu.edu.cn} \\
 }
 
-
 \begin{document}
 
-
 \maketitle
-
 
 \begin{abstract}
   Deep
   where the observed evidence come from corresponding layer in deep neural network.
 \end{abstract}
-
 
 \section{Introduction}
 
@@ -101,8 +92,6 @@ At every layer, the deep neural network learns a new, more abstract, higher-leve
 
 A deep neural network architecture can be formalized as a composition of functions $\bm{z} = f_{n} . f_{n-1} \ldots f_1(x_0) $.
 
-既然f可以成为deep，softmax也可以成为deep dfdf
-
 On the other hand, Bayesian inference is an iterative process utilizing Bayes' Theorem to deduce(infer) a probability distribution based on new observed data features coming in iteratively.
 
 Since at each layer in a deep neural network, we get a new level or aspect representation of the input data,
@@ -129,9 +118,10 @@ a layer learns something and then passes a representation to the next layer, whi
 
 The Bayesian inference provides a new approach to explanations of deep neural networks.
 
-\section{Deep Bayesian Inference}
+\section{Deep Residual Learning vs Deep Iterative Learning}
+\cite{he2016deep}
 
-
+$\bm{x}_{i} = \bm{x}_{i-1} + \mathcal{F}(\bm{x}_{i-1})$
 
 \begin{equation}
   p(y=c|\bm{x}) = \frac{p(\bm{x}|y=c)p(y=c)}{\sum_{c=1}^C p(\bm{x}|y=c)p(y=c)}
