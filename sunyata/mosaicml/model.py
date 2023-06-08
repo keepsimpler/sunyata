@@ -6,7 +6,7 @@ from composer.models import ComposerClassifier
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy
 
-from sunyata.pytorch.arch.convmixer import ConvMixerCfg, ConvMixer, BayesConvMixer, BayesConvMixer3
+from sunyata.pytorch.arch.convmixer import ConvMixerCfg, ConvMixer, BayesConvMixer, BayesConvMixer3, BayesConvMixer4
 # %%
 def build_composer_convmixer(model_name: str = 'convmixer',
                              num_layers: int = 8,
@@ -34,8 +34,10 @@ def build_composer_convmixer(model_name: str = 'convmixer',
         model = BayesConvMixer(cfg)
     elif model_name == "bayes_convmixer_3":
         model = BayesConvMixer3(cfg)
+    elif model_name == "bayes_convmixer_4":
+        model = BayesConvMixer4(cfg)
     else:
-        raise ValueError(f"model_name='{model_name}' but only 'convmixer' and 'bayes_convmixer' and 'bayes_convmixer_3' are supported now.")
+        raise ValueError(f"model_name='{model_name}' but only 'convmixer' and 'bayes_convmixer' and 'bayes_convmixer_3 and 'bayes_convmixer_4' are supported now.")
     
     # Performance metrics to log other than training loss
     train_metrics = MulticlassAccuracy(num_classes=num_classes, average='micro')
