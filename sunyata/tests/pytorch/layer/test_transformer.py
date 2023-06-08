@@ -3,7 +3,7 @@ import torch.nn as nn
 from sunyata.pytorch.layer.attention import SelfAttention
 from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer
 
-def test_attention():
+def test_self_attention():
 
     batch_size, seq_len, hidden_dim = 2, 6, 8
     input = torch.randn((batch_size, seq_len, hidden_dim))

@@ -1,31 +1,12 @@
 # %%
 from dataclasses import dataclass
+from einops import rearrange, repeat
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer, ConvMixerLayer2
-from sunyata.pytorch.layer.attention import Attention
-
-# %%
-class eca_layer(nn.Module):
-    """
-    
-    Refs
-    -----
-    ECA-Net: Efficient Channel Attention for Deep Convolutional Neural Networks. https://github.com/BangguWu/ECANet
-    """
-    def __init__(self, kernel_size: int = 3):
-        super(eca_layer, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.conv = nn.Conv1d(1, 1, kernel_size=kernel_size, padding=(kernel_size-1)//2, bias=False)
-
-    def forward(self, x: torch.Tensor):
-        assert x.ndim == 4
-        y = self.avg_pool(x)
-        y = self.conv(y.squeeze(-1).transpose(-1,-2))
-        y = y.transpose(-1,-2).squeeze(-1)
-        return y
+from sunyata.pytorch.layer.attention import Attention, EfficientChannelAttention
 
 # %%
 @dataclass
@@ -38,7 +19,7 @@ class ConvMixerCfg(BaseCfg):
 
     drop_rate: float = 0.    
 
-    layer_norm_zero_init: bool = True
+    layer_norm_zero_init: bool = False
     skip_connection: bool = True
 
     eca_kernel_size: int = 3
@@ -103,7 +84,7 @@ class BayesConvMixer(ConvMixer):
         #     nn.AdaptiveAvgPool2d((1,1)),
         #     nn.Flatten(),
         # )
-        self.digup = eca_layer(kernel_size=cfg.eca_kernel_size)
+        self.digup = EfficientChannelAttention(kernel_size=cfg.eca_kernel_size)
         self.fc = nn.Linear(cfg.hidden_dim, cfg.num_classes)
         self.skip_connection = cfg.skip_connection
 
@@ -153,40 +134,41 @@ class BayesConvMixer3(ConvMixer):
         if cfg.layer_norm_zero_init:
             self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
         
-        self.digup = nn.Sequential(
-            Attention(query_dim=cfg.hidden_dim,
+        self.latent = nn.Parameter(torch.randn(1, cfg.hidden_dim))
+
+        self.digup = Attention(query_dim=cfg.hidden_dim,
                       context_dim=cfg.hidden_dim,
                       heads=1, 
                       dim_head=cfg.hidden_dim
-                      ),
-            nn.Flatten(),
-        )
+                      )
+        
         # self.digup = eca_layer(kernel_size=cfg.eca_kernel_size)
         self.fc = nn.Linear(cfg.hidden_dim, cfg.num_classes)
         self.skip_connection = cfg.skip_connection
 
     def forward(self, x):
+        latent = repeat(self.latent, 'n d -> b n d', b = self.cfg.batch_size)
+
         x = self.embed(x)
-        logits = self.digup(x)
+        input = x.permute(0, 2, 3, 1)
+        input = rearrange(input, 'b ... d -> b (...) d')
+        latent = latent + self.digup(latent, input)
+        latent = self.logits_layer_norm(latent)
+
         for layer in self.layers:
             if self.skip_connection:
                 x = x + layer(x)
             else:
                 x = layer(x)
-            logits = logits + self.digup(x)
-            logits = self.logits_layer_norm(logits)
-        logits = self.fc(logits)
+            
+            input = x.permute(0, 2, 3, 1)
+            input = rearrange(input, 'b ... d -> b (...) d')
+            latent = latent + self.digup(latent, input)
+            latent = self.logits_layer_norm(latent)
+
+        latent = nn.Flatten()(latent)
+        logits = self.fc(latent)
         return logits
-
-# %%
-input = torch.randn(2, 3, 256, 256)
-cfg = ConvMixerCfg(
-    patch_size = 8,
-)
-model = BayesConvMixer3(cfg)
-
-output = model(input)
-output.shape
 
 
 # %%
