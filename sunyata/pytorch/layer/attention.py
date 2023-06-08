@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
-
 # %%
 class EfficientChannelAttention(nn.Module):
     """
@@ -141,3 +140,61 @@ class Attention(nn.Module):
         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
         out = self.to_out(out)
         return out
+
+# %%
+class AttentionWithoutParams(nn.Module):
+    """
+    Cross Attention modified from Perceiver.
+
+    Three dimensions:
+    - query_dim (or latent_dim): dim of the latent space
+    - context_dim: dim of the input space
+    - inner_dim: dim of the inner space of attention, equal to dim_head * heads
+
+    Two inputs:
+    - x: input from the latent space, with shape (latent, query_dim)
+    - context: input from the input space, with shape (input, context_dim)
+
+    Data flow:
+    x(latent, query_dim) -- Linear(query_dim, inner_dim) --> q(latent, inner_dim)
+    context(input, context_dim) -- nn.Linear(context_dim, inner_dim * 2) --> k,v(input, inner_dim)
+    q(latent, inner_dim) * k(input, inner_dim) --> sim(latent, input) -- softmax(dim=-1) -->
+    attn(latent, input) * v(input, inner_dim) --> 
+    out(latent, inner_dim) -- Linear(inner_dim, query_dim) --> out(latent, query_dim)
+
+    Refs:
+    https://github.com/lucidrains/perceiver-pytorch/
+    """
+    def __init__(self, query_dim, heads=8, dim_head=64, dropout=0.):
+
+        super().__init__()
+        inner_dim = dim_head * heads
+        assert query_dim == inner_dim
+        project_out = not (inner_dim == query_dim and heads == 1)
+
+
+        self.scale = dim_head ** -0.5
+        self.heads = heads
+
+        self.dropout = nn.Dropout(dropout)
+        self.to_out = nn.Linear(inner_dim, query_dim) if project_out else nn.Identity()
+
+    def forward(self, x, context = None):
+        h = self.heads
+
+        context = context if context is not None else x
+
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (x,context,context))
+
+        sim = torch.einsum('b i d, b j d -> b i j', q, k) * self.scale
+
+        attn = sim.softmax(dim=-1)
+        attn = self.dropout(attn)
+
+        out = torch.einsum('b i j, b j d -> b i d', attn, v)
+        out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        out = self.to_out(out)
+        return out
+
+
+# %%

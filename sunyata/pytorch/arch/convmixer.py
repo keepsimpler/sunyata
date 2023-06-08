@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from sunyata.pytorch.arch.base import BaseCfg, ConvMixerLayer, ConvMixerLayer2
-from sunyata.pytorch.layer.attention import Attention, EfficientChannelAttention
+from sunyata.pytorch.layer.attention import Attention, EfficientChannelAttention, AttentionWithoutParams
 
 # %%
 @dataclass
@@ -171,5 +171,15 @@ class BayesConvMixer3(ConvMixer):
         logits = self.fc(latent)
         return logits
 
+
+# %%
+class BayesConvMixer4(BayesConvMixer3):
+    def __init__(self, cfg: ConvMixerCfg):
+        super().__init__(cfg)
+
+        self.digup = AttentionWithoutParams(query_dim=cfg.hidden_dim,
+                      heads=1, 
+                      dim_head=cfg.hidden_dim
+                      )
 
 # %%
