@@ -147,7 +147,8 @@ class BayesConvMixer3(ConvMixer):
         self.skip_connection = cfg.skip_connection
 
     def forward(self, x):
-        latent = repeat(self.latent, 'n d -> b n d', b = self.cfg.batch_size)
+        batch_size, _, _, _ = x.shape
+        latent = repeat(self.latent, 'n d -> b n d', b = batch_size)
 
         x = self.embed(x)
         input = x.permute(0, 2, 3, 1)
