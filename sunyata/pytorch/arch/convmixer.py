@@ -80,11 +80,11 @@ class BayesConvMixer(ConvMixer):
         if cfg.layer_norm_zero_init:
             self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
         
-        # self.digup = nn.Sequential(
-        #     nn.AdaptiveAvgPool2d((1,1)),
-        #     nn.Flatten(),
-        # )
-        self.digup = EfficientChannelAttention(kernel_size=cfg.eca_kernel_size)
+        self.digup = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1,1)),
+            nn.Flatten(),
+        )
+#         self.digup = EfficientChannelAttention(kernel_size=cfg.eca_kernel_size)
         self.fc = nn.Linear(cfg.hidden_dim, cfg.num_classes)
         self.skip_connection = cfg.skip_connection
 
