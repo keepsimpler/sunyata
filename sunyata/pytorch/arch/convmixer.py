@@ -90,15 +90,15 @@ class BayesConvMixer(ConvMixer):
 
     def forward(self, x):
         x = self.embed(x)
-        logits = self.digup(x)
+        logits = self.logits_layer_norm(self.digup(x))
         for layer in self.layers:
             if self.skip_connection:
                 x = x + layer(x)
             else:
                 x = layer(x)
-            logits = logits + self.digup(x)
-            logits = self.logits_layer_norm(logits)
-        logits = self.fc(logits)
+            logits = logits + self.logits_layer_norm(self.digup(x))
+#             logits = self.logits_layer_norm(logits)
+        logits = self.fc(self.logits_layer_norm(logits))
         return logits
 
 # %%
