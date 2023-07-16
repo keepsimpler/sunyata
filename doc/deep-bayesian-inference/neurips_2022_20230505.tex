@@ -119,14 +119,24 @@ The Bayesian inference provides a new approach to explanations of deep neural ne
 
 \section{Deep Bayesian Inference}
 
+\cite{touvron2021going} explicitly separate the transformer layers involving self-attention between patches from feature-attention layers that are devoted to extract the content of the processed patches into a feature vector.
 
+\cite{jaegle2021perceiver} Perceiver is structured with multiple cross-attend layers, which allow the latent array to iteratively extract information from the input image as it is needed.
+
+Compact Convolutional Transformer (CCT) \cite{hassani2021escaping} introduces an attention-based sequence pooling schema which pools over the output sequence of tokens to map it to a single class index.
+
+\cite{gulati2020conformer} Transformer models are good at capturing content-based global interactions, while CNNs exploit local features effectively. Conformer achieve the best of both worlds by combining convolution neural networks and transformers to model both local and global dependencies of an audio sequence in a parameter-efficient way.
+
+\cite{xiong2020layer} Post-normalization transformers have trouble with stability, prompting the move to pre-normalization even though the latter sacrifices performance.
+
+\cite{wang2022deepnet} DeepNet proposes a way to fix post-normalization stability. They achieve this by simply scaling the residual and proper initialization. They can train an one thousand layer transformer without stability issues, and achieve better results than pre-normalization.
 
 \begin{equation}
   p(y=c|\bm{x}) = \frac{p(\bm{x}|y=c)p(y=c)}{\sum_{c=1}^C p(\bm{x}|y=c)p(y=c)}
 \end{equation}
 
 
-When dealing with high-dimensional data, it is often useful to reduce the dimensionality by projecting it to a lower dimensional subspace which captures the "essence" of the data. (P46)
+When dealing with high-dimensional data, it is often useful to reduce the dimensionality by projecting it to a lower dimensional subspace which captures the "essence" of the data. (\cite{murphy2022probabilistic}P46)
 
 \subsection{Bayesian Inference}
 
@@ -188,9 +198,10 @@ A Bayesian neural network (BNN) is commonly defined as a stochastic artificial n
 While the prior distribution in BNN is taken over the possible model parameterization (is specified for each weight and bias),
 the prior distribution of Deep Bayesian Inference is taken over the possible parameterization of data distribution.
 
-\paragraph{Normalizing Flow}
-
 \section{Experiments}
+
+We evaluate our model on the standard benchmarks
+
 \paragraph{Experiment environment and setting}
 We use Kaggle's free accessed GPUs to do our experiments. 
 Kaggle provides a NVIDIA TESLA P100 GPU for each user which has 15.9GB memory, with a limit on each user's GPU use of 30 hours/week.

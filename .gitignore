@@ -150,6 +150,10 @@ lightning_logs/
 *.pdf
 doc/**/*.png
 
+# office/word
+*.doc
+*.docx
+
 # MDPI
 MDPI_template/
 doc/foldnet/MDPI_template
