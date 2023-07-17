@@ -26,7 +26,7 @@ cfg = ContrastiveCLMCfg(
     transformer = TransformerCfg(
         hidden_dim = hidden_dim,
         num_heads = 2,
-        expanded_dim= 2*hidden_dim,
+        expansion= 2*hidden_dim,
         is_softmax=True,
     ),
     ema_tau = 0.99,

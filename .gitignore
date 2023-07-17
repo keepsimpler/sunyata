@@ -156,5 +156,5 @@ doc/**/*.png
 
 # MDPI
 MDPI_template/
-doc/foldnet/MDPI_template
-doc/plant/MDPI_template
+doc/foldnet/MDPI_template/
+doc/plant/MDPI_template/

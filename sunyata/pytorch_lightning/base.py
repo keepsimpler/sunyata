@@ -11,6 +11,9 @@ class BaseModule(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters("cfg")
         self.cfg = cfg
+    
+    def _step(self, batch, mode):
+        pass
 
     def training_step(self, batch, batch_idx):
         return self._step(batch, mode="train")
@@ -35,9 +38,9 @@ class BaseModule(pl.LightningModule):
 
         if self.cfg.learning_rate_scheduler == "CosineAnnealing":
             lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.cfg.num_epochs, last_epoch=self.cfg.last_epoch)
-        elif self.cfg.learning_rate_scheduler == "OneCycleLR":
-            lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.cfg.learning_rate,
-                steps_per_epoch=self.cfg.steps_per_epoch, epochs=self.cfg.num_epochs, last_epoch=self.cfg.last_epoch)
+        # elif self.cfg.learning_rate_scheduler == "OneCycleLR":
+        #     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.cfg.learning_rate,
+        #         steps_per_epoch=self.cfg.steps_per_epoch, epochs=self.cfg.num_epochs, last_epoch=self.cfg.last_epoch)
         elif self.cfg.learning_rate_scheduler == "LinearWarmupCosineAnnealingLR":
             from pl_bolts.optimizers import LinearWarmupCosineAnnealingLR
             lr_scheduler = LinearWarmupCosineAnnealingLR(

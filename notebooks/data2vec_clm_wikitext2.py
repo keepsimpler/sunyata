@@ -28,7 +28,7 @@ cfg = Data2VecCfg(
     transformer = TransformerCfg(
         hidden_dim = hidden_dim,
         num_heads = 2,
-        expanded_dim= 2*hidden_dim,
+        expansion= 2*hidden_dim,
     ),
 
     batch_size = 64,

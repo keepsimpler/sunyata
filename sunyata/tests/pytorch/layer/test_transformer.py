@@ -18,10 +18,7 @@ def test_transformer():
     cfg = TransformerCfg(
         hidden_dim = 64,
         num_heads = 2,
-        expanded_dim= 2*64,
-        is_softmax=True,
-        is_ff=True,
-        is_ff_layernorm=True,
+        expansion= 2,
     )
     
     transformer = TransformerLayer(cfg)

@@ -153,7 +153,7 @@ cfg = RevTransformerCLMCfg(
     transformer = TransformerCfg(
         hidden_dim = hidden_dim // 2,
         num_heads = 1,
-        expanded_dim= 2*hidden_dim,
+        expansion= 2*hidden_dim,
         is_softmax=True,
         fore_mask=True,
     ),

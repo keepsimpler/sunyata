@@ -1,4 +1,5 @@
 # %%
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -31,8 +32,13 @@ class EfficientChannelAttention(nn.Module):
 
 # %%
 class SelfAttention(nn.Module):
-    def __init__(self, hidden_dim: int, num_heads: int, scale: float=None, dropout=0.,
-                 is_mask=True, is_softmax=True, fore_mask=True):
+    def __init__(
+            self, 
+            hidden_dim: int, 
+            num_heads: int, 
+            scale: Optional[float]=None, 
+            dropout=0.,
+            is_mask=True, is_softmax=True, fore_mask=True):
         super().__init__()
         head_dim = hidden_dim // num_heads
         assert head_dim * num_heads == hidden_dim, "hidden_dim must be divisible by num_heads"

@@ -1,5 +1,5 @@
 import math
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -31,20 +31,20 @@ class RevSGD(torch.optim.Optimizer):
 
         return loss
 
+
 @dataclass
 class BaseCfg:
     batch_size: int = 16
-
     num_layers: int = 8
-    
     num_epochs: int = 10
-    learning_rate: float = 1e-3
-    weight_decay: float = None
+
     optimizer_method: str = "Adam"
+    learning_rate: float = 1e-3
+    weight_decay: float = 0.
+
     learning_rate_scheduler: str = "CosineAnnealing"
-    warmup_epochs: int = None
-    warmup_start_lr: float = None
-    steps_per_epoch: int = None
+    warmup_epochs: int = 0
+    warmup_start_lr: float = 0.
     last_epoch: int = -1
 
 
