@@ -25,7 +25,7 @@ class ViTCfg(BaseCfg):
     patch_size: int = 7
     num_classes: int = 100
 
-    pool: str = 'cls' # or 'mean'
+    pool: str = 'mean' # or 'cls'
 
     emb_dropout: float = 0. 
 
@@ -119,6 +119,36 @@ class ViTPostNorm(ViT):
             TransformerLayerPostNorm(cfg.transformer) for _ in range(cfg.num_layers)
         ])
 
+
+class IterViTPreNorm(ViTPreNorm):
+    def __init__(self, cfg:ViTCfg):
+        super().__init__(cfg)
+
+    def forward(self, img):
+        x = self.to_patch_embedding(img)
+        batch_size, num_patches, _ = x.shape
+
+        if self.pool == 'cls':
+            cls_tokens = repeat(self.cls_token, '1 1 d -> b 1 d', b = batch_size)
+            x = torch.cat((cls_tokens, x), dim=1)
+
+        x += self.pos_embedding
+
+        x = self.emb_dropout(x)
+
+        logits = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
+
+        for layer in self.layers:
+            x = layer(x)
+            x_chosen = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
+            logits = logits + x_chosen
+            logits = self.final_ln(logits)
+
+        logits = self.mlp_head(logits)
+
+        return logits
+
+    
 
 class BayesViT(ViT):
     def __init__(self, cfg:ViTCfg):
