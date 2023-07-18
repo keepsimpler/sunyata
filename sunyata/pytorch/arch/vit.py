@@ -9,7 +9,12 @@ from sunyata.pytorch_lightning.base import BaseModule
 
 
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
-from sunyata.pytorch.layer.transformer import TransformerCfg, TransformerLayer, TransformerLayerPreNorm
+from sunyata.pytorch.layer.transformer import (
+    TransformerCfg,
+    TransformerLayer, 
+    TransformerLayerPreNorm,
+    TransformerLayerPostNorm,
+    )
 
 @dataclass
 class ViTCfg(BaseCfg):
@@ -32,7 +37,7 @@ class ViT(BaseModule):
         self.save_hyperparameters("cfg")
 
         self.layers = nn.Sequential(*[
-            TransformerLayerPreNorm(cfg.transformer) for _ in range(cfg.num_layers)
+            TransformerLayer(cfg.transformer) for _ in range(cfg.num_layers)
         ])
 
         image_height, image_width = pair(cfg.image_size)
@@ -97,6 +102,22 @@ class ViT(BaseModule):
         accuracy = (logits.argmax(dim=-1) == target).float().mean()
         self.log(mode + "_accuracy", accuracy, prog_bar=True)
         return loss
+
+
+class ViTPreNorm(ViT):
+    def __init__(self, cfg:ViTCfg):
+        super().__init__(cfg)
+        self.layers = nn.Sequential(*[
+            TransformerLayerPreNorm(cfg.transformer) for _ in range(cfg.num_layers)
+        ])
+
+
+class ViTPostNorm(ViT):
+    def __init__(self, cfg:ViTCfg):
+        super().__init__(cfg)
+        self.layers = nn.Sequential(*[
+            TransformerLayerPostNorm(cfg.transformer) for _ in range(cfg.num_layers)
+        ])
 
 
 class BayesViT(ViT):

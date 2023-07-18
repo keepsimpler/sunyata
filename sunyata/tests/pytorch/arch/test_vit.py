@@ -6,6 +6,7 @@ from sunyata.pytorch.arch.vit import ViT, ViTCfg
 
 def test_vit():
     cfg = ViTCfg()
+    cfg.pool = 'mean'
     input = torch.randn(2, 3, cfg.image_size, cfg.image_size)
     vit_model = ViT(cfg)
     output = vit_model(input)
