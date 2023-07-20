@@ -6,7 +6,7 @@ from composer.models import ComposerClassifier
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy
 
-from sunyata.pytorch.arch.convmixer import BayesConvMixer5, ConvMixerCfg, ConvMixer, BayesConvMixer, BayesConvMixer3, BayesConvMixer4
+from sunyata.pytorch.arch.convmixer import BayesConvMixer5, ConvMixerCfg, ConvMixer, BayesConvMixer, IterAttnConvMixer, BayesConvMixer4
 # %%
 def build_composer_convmixer(model_name: str = 'convmixer',
                              num_layers: int = 8,
@@ -33,7 +33,7 @@ def build_composer_convmixer(model_name: str = 'convmixer',
     elif model_name == "bayes_convmixer":
         model = BayesConvMixer(cfg)
     elif model_name == "bayes_convmixer_3":
-        model = BayesConvMixer3(cfg)
+        model = IterAttnConvMixer(cfg)
     elif model_name == "bayes_convmixer_5":
         model = BayesConvMixer5(cfg)
     else:

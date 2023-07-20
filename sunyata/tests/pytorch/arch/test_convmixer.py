@@ -2,7 +2,7 @@
 from einops import rearrange, repeat
 import torch
 import torch.nn as nn
-from sunyata.pytorch.arch.convmixer import ConvMixerCfg, BayesConvMixer3
+from sunyata.pytorch.arch.convmixer import ConvMixerCfg, IterAttnConvMixer
 # %%
 def test_BayesConvMixer3():
     cfg = ConvMixerCfg(
@@ -11,7 +11,7 @@ def test_BayesConvMixer3():
 
     input = torch.randn(cfg.batch_size, 3, 224, 224)
 
-    model = BayesConvMixer3(cfg)
+    model = IterAttnConvMixer(cfg)
 
     output = model(input)
     assert output.shape == (cfg.batch_size, cfg.num_classes)

@@ -126,7 +126,7 @@ class BayesConvMixer2(ConvMixer2):
         return logits
 
 # %%
-class BayesConvMixer3(ConvMixer):
+class IterAttnConvMixer(ConvMixer):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
 
@@ -173,7 +173,7 @@ class BayesConvMixer3(ConvMixer):
 
 
 # %%
-class BayesConvMixer4(BayesConvMixer3):
+class BayesConvMixer4(IterAttnConvMixer):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
 
