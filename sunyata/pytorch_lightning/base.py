@@ -26,7 +26,7 @@ class BaseModule(pl.LightningModule):
         if self.cfg.optimizer_method == "RevSGD":
             optimizer = RevSGD(self.parameters(), lr=self.cfg.learning_rate)
         elif self.cfg.optimizer_method == "SGD":
-            optimizer = torch.optim.SGD(self.parameters(), lr=self.cfg.learning_rate)
+            optimizer = torch.optim.SGD(self.parameters(), lr=self.cfg.learning_rate, weight_decay=self.cfg.weight_decay)
         elif self.cfg.optimizer_method == "Adam":
             optimizer = torch.optim.Adam(self.parameters(), lr=self.cfg.learning_rate)
         elif self.cfg.optimizer_method == "AdamW":
