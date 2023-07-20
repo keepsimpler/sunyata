@@ -1,6 +1,7 @@
 import math
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import pytorch_lightning as pl
 
 from sunyata.pytorch.arch.base import BaseCfg, RevSGD
@@ -53,6 +54,20 @@ class BaseModule(pl.LightningModule):
             return optimizer
         else:
             return [optimizer], [lr_scheduler]   
+
+
+class ClassifierModule(BaseModule):
+    def __init__(self, cfg:BaseCfg):
+        super().__init__(cfg)
+
+    def _step(self, batch, mode="train"):  # or "val"
+        input, target = batch
+        logits = self.forward(input)
+        loss = F.cross_entropy(logits, target)
+        self.log(mode + "_loss", loss, prog_bar=True)
+        accuracy = (logits.argmax(dim=1) == target).float().mean()
+        self.log(mode + "_accuracy", accuracy, prog_bar=True)
+        return loss    
 
 
 class BYOL_EMA(pl.Callback):

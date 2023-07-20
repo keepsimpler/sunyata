@@ -27,7 +27,7 @@ class ConvMixerCfg(BaseCfg):
 # %%
 class ConvMixer(nn.Module):
     def __init__(self, cfg: ConvMixerCfg):
-        super().__init__()
+        super(ConvMixer, self).__init__()
 
         self.layers = nn.ModuleList([
             ConvMixerLayer(cfg.hidden_dim, cfg.kernel_size, cfg.drop_rate)
