@@ -72,7 +72,7 @@ class ConvMixer2(ConvMixer):
 
 
 # %%
-class BayesConvMixer(ConvMixer):
+class IterConvMixer(ConvMixer):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
 
