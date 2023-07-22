@@ -6,7 +6,7 @@ from composer.models import ComposerClassifier
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy
 
-from sunyata.pytorch.arch.convmixer import BayesConvMixer5, ConvMixerCfg, ConvMixer, IterConvMixer, IterAttnConvMixer, BayesConvMixer4
+from sunyata.pytorch.arch.convmixer import BayesConvMixer5, ConvMixerCfg, ConvMixer, IterConvMixer, IterAttnConvMixer
 # %%
 def build_composer_convmixer(model_name: str = 'convmixer',
                              num_layers: int = 8,
@@ -30,14 +30,14 @@ def build_composer_convmixer(model_name: str = 'convmixer',
 
     if model_name == "convmixer":
         model = ConvMixer(cfg)
-    elif model_name == "bayes_convmixer":
+    elif model_name == "iter_convmixer":
         model = IterConvMixer(cfg)
-    elif model_name == "bayes_convmixer_3":
+    elif model_name == "iter_attn_convmixer":
         model = IterAttnConvMixer(cfg)
     elif model_name == "bayes_convmixer_5":
         model = BayesConvMixer5(cfg)
     else:
-        raise ValueError(f"model_name='{model_name}' but only 'convmixer' and 'bayes_convmixer' and 'bayes_convmixer_3 and 'bayes_convmixer_5' are supported now.")
+        raise ValueError(f"model_name='{model_name}' but only 'convmixer' and 'iter_convmixer' and 'iter_attn_convmixer and 'bayes_convmixer_5' are supported now.")
     
     # Performance metrics to log other than training loss
     train_metrics = MulticlassAccuracy(num_classes=num_classes, average='micro')
@@ -59,3 +59,5 @@ def build_composer_convmixer(model_name: str = 'convmixer',
 # input = [torch.randn(2, 3, 224, 224), torch.randint(0,100, (2,))]
 # output = composer_model(input)
 # output.shape
+
+# %%
