@@ -134,7 +134,7 @@ class IterAttnConvMixer(ConvMixer):
         if cfg.layer_norm_zero_init:
             self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
         
-        self.latent = nn.Parameter(torch.randn(1, cfg.hidden_dim))
+        self.latent = nn.Parameter(torch.zeros(1, cfg.hidden_dim))
 
         self.digup = Attention(query_dim=cfg.hidden_dim,
                       context_dim=cfg.hidden_dim,
