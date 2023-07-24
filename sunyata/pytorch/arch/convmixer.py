@@ -72,6 +72,27 @@ class ConvMixer2(ConvMixer):
 
 
 # %%
+class MeanConvMixer(ConvMixer):
+    def __init__(self, cfg: ConvMixerCfg):
+        super().__init__(cfg)
+
+        self.digup = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1,1)),
+            nn.Flatten(),
+        )
+        self.fc = nn.Linear(cfg.hidden_dim, cfg.num_classes)
+
+    def forward(self, x):
+        x = self.embed(x)
+        logits = self.digup(x)
+        for layer in self.layers:
+            x = x + layer(x)
+            logits = logits + self.digup(x)
+        logits = self.fc(logits / (self.cfg.num_layers + 1))
+        return logits
+
+
+# %%
 class IterConvMixer(ConvMixer):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
