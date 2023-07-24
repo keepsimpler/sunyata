@@ -119,7 +119,7 @@ class Attention(nn.Module):
 
         context_dim = context_dim if context_dim is not None else query_dim
 
-        self.scale = dim_head ** -0.5
+        self.scale = dim_head ** -0.5 / 10.
         self.heads = heads
 
         self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
