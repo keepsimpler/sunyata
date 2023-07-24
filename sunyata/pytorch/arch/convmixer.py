@@ -154,9 +154,9 @@ class IterAttnConvMixer(ConvMixer):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
 
-        # self.logits_layer_norm = nn.LayerNorm(cfg.hidden_dim)
-        # if cfg.layer_norm_zero_init:
-        #     self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
+        self.logits_layer_norm = nn.LayerNorm(cfg.hidden_dim)
+        if cfg.layer_norm_zero_init:
+            self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
         
         self.latent = nn.Parameter(torch.zeros(1, cfg.hidden_dim))
 
@@ -179,7 +179,7 @@ class IterAttnConvMixer(ConvMixer):
         input = x.permute(0, 2, 3, 1)
         input = rearrange(input, 'b ... d -> b (...) d')
         latent = latent + self.digup(latent, input)
-        # latent = self.logits_layer_norm(latent)
+        latent = self.logits_layer_norm(latent)
 
         for layer in self.layers:
             if self.skip_connection:
@@ -190,9 +190,9 @@ class IterAttnConvMixer(ConvMixer):
             input = x.permute(0, 2, 3, 1)
             input = rearrange(input, 'b ... d -> b (...) d')
             latent = latent + self.digup(latent, input)
-            # latent = self.logits_layer_norm(latent)
+            latent = self.logits_layer_norm(latent)
 
-        latent = nn.Flatten()(latent / (self.cfg.num_layers + 1))
+        latent = nn.Flatten()(latent)
         logits = self.fc(latent)
         return logits
 
