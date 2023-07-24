@@ -8,7 +8,7 @@ import pytorch_lightning as pl
 from sunyata.pytorch.arch.base import BaseCfg, Residual
 from sunyata.pytorch_lightning.base import BaseModule, ClassifierModule
 
-from sunyata.pytorch.arch.convmixer import ConvMixer, ConvMixerCfg, IterAttnConvMixer, IterConvMixer
+from sunyata.pytorch.arch.convmixer import ConvMixer, ConvMixerCfg, IterAttnConvMixer, IterConvMixer, MeanConvMixer
 
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
@@ -21,6 +21,17 @@ class PlConvMixer(ClassifierModule):
     
     def forward(self, x):
         return self.convmixer(x)
+
+
+# %%
+class PlMeanConvMixer(ClassifierModule):
+    def __init__(self, cfg:ConvMixerCfg):
+        super(PlMeanConvMixer, self).__init__(cfg)
+        self.convmixer = MeanConvMixer(cfg)
+    
+    def forward(self, x):
+        return self.convmixer(x)
+
 
 # %%
 class PlIterAttnConvMixer(ClassifierModule):
