@@ -1,5 +1,6 @@
 # %%
 from dataclasses import dataclass
+from typing import Optional
 from einops import rearrange, repeat
 import torch
 import torch.nn as nn
@@ -16,6 +17,8 @@ class ConvMixerCfg(BaseCfg):
     kernel_size: int = 5
     patch_size: int = 2
     num_classes: int = 10
+
+    scale: Optional[float] = None
 
     drop_rate: float = 0.    
 
@@ -160,7 +163,8 @@ class IterAttnConvMixer(ConvMixer):
         self.digup = Attention(query_dim=cfg.hidden_dim,
                       context_dim=cfg.hidden_dim,
                       heads=1, 
-                      dim_head=cfg.hidden_dim
+                      dim_head=cfg.hidden_dim,
+                      scale=cfg.scale,
                       )
         
         # self.digup = eca_layer(kernel_size=cfg.eca_kernel_size)
