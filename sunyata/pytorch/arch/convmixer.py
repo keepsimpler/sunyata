@@ -154,9 +154,9 @@ class IterAttnConvMixer(ConvMixer):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
 
-        self.logits_layer_norm = nn.LayerNorm(cfg.hidden_dim)
-        if cfg.layer_norm_zero_init:
-            self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
+        # self.logits_layer_norm = nn.LayerNorm(cfg.hidden_dim)
+        # if cfg.layer_norm_zero_init:
+        #     self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
         
         self.latent = nn.Parameter(torch.zeros(1, cfg.hidden_dim))
 
