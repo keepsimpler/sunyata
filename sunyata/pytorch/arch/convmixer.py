@@ -178,7 +178,7 @@ class IterAttnConvMixer(ConvMixer):
         x = self.embed(x)
         input = x.permute(0, 2, 3, 1)
         input = rearrange(input, 'b ... d -> b (...) d')
-        latent = latent + self.logits_layer_norm(self.digup(latent, input))
+        latent = latent + self.digup(latent, input)
         # latent = self.logits_layer_norm(latent)
 
         for layer in self.layers:
@@ -189,10 +189,10 @@ class IterAttnConvMixer(ConvMixer):
             
             input = x.permute(0, 2, 3, 1)
             input = rearrange(input, 'b ... d -> b (...) d')
-            latent = latent + self.logits_layer_norm(self.digup(latent, input))
+            latent = latent + self.digup(latent, input)
             # latent = self.logits_layer_norm(latent)
 
-        latent = nn.Flatten()(latent)
+        latent = nn.Flatten()(latent / (self.cfg.num_layers + 1))
         logits = self.fc(latent)
         return logits
 
