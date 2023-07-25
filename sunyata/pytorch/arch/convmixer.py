@@ -20,6 +20,8 @@ class ConvMixerCfg(BaseCfg):
 
     scale: Optional[float] = None
 
+    type: str = 'standard'  # 'iter',  'iter_attn'
+
     drop_rate: float = 0.    
 
     layer_norm_zero_init: bool = False
