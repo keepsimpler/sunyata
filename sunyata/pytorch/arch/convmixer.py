@@ -42,7 +42,7 @@ class ConvMixer(nn.Module):
         self.embed = nn.Sequential(
             nn.Conv2d(3, cfg.hidden_dim, kernel_size=cfg.patch_size, stride=cfg.patch_size),
             nn.GELU(),
-            nn.BatchNorm2d(cfg.hidden_dim, eps=7e-5),  # eps>6.1e-5 to avoid nan in half precision
+            nn.BatchNorm2d(cfg.hidden_dim),  # , eps=7e-5 eps>6.1e-5 to avoid nan in half precision
         )
         
         self.digup = nn.Sequential(

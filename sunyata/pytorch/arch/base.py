@@ -85,11 +85,11 @@ class ConvMixerLayer(nn.Sequential):
         super().__init__(
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size, groups=hidden_dim, padding=kernel_size//2),
             nn.GELU(),
-            nn.BatchNorm2d(hidden_dim, eps=7e-5),
+            nn.BatchNorm2d(hidden_dim), # , eps=7e-5
             # nn.Dropout(drop_rate),
             nn.Conv2d(hidden_dim, hidden_dim, kernel_size=1),
             nn.GELU(),
-            nn.BatchNorm2d(hidden_dim, eps=7e-5),
+            nn.BatchNorm2d(hidden_dim), # , eps=7e-5
             # nn.Dropout(drop_rate)
             StochasticDepth(drop_rate, 'row') if drop_rate > 0. else nn.Identity(),
         )
