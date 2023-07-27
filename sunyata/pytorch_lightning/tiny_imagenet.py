@@ -1,11 +1,18 @@
 
-import pytorch_lightning as pl
+import lightning.pytorch as pl
 from torch.utils.data import DataLoader
 from sunyata.pytorch.data.tiny_imagenet import TinyImageNet
 
 
 class TinyImageNetDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size:int, root: str, num_workers: int=2, pin_memory: bool=True, train_transforms=None, val_transforms=None):
+    def __init__(self, 
+                 root: str, 
+                 batch_size:int=2, 
+                 num_workers: int=2, 
+                 pin_memory: bool=True, 
+                 train_transforms=None, 
+                 val_transforms=None,
+                 ):
         super().__init__()
         self.batch_size = batch_size
         self.root = root
