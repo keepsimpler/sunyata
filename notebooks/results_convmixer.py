@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
-from sunyata.pytorch.arch.convmixer import BayesConvMixer2, ConvMixer, ConvMixerCfg
+from sunyata.pytorch.arch.convmixer import IterConvMixer2, ConvMixer, ConvMixerCfg
 from sunyata.pytorch.data.tiny_imagenet import TinyImageNetDataModule
 # %%
 checkpoint_path = ".data/results/epoch=39-step=31280.ckpt"
@@ -25,7 +25,7 @@ cfg = ConvMixerCfg(
 #     warmup_epochs = 10,  # 2//5 * num_epoches
 )
 # %%
-model = BayesConvMixer2.load_from_checkpoint(checkpoint_path, cfg=cfg)
+model = IterConvMixer2.load_from_checkpoint(checkpoint_path, cfg=cfg)
 model.summarize(max_depth=2)
 # %%
 import torchvision

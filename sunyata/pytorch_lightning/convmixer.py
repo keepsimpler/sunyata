@@ -8,7 +8,10 @@ import pytorch_lightning as pl
 from sunyata.pytorch.arch.base import BaseCfg, Residual
 from sunyata.pytorch_lightning.base import BaseModule, ClassifierModule
 
-from sunyata.pytorch.arch.convmixer import ConvMixer, ConvMixerCfg, IterAttnConvMixer, IterConvMixer, MeanConvMixer
+from sunyata.pytorch.arch.convmixer import (ConvMixer, ConvMixerCfg, ConvMixer2,
+                                            IterAttnConvMixer, IterConvMixer, 
+                                            IterConvMixer2, IterAttnConvMixer2,
+                                            MeanConvMixer,)
 
 from sunyata.pytorch.arch.bayes.core import log_bayesian_iteration
 
@@ -18,6 +21,15 @@ class PlConvMixer(ClassifierModule):
     def __init__(self, cfg:ConvMixerCfg):
         super(PlConvMixer, self).__init__(cfg)
         self.convmixer = ConvMixer(cfg)
+    
+    def forward(self, x):
+        return self.convmixer(x)
+
+
+class PlConvMixer2(ClassifierModule):
+    def __init__(self, cfg:ConvMixerCfg):
+        super(PlConvMixer2, self).__init__(cfg)
+        self.convmixer = ConvMixer2(cfg)
     
     def forward(self, x):
         return self.convmixer(x)
@@ -43,11 +55,29 @@ class PlIterAttnConvMixer(ClassifierModule):
         return self.convmixer(x)
 
 
+class PlIterAttnConvMixer2(ClassifierModule):
+    def __init__(self, cfg:ConvMixerCfg):
+        super(PlIterAttnConvMixer2, self).__init__(cfg)
+        self.convmixer = IterAttnConvMixer2(cfg)
+    
+    def forward(self, x):
+        return self.convmixer(x)
+
+
 # %%
 class PlIterConvMixer(ClassifierModule):
     def __init__(self, cfg:ConvMixerCfg):
         super(PlIterConvMixer, self).__init__(cfg)
         self.convmixer = IterConvMixer(cfg)
+    
+    def forward(self, x):
+        return self.convmixer(x)
+
+
+class PlIterConvMixer2(ClassifierModule):
+    def __init__(self, cfg:ConvMixerCfg):
+        super(PlIterConvMixer2, self).__init__(cfg)
+        self.convmixer = IterConvMixer2(cfg)
     
     def forward(self, x):
         return self.convmixer(x)

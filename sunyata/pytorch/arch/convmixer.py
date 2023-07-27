@@ -128,7 +128,7 @@ class IterConvMixer(ConvMixer):
         return logits
 
 # %%
-class BayesConvMixer2(ConvMixer2):
+class IterConvMixer2(ConvMixer2):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
 
@@ -153,6 +153,54 @@ class BayesConvMixer2(ConvMixer2):
 
 # %%
 class IterAttnConvMixer(ConvMixer):
+    def __init__(self, cfg: ConvMixerCfg):
+        super().__init__(cfg)
+
+        self.logits_layer_norm = nn.LayerNorm(cfg.hidden_dim)
+        if cfg.layer_norm_zero_init:
+            self.logits_layer_norm.weight.data = torch.zeros(self.logits_layer_norm.weight.data.shape)
+        
+        self.latent = nn.Parameter(torch.zeros(1, cfg.hidden_dim))
+
+        self.digup = Attention(query_dim=cfg.hidden_dim,
+                      context_dim=cfg.hidden_dim,
+                      heads=1, 
+                      dim_head=cfg.hidden_dim,
+                      scale=cfg.scale,
+                      )
+        
+        # self.digup = eca_layer(kernel_size=cfg.eca_kernel_size)
+        self.fc = nn.Linear(cfg.hidden_dim, cfg.num_classes)
+        self.skip_connection = cfg.skip_connection
+
+    def forward(self, x):
+        batch_size, _, _, _ = x.shape
+        latent = repeat(self.latent, 'n d -> b n d', b = batch_size)
+
+        x = self.embed(x)
+        input = x.permute(0, 2, 3, 1)
+        input = rearrange(input, 'b ... d -> b (...) d')
+        latent = latent + self.digup(latent, input)
+        latent = self.logits_layer_norm(latent)
+
+        for layer in self.layers:
+            if self.skip_connection:
+                x = x + layer(x)
+            else:
+                x = layer(x)
+            
+            input = x.permute(0, 2, 3, 1)
+            input = rearrange(input, 'b ... d -> b (...) d')
+            latent = latent + self.digup(latent, input)
+            latent = self.logits_layer_norm(latent)
+
+        latent = nn.Flatten()(latent)
+        logits = self.fc(latent)
+        return logits
+
+
+# %%
+class IterAttnConvMixer2(ConvMixer2):
     def __init__(self, cfg: ConvMixerCfg):
         super().__init__(cfg)
 
