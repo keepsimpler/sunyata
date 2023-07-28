@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from sunyata.pytorch.arch.convmixer import ConvMixerCfg, IterAttnConvMixer
 # %%
-def test_BayesConvMixer3():
+def test_IterAttnConvMixer():
     cfg = ConvMixerCfg(
         patch_size = 7,
     )
