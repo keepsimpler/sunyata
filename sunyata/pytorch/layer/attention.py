@@ -139,8 +139,7 @@ class Attention(nn.Module):
 
         sim = torch.einsum('b i d, b j d -> b i j', q, k) * self.scale
 
-        attn = torch.exp(sim) / (1 + torch.sum(sim, dim=-1, keepdim=True))
-        # attn = sim.softmax(dim=-1)
+        attn = sim.softmax(dim=-1)
         attn = self.dropout(attn)
 
         out = torch.einsum('b i j, b j d -> b i d', attn, v)
