@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from einops import repeat
 from einops.layers.torch import Rearrange
 from sunyata.pytorch.arch.base import BaseCfg
+from sunyata.pytorch.layer.attention import Attention
 from sunyata.pytorch_lightning.base import BaseModule
 
 
@@ -28,6 +29,8 @@ class ViTCfg(BaseCfg):
     pool: str = 'mean' # or 'cls'
 
     emb_dropout: float = 0. 
+
+    scale: float = 1.
 
 
 class ViT(BaseModule):
@@ -150,36 +153,48 @@ class IterViTPreNorm(ViTPreNorm):
 
     
 
-class BayesViT(ViT):
+class IterAttnViTPreNorm(ViTPreNorm):
     def __init__(self, cfg:ViTCfg):
         super().__init__(cfg)
+        
+        self.latent = nn.Parameter(torch.zeros(1, cfg.hidden_dim))
+
         log_prior = torch.zeros(1, cfg.num_classes)
         self.register_buffer('log_prior', log_prior) 
-
+        self.digup = Attention(query_dim=cfg.hidden_dim,
+                      context_dim=cfg.hidden_dim,
+                      heads=1, 
+                      dim_head=cfg.hidden_dim,
+                      scale=cfg.scale,
+                      )
+        
     def forward(self, img):
-        batch_size, _, _, _ = img.shape
-        log_prior = repeat(self.log_prior, '1 n -> b n', b=batch_size)
-
         x = self.to_patch_embedding(img)
         batch_size, num_patches, _ = x.shape
 
-        cls_tokens = repeat(self.cls_token, '1 1 d -> b 1 d', b = batch_size)
+        latent = repeat(self.latent, 'n d -> b n d', b = batch_size)
 
-        x = torch.cat((cls_tokens, x), dim=1)
-        x += self.pos_embedding[:, :(num_patches + 1)]
+        if self.pool == 'cls':
+            cls_tokens = repeat(self.cls_token, '1 1 d -> b 1 d', b = batch_size)
+            x = torch.cat((cls_tokens, x), dim=1)
+
+        x += self.pos_embedding
+
         x = self.emb_dropout(x)
+
+        latent = latent + self.digup(latent, x)
+        latent = self.final_ln(latent)
 
         for layer in self.layers:
             x = layer(x)
 
-            x_chosen = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
+            latent = latent + self.digup(latent, x)
+            latent = self.final_ln(latent)
 
-            logits = self.mlp_head(x_chosen)
+        latent = nn.Flatten()(latent)
+        logits = self.mlp_head(latent)
 
-            log_posterior = log_bayesian_iteration(log_prior, logits)
-            log_prior = log_posterior
-
-        return log_posterior
+        return logits
 
     def _step(self, batch, mode="train"):  # or "val"
         input, target = batch
