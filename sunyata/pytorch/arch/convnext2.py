@@ -156,6 +156,8 @@ class ConvNeXtCfg(BaseCfg):
     head_init_scale: float = 1.
 
     scale: float = 1.
+
+    type: str = 'standard'  # standard iter iter_attn
     
 
 def convnext(cfg:ConvNeXtCfg):
@@ -257,6 +259,15 @@ class IterAttnConvNeXt(nn.Module):
         features = nn.Flatten()(features)
         logits = self.convnext.head(features)
         return logits
+
+
+class PlConvNeXt(ClassifierModule):
+    def __init__(self, cfg:ConvNeXtCfg):
+        super(PlConvNeXt, self).__init__(cfg)
+        self.convnext = convnext(cfg)
+    
+    def forward(self, x):
+        return self.convnext(x)
 
 
 class PlIterAttnConvNeXt(ClassifierModule):
