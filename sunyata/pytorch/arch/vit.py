@@ -32,6 +32,8 @@ class ViTCfg(BaseCfg):
 
     scale: float = 1.
 
+    type: str = 'standard'
+
 
 class ViT(BaseModule):
     def __init__(self, cfg: ViTCfg):
@@ -196,14 +198,14 @@ class IterAttnViTPreNorm(ViTPreNorm):
 
         return logits
 
-    def _step(self, batch, mode="train"):  # or "val"
-        input, target = batch
-        log_posterior = self.forward(input)
-        loss = F.nll_loss(log_posterior, target)
-        self.log(mode + "_loss", loss, prog_bar=True)
-        accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
-        self.log(mode + "_accuracy", accuracy, prog_bar=True)
-        return loss
+    # def _step(self, batch, mode="train"):  # or "val"
+    #     input, target = batch
+    #     log_posterior = self.forward(input)
+    #     loss = F.nll_loss(log_posterior, target)
+    #     self.log(mode + "_loss", loss, prog_bar=True)
+    #     accuracy = (log_posterior.argmax(dim=-1) == target).float().mean()
+    #     self.log(mode + "_accuracy", accuracy, prog_bar=True)
+    #     return loss
 
 
 
