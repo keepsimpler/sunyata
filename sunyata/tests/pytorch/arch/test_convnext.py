@@ -32,3 +32,5 @@ assert output.shape == (cfg.batch_size, cfg.num_classes)
 # latent = repeat(latent, 'n d -> b n d', b = cfg.batch_size)
 
 
+
+# %%
