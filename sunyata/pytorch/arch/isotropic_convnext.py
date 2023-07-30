@@ -121,7 +121,7 @@ class IterAttnConvNeXtIsotropic(nn.Module):
         latent = self.logits_layer_norm(latent)
 
         for layer in self.convnext.blocks:
-            x = x + layer(x)
+            x = layer(x)
 
             input = x.permute(0, 2, 3, 1)
             input = rearrange(input, 'b ... d -> b (...) d')
