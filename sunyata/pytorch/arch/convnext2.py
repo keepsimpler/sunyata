@@ -156,6 +156,7 @@ class ConvNeXtCfg(BaseCfg):
     head_init_scale: float = 1.
 
     scale: float = 1.
+    heads: int = 1
 
     type: str = 'standard'  # standard iter iter_attn
     

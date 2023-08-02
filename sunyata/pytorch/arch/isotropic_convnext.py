@@ -99,11 +99,13 @@ class IterAttnConvNeXtIsotropic(nn.Module):
         self.dim = self.convnext.dim
         del self.convnext.norm
 
+        assert self.dim % cfg.heads == 0
+        dim_head = self.dim // cfg.heads
         self.digup = Attention(
             query_dim=self.dim,
             context_dim=self.dim,
-            heads=1,
-            dim_head=self.dim,
+            heads=cfg.heads,
+            dim_head=dim_head,
             scale= cfg.scale,
         )
 
