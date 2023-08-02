@@ -12,7 +12,7 @@ from sunyata.pytorch.layer.attention import Attention
 from sunyata.pytorch_lightning.base import ClassifierModule
 
 from sunyata.pytorch.arch.convnext2 import Block, LayerNorm, ConvNeXtCfg
-from sunyata.pytorch.layer.transformer import FeedForward
+
 
 
 class ConvNeXtIsotropic(nn.Module):
@@ -111,10 +111,6 @@ class IterAttnConvNeXtIsotropic(nn.Module):
 
         self.latent = nn.Parameter(torch.zeros(1, self.dim))
         self.latent_layer_norm = nn.LayerNorm(self.dim)
-        expanded_dim = self.dim
-        self.latent_ffd = FeedForward(hidden_dim=self.dim, expanded_dim=expanded_dim)
-        self.latent_ffd_layer_norm = nn.LayerNorm(self.dim)
-
 
     def forward(self, x):
         batch_size, _, _, _ = x.shape
@@ -133,8 +129,6 @@ class IterAttnConvNeXtIsotropic(nn.Module):
             input = rearrange(input, 'b ... d -> b (...) d')
             latent = latent + self.digup(latent, input)
             latent = self.latent_layer_norm(latent)
-            latent = latent + self.latent_ffd(latent)
-            latent = self.latent_ffd_layer_norm(latent)
 
         latent = nn.Flatten()(latent)
         logits = self.convnext.head(latent)
