@@ -116,36 +116,27 @@ class IterAttnConvNeXtIsotropic(nn.Module):
         self.latent_ffd_layer_norm = nn.LayerNorm(self.dim)
 
 
-class IterConvNeXtIsotropic(nn.Module):
-    def __init__(self, cfg:ConvNeXtCfg):
-        super().__init__()
-        self.convnext = isotropic_convnext(cfg)
-        self.dim = self.convnext.dim
-        del self.convnext.norm
-
-        self.digup = nn.Sequential(
-            nn.AdaptiveAvgPool2d((1,1)),
-            nn.Flatten(),
-        )
-
-        self.latent = nn.Parameter(torch.randn(self.dim))
-        self.latent_layer_norm = nn.LayerNorm(self.dim)
-
-
     def forward(self, x):
         batch_size, _, _, _ = x.shape
-        latent = repeat(self.latent, 'd -> b d', b = batch_size)
+        latent = repeat(self.latent, 'n d -> b n d', b = batch_size)
 
         x = self.convnext.stem(x)
-        latent = latent + self.digup(x)
+        input = x.permute(0, 2, 3, 1)
+        input = rearrange(input, 'b ... d -> b (...) d')
+        latent = latent + self.digup(latent, input)
         latent = self.latent_layer_norm(latent)
 
         for layer in self.convnext.blocks:
             x = layer(x)
 
-            latent = latent + self.digup(x)
+            input = x.permute(0, 2, 3, 1)
+            input = rearrange(input, 'b ... d -> b (...) d')
+            latent = latent + self.digup(latent, input)
             latent = self.latent_layer_norm(latent)
+            latent = latent + self.latent_ffd(latent)
+            latent = self.latent_ffd_layer_norm(latent)
 
+        latent = nn.Flatten()(latent)
         logits = self.convnext.head(latent)
         return logits
 
@@ -154,15 +145,6 @@ class PlConvNeXtIsotropic(ClassifierModule):
     def __init__(self, cfg:ConvNeXtCfg):
         super(PlConvNeXtIsotropic, self).__init__(cfg)
         self.isotropic_convnext = isotropic_convnext(cfg)
-    
-    def forward(self, x):
-        return self.isotropic_convnext(x)
-
-
-class PlIterConvNeXtIsotropic(ClassifierModule):
-    def __init__(self, cfg:ConvNeXtCfg):
-        super(PlIterConvNeXtIsotropic, self).__init__(cfg)
-        self.isotropic_convnext = IterConvNeXtIsotropic(cfg)
     
     def forward(self, x):
         return self.isotropic_convnext(x)
