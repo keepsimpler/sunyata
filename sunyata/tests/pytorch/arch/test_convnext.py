@@ -3,7 +3,11 @@ from einops import rearrange, repeat
 import torch
 import torch.nn as nn
 from sunyata.pytorch.arch.convnext2 import ConvNeXtCfg, convnext, IterAttnConvNeXt, PlIterAttnConvNeXt
-from sunyata.pytorch.arch.isotropic_convnext import isotropic_convnext, IterAttnConvNeXtIsotropic, PlIterAttnConvNeXtIsotropic
+from sunyata.pytorch.arch.isotropic_convnext import (isotropic_convnext,
+                                                    IterConvNeXtIsotropic, 
+                                                    IterAttnConvNeXtIsotropic, 
+                                                    PlIterAttnConvNeXtIsotropic,
+                                                    )
 # %%
 cfg = ConvNeXtCfg(
     batch_size=2,
@@ -14,8 +18,9 @@ cfg = ConvNeXtCfg(
 input = torch.randn(cfg.batch_size, 3, 224, 224)
 
 # model = isotropic_convnext(cfg)
+model = IterConvNeXtIsotropic(cfg)
 # model = IterAttnConvNeXtIsotropic(cfg)
-model = PlIterAttnConvNeXtIsotropic(cfg)
+# model = PlIterAttnConvNeXtIsotropic(cfg)
 # model = convnext(cfg)
 # model = IterAttnConvNeXt(cfg)
 # model = PlIterAttnConvNeXt(cfg)
