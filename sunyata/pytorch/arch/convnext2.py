@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union
 from einops import repeat, rearrange
 
 import torch
@@ -155,7 +156,7 @@ class ConvNeXtCfg(BaseCfg):
     layer_scale_init_value: float = 1e-6
     head_init_scale: float = 1.
 
-    scale: float = 1.
+    scale: Union[float, list] = 1.
     heads: int = 1
 
     type: str = 'standard'  # standard iter iter_attn
@@ -224,18 +225,23 @@ class IterAttnConvNeXt(nn.Module):
         self.dims = self.convnext.dims
         del self.convnext.norm
 
+        if isinstance(cfg.scale, float):
+            scales = [cfg.scale] * len(self.dims)
+        else:
+            scales = cfg.scale
+
         self.digups = nn.ModuleList()
-        for dim in self.dims:
+        for dim, scale in zip(self.dims, scales):
             digup = Attention(
                 query_dim=self.dims[-1],
                 context_dim=dim,
                 heads=1,
                 dim_head=self.dims[-1],
-                scale= cfg.scale,
+                scale= scale,
             )
             self.digups.append(digup)
 
-        self.features = nn.Parameter(torch.zeros(1, self.dims[-1]))
+        self.features = nn.Parameter(torch.randn(1, self.dims[-1]))
         self.iter_layer_norm = nn.LayerNorm(self.dims[-1])
 
 
