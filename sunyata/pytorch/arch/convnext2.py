@@ -241,7 +241,7 @@ class IterAttnConvNeXt(nn.Module):
             )
             self.digups.append(digup)
 
-        self.features = nn.Parameter(torch.randn(1, self.dims[-1]))
+        self.features = nn.Parameter(torch.zeros(1, self.dims[-1]))
         self.iter_layer_norm = nn.LayerNorm(self.dims[-1])
 
 

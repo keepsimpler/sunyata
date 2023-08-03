@@ -109,7 +109,7 @@ class IterAttnConvNeXtIsotropic(nn.Module):
             scale= cfg.scale,
         )
 
-        self.latent = nn.Parameter(torch.randn(1, self.dim))
+        self.latent = nn.Parameter(torch.zeros(1, self.dim))
         self.latent_layer_norm = nn.LayerNorm(self.dim)
 
     def forward(self, x):

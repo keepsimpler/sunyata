@@ -161,8 +161,6 @@ class IterAttnViTPreNorm(ViTPreNorm):
         
         self.latent = nn.Parameter(torch.zeros(1, cfg.hidden_dim))
 
-        log_prior = torch.zeros(1, cfg.num_classes)
-        self.register_buffer('log_prior', log_prior) 
         self.digup = Attention(query_dim=cfg.hidden_dim,
                       context_dim=cfg.hidden_dim,
                       heads=1, 
