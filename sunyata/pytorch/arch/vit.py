@@ -74,11 +74,12 @@ class ViT(ClassifierModule):
         if self.posemb == 'learn':
             self.pos_embedding = nn.Parameter(torch.randn(1, num_patches, cfg.hidden_dim))
         elif self.posemb == 'sincos2d':
-            self.pos_embedding = posemb_sincos_2d(
+            pos_embedding = posemb_sincos_2d(
             h = image_height // patch_height,
             w = image_width // patch_width,
             dim = cfg.hidden_dim,
-        ) 
+            )
+            self.register_buffer('pos_embedding', pos_embedding)
 
         if self.pool == 'cls':
             self.cls_token = nn.Parameter(torch.randn(1, 1, cfg.hidden_dim))
