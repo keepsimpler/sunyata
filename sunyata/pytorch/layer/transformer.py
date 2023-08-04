@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 import torch
 import torch.nn as nn
 from sunyata.pytorch.layer.attention import SelfAttention, Attention
@@ -10,6 +11,7 @@ class TransformerCfg:
 
      # attention
     num_heads: int = 8
+    attn_scale: Optional[float] = None
     attn_dropout: float = 0.
 
     # feed forward
@@ -24,7 +26,7 @@ class TransformerLayer(nn.Module):
         assert cfg.hidden_dim % cfg.num_heads == 0
         dim_head = cfg.hidden_dim // cfg.num_heads
         self.attention = Attention(query_dim=cfg.hidden_dim, context_dim=cfg.hidden_dim, heads=cfg.num_heads,
-                                    dim_head=dim_head, dropout=cfg.attn_dropout)
+                                    dim_head=dim_head, dropout=cfg.attn_dropout, scale = cfg.attn_scale)
 
         expanded_dim = cfg.expansion * cfg.hidden_dim
         self.feed_forward = FeedForward(cfg.hidden_dim, expanded_dim, cfg.ff_act_nn, 
