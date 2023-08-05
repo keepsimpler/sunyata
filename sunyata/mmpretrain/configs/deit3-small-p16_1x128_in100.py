@@ -5,7 +5,10 @@ model = dict(
         arch='s',
         img_size=224,
         patch_size=16,
-        drop_path_rate=0.05),
+        drop_path_rate=0.05,
+        with_cls_token=False,
+        out_type='avg_featmap',
+        ),
     neck=None,
     head=dict(
         type='VisionTransformerClsHead',
@@ -171,7 +174,7 @@ default_hooks = dict(
     param_scheduler=dict(type='ParamSchedulerHook'),
 
     # save checkpoint per epoch.
-    checkpoint=dict(type='CheckpointHook', interval=1, max_keep_ckpts=2, save_best='acc'),
+    checkpoint=dict(type='CheckpointHook', interval=1, max_keep_ckpts=2, save_best='auto'),
 
     # set sampler seed in distributed evrionment.
     sampler_seed=dict(type='DistSamplerSeedHook'),
