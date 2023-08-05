@@ -116,12 +116,13 @@ test_evaluator = val_evaluator
 
 # optimizer
 optim_wrapper = dict(
-    optimizer=dict(type='AdamW', lr=1e-5, weight_decay=0.1),
+    optimizer=dict(type='AdamW', lr=1e-3, weight_decay=1e-2),
     # specific to vit pretrain
     paramwise_cfg=dict(custom_keys={
         '.cls_token': dict(decay_mult=0.0),
         '.pos_embed': dict(decay_mult=0.0)
     }),
+    clip_grad=dict(max_norm=1.0),
 )
 
 # learning policy
@@ -132,21 +133,21 @@ param_scheduler = [
         start_factor=1e-4,
         by_epoch=True,
         begin=0,
-        end=30,
+        end=10,
         # update by iter
         convert_to_iter_based=True),
     # main learning rate scheduler
     dict(
         type='CosineAnnealingLR',
-        T_max=270,
+        T_max=40,
         by_epoch=True,
-        begin=30,
-        end=300,
+        begin=10,
+        end=50,
     )
 ]
 
 # train, val, test setting
-train_cfg = dict(by_epoch=True, max_epochs=300, val_interval=1)
+train_cfg = dict(by_epoch=True, max_epochs=50, val_interval=1)
 val_cfg = dict()
 test_cfg = dict()
 
