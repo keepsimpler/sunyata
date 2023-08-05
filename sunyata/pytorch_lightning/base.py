@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import math
 import torch
 import torch.nn as nn
@@ -14,6 +15,7 @@ class BaseModule(pl.LightningModule):
         self.save_hyperparameters("cfg")
         self.cfg = cfg
     
+    @abstractmethod
     def _step(self, batch, mode):
         pass
 
