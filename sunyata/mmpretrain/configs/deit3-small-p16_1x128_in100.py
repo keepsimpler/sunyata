@@ -85,6 +85,10 @@ train_dataloader = dict(
         type=dataset_type,
         data_root='/root/autodl-tmp/ImageNet100',
         split='train',
+        ann_file = '',
+        metainfo = dict(
+            classes = None,
+        ),
         pipeline=train_pipeline),
     sampler=dict(type='DefaultSampler', shuffle=True),
 )
@@ -96,6 +100,10 @@ val_dataloader = dict(
         type=dataset_type,
         data_root='/root/autodl-tmp/ImageNet100',
         split='val',
+        ann_file = '',
+        metainfo = dict(
+            classes = None,
+        ),
         pipeline=test_pipeline),
     sampler=dict(type='DefaultSampler', shuffle=False),
 )
