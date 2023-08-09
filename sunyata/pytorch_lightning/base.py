@@ -44,15 +44,15 @@ class BaseModule(pl.LightningModule):
             raise Exception("Only supportSGD, Adam and AdamW and Lamb optimizer till now.")
 
         if self.cfg.learning_rate_scheduler == "CosineAnnealing":
-            lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.cfg.num_epochs, last_epoch=self.cfg.last_epoch)
-        # elif self.cfg.learning_rate_scheduler == "OneCycleLR":
-        #     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.cfg.learning_rate,
-        #         steps_per_epoch=self.cfg.steps_per_epoch, epochs=self.cfg.num_epochs, last_epoch=self.cfg.last_epoch)
+            lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, self.cfg.num_epochs)
+        elif self.cfg.learning_rate_scheduler == "OneCycleLR":
+            lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=self.cfg.learning_rate,
+                steps_per_epoch=self.cfg.steps_per_epoch, epochs=self.cfg.num_epochs)
         elif self.cfg.learning_rate_scheduler == "LinearWarmupCosineAnnealingLR":
             from sunyata.pytorch.lr_scheduler import LinearWarmupCosineAnnealingLR
             lr_scheduler = LinearWarmupCosineAnnealingLR(
                 optimizer, warmup_epochs=self.cfg.warmup_epochs, max_epochs=self.cfg.num_epochs,
-                warmup_start_lr=self.cfg.warmup_start_lr, last_epoch=self.cfg.last_epoch)
+                warmup_start_lr=self.cfg.warmup_start_lr)
         else:
             lr_scheduler = None
 

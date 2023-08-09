@@ -45,7 +45,7 @@ class BaseCfg:
     learning_rate_scheduler: str = "CosineAnnealing"
     warmup_epochs: int = 0
     warmup_start_lr: float = 0.
-    last_epoch: int = -1
+    steps_per_epoch: Optional[int] = None
 
 
 
