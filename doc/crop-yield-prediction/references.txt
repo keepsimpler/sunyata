@@ -1,0 +1,8 @@
+https://eos.com/products/high-resolution-images/
+
+https://farmersedge.ca/predicting-the-future-today-with-yield-prediction/
+only considering one parameter or using publicly available data is not accurate enough to provide field and farm level conditions across an area. Using large datasets that have been confirmed accurate and provide constant information at the field-level is critical to success.
+
+https://geopard.tech/blog/predicting-crop-yield-with-remote-sensing-data/
+
+https://www.rsipvision.com/agricultural-yield-prediction-using-deep-learning/

@@ -1,0 +1,111 @@
+\documentclass[anon,12pt]{colt2024} % Anonymized submission
+%\documentclass[final,12pt]{colt2024} % Include author names
+
+% The following packages will be automatically loaded:
+% amsmath, amssymb, natbib, graphicx, url, algorithm2e
+
+\title[Short Title]{Full Title of Article}
+\usepackage{times}
+% Use \Name{Author Name} to specify the name.
+% If the surname contains spaces, enclose the surname
+% in braces, e.g. \Name{John {Smith Jones}} similarly
+% if the name has a "von" part, e.g \Name{Jane {de Winter}}.
+% If the first letter in the forenames is a diacritic
+% enclose the diacritic in braces, e.g. \Name{{\'E}louise Smith}
+
+% Two authors with the same address
+% \coltauthor{\Name{Author Name1} \Email{abc@sample.com}\and
+%  \Name{Author Name2} \Email{xyz@sample.com}\\
+%  \addr Address}
+
+% Three or more authors with the same address:
+% \coltauthor{\Name{Author Name1} \Email{an1@sample.com}\\
+%  \Name{Author Name2} \Email{an2@sample.com}\\
+%  \Name{Author Name3} \Email{an3@sample.com}\\
+%  \addr Address}
+
+% Authors with different addresses:
+\coltauthor{%
+ \Name{Author Name1} \Email{abc@sample.com}\\
+ \addr Address 1
+ \AND
+ \Name{Author Name2} \Email{xyz@sample.com}\\
+ \addr Address 2%
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}%
+  This is a great paper and it has a concise abstract.%
+\end{abstract}
+
+\begin{keywords}%
+  List of keywords%
+\end{keywords}
+
+\section{Introduction}
+
+Deep neural networks have become the fundamental infrastructure in today's artificial intelligence systems. 
+% There are different types of deep neural networks, such as multi-layer perceptron (MLP), convolutional neural networks (CNN), and etc.
+Transformer is a new type of deep neural network incorporated recently.
+It mainly utilized the self-attention mechanism and/or cross-attention mechanism to extract intrinsic features.
+Transformer was first applied to natural language processing (NLP) tasks where it achieved significant improvements.
+Inspired by the major success of transformer architectures in the field of NLP, researchers have recently applied transformer to computer vision (CV) tasks.
+
+Among transformers in CV, vision transformer (ViT) is a pure transformer directly applies to sequences of image patches for image classification task.
+It has achieved state-of-the-art performance on multiple image recognition benchmarks.
+
+In ViT, an image $\mathbf{x} \in \mathbb{R} ^ {h \times w \times c}$ is split into a sequence of flattened patches $\mathbf{x} \in \mathbb{R} ^ {n \times (p^2 \cdot c)}$ where $c$ is the number of channels, $(h,w)$ is the resolution of the original image, $(p,p)$ is the resolution of each image patch, and $n=hw/p^2$ is the number of patches.
+Each flattened patch is then linearly projected to a patch embedding to produce a sequence of patch embeddings $\mathbf{x}_p \in \mathbb{R} ^ {n \times d}$ where $d$ is the embedded dimension size (or model dimension size).
+To capture positional information, learnable position embeddings $\mathbf{pos} \in \mathbb{R} ^ {n \times d}$ are added to the sequence of patch embeddings to get the resulting sequence of patch and position embeddings $\mathbf{p}_0 = \mathbf{x}_p + \mathbf{pos}$.
+After that, a learnable class embedding $\mathbf{c}_0 \in \mathbb{R}^d$ is concatenated to the sequence of patch and position embedding to produce the input sequence of tokens $\mathbf{z}_0 = \mathrm{concat}(\mathbf{p}_0,  \mathbf{c}_0) \in \mathbb{R} ^ {(n+1) \times d}$ for the ViT backbone.
+
+The ViT backbone composed of $l$ layers is applied to the sequence of tokens $\mathbf{z}_0$ to generate a sequence of encodings $\mathbf{z}_l \in \mathbb{R} ^ {(n+1) \times d}$.
+A ViT layer consists of a multi-head self-attention (MSA) block followed by a feed-forward network (FFN) block with layer norm (LN) applied before every block and residual connections added after every block:
+\begin{eqnarray}
+  \mathbf{a_{i-1}} &=& \mathbf{MSA}(\mathbf{LN}(\mathbf{z_{i-1}})) + \mathbf{z_{i-1}} , \\
+  \mathbf{z_{i}} &=& \mathbf{FFN}(\mathbf{LN}(\mathbf{a_{i-1}})) + \mathbf{a_{i-1}},
+\end{eqnarray}
+where $i \in \{1,\ldots,l\}$.
+
+The self-attention mechanism is composed of three point-wise linear layers mapping tokens to three intermediate representations, queries $\mathbf{q} \in \mathbb{R}^{(n+1) \times d}$, keys $\mathbf{k} \in \mathbb{R}^{(n+1) \times d}$ and values $\mathbf{v} \in \mathbb{R}^{(n+1) \times d}$.
+Self-attention is then computed as follows:
+\begin{equation}
+   \mathbf{MSA}(\mathbf{q}, \mathbf{k}, \mathbf{v}) = \mathrm{softmax} \left( \frac{\mathbf{q}\mathbf{k}^T}{\sqrt{d}} \right)  \mathbf{v}.
+\end{equation}
+
+A FFN block is applied after the MSA block. It consists of two linear transformations and a nonlinear activation function within them, and can be denoted as the following function:
+\begin{equation}
+  \mathbf{FFN}(\mathbf{a}) = \mathbf{w_2} \cdot \sigma(\mathbf{w_1} \cdot \mathbf{a}),
+\end{equation}
+where $\mathbf{w_1}$ and $\mathbf{w_2}$ are two learnable matrices of the two linear transformations, $\sigma$ represents the nonlinear activation function, such as GELU [], and  $\mathbf{a}$ is the output of the MSA block.
+
+The output of ViT backbone $\mathbf{z}_l$ is feed into the ViT head, who first splits the generated encodings $\mathbf{z}_l$ into two partitions, the patch and position encodings $\mathbf{p}_l \in \mathbb{R} ^ {n \times d}$ and the class encoding $\mathbf{c}_l \in \mathbb{R}^d$, then extracts the class encoding.
+After that, a linear transformation is applied to the class encoding $\mathbf{c}_l$ to produce a logits vector. A softmax layer is then used to transform the logits into class probabilities.
+
+\subsection{The problem of the ViT architecture}
+The same learnable weights are asked to optimize two unrelated, even contradictory objectives: (1) guiding the self-attention between patches while (2) summarizing the information useful to the linear classifier.
+We argue that this may damage the performance.
+Our proposal is to explicitly separate the transformer layers involving self-attention between patches from the cross-attention layers that are devoted to extract the content of the processed patches into a feature vector.
+Therefore, the self-attention layers is dedicated to capture the attentions between patches, while the cross-attention layers is dedicated to capture the attentions of the classifier to the patches.
+
+% Acknowledgments---Will not appear in anonymized version
+\acks{We thank a bunch of people and funding agency.}
+
+\bibliography{yourbibfile}
+
+\appendix
+
+% \crefalias{section}{appendix} % uncomment if you are using cleveref
+
+\section{My Proof of Theorem 1}
+
+This is a boring technical proof.
+
+\section{My Proof of Theorem 2}
+
+This is a complete version of a proof sketched in the main text.
+
+\end{document}

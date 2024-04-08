@@ -1,0 +1,335 @@
+%%%%%%%% ICML 2024 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+% hyperref makes hyperlinks in the resulting PDF.
+% If your build breaks (sometimes temporarily if a hyperlink spans a page)
+% please comment out the following usepackage line and replace
+% \usepackage{icml2024} with \usepackage[nohyperref]{icml2024} above.
+\usepackage{hyperref}
+
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+\usepackage{icml2024}
+
+% If accepted, instead use the following line for the camera-ready submission:
+% \usepackage[accepted]{icml2024}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+\usepackage[textsize=tiny]{todonotes}
+
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{Submission and Formatting Instructions for ICML 2024}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{
+   An iterative encoder-decorder image transformer
+   Add an iterative decorder to image transformers
+}
+
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically remove it for you
+% unless you've provided the [accepted] option to the icml2024
+% package.
+
+% List of affiliations: The first argument should be a (short)
+% identifier you will use later to specify author affiliations
+% Academic affiliations should list Department, University, City, Region, Country
+% Industry affiliations should list Company, City, Region, Country
+
+% You can specify symbols, otherwise they are numbered in order.
+% Ideally, you should not use this facility. Affiliations will be numbered
+% in order of appearance and this is the preferred way.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Firstname1 Lastname1}{equal,yyy}
+\icmlauthor{Firstname2 Lastname2}{equal,yyy,comp}
+\icmlauthor{Firstname3 Lastname3}{comp}
+\icmlauthor{Firstname4 Lastname4}{sch}
+\icmlauthor{Firstname5 Lastname5}{yyy}
+\icmlauthor{Firstname6 Lastname6}{sch,yyy,comp}
+\icmlauthor{Firstname7 Lastname7}{comp}
+%\icmlauthor{}{sch}
+\icmlauthor{Firstname8 Lastname8}{sch}
+\icmlauthor{Firstname8 Lastname8}{yyy,comp}
+%\icmlauthor{}{sch}
+%\icmlauthor{}{sch}
+\end{icmlauthorlist}
+
+\icmlaffiliation{yyy}{Department of XXX, University of YYY, Location, Country}
+\icmlaffiliation{comp}{Company Name, Location, Country}
+\icmlaffiliation{sch}{School of ZZZ, Institute of WWW, Location, Country}
+
+\icmlcorrespondingauthor{Firstname1 Lastname1}{first1.last1@xxx.edu}
+\icmlcorrespondingauthor{Firstname2 Lastname2}{first2.last2@www.uk}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to populate
+% the "keywords" metadata in the PDF but will not be shown in the document
+\icmlkeywords{Machine Learning, ICML}
+
+\vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+
+% This command actually creates the footnote in the first column
+% listing the affiliations and the copyright notice.
+% The command takes one argument, which is text to display at the start of the footnote.
+% The \icmlEqualContribution command is standard text for equal contribution.
+% Remove it (just {}) if you do not need this facility.
+
+%\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+% \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\begin{abstract}
+This document provides a basic paper template and submission guidelines.
+Abstracts must be a single paragraph, ideally between 4--6 sentences long.
+Gross violations will trigger corrections at the camera-ready phase.
+\end{abstract}
+
+\section{Introduction}
+\label{introduction}
+
+The assumption that there is no benefit in copying information from the class embedding back to the patch embeddings.
+
+
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=0.8\columnwidth]{vit_arch.png}}
+\caption{caption}
+\label{vit_arch}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+
+\section{Related work}
+
+\section{Method}
+
+An image $\mathbf{x} \in \mathbb{R} ^ {H \times W \times C}$ is split into a sequence of patches $\mathbf{x} = [x_1, \ldots, x_N] \in \mathbb{R} ^ {N \times (P^2 C)}$ where $(P,P)$ is the patch size, $N = HW/P^2$ is the number of patches and $C$ is the number of channels.
+Each patch is flattened into a 1D vector and then linearly projected to a patch embedding to produce a sequence of patch embeddings $\mathbf{x}_0 = [x_1 \cdot \mathbf{E}, \ldots, x_N \cdot \mathbf{E}] \in \mathbb{R}^{N \times D}$ where $\mathbf{E} \in \mathbb{R}^{(P^2C) \times D}$.
+To capture positional information, learnable position embeddings $\mathbf{pos} = [\mathrm{pos}_1, \ldots, \mathrm{pos}_N] \in \mathbb{R}^{N \times D}$ are added to the sequence of patches to get the resulting input sequence of tokens $\mathbf{z}_0 = \mathbf{x}_0 + \mathbf{pos}$.
+
+A Vision Transformer backbone composed of $L$ layers is applied to the sequence of tokens $\mathbf{z}_0$ to generate a sequence of contextualized (representative) encodings $\mathbf{z}_L \in \mathbb{R}^{N \times D}$.
+A Vision Transformer layer consists of a multi-head self-attention (MSA) block followed by a position-wise feed-forward network (FFN) block of two layers with layer norm (LN) applied before every block and residual connections added after every block:
+\begin{eqnarray}
+   \mathbf{a_{i-1}} &=& \mathbf{MSA}(\mathbf{LN}(\mathbf{z_{i-1}})) + \mathbf{z_{i-1}} , \\
+   \mathbf{z_{i}} &=& \mathbf{FFN}(\mathbf{LN}(\mathbf{a_{i-1}})) + \mathbf{a_{i-1}},
+\end{eqnarray}
+where $i \in \{1,\ldots,L\}$.
+The self-attention mechanism is composed of three point-wise linear layers mapping tokens to three intermediate representations, queries $\mathbf{Q} \in \mathbb{R}^{N \times D}$, keys $\mathbf{K} \in \mathbb{R}^{N \times D}$ and values $\mathbf{V} \in \mathbb{R}^{N \times D}$.
+Self-attention is then computed as follows:
+\begin{equation}
+   \mathbf{MSA}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \mathrm{softmax} \left( \frac{\mathbf{Q}\mathbf{K}^T}{\sqrt{D}} \right)  \mathbf{V}.
+\end{equation}
+
+The transformer encoder maps the input sequence $\mathbf{z_0} = [z_{0,1},\ldots,z_{0,N}]$ of embedded patches with position encoding to $\mathbf{z_L} = [z_{L,1},\ldots,z_{L,N}]$, a contextualized (representative) encoding sequence containing rich semantic information.
+
+We introduce a learnable class embedding (feature vector) $\mathbf{\hat{z}}_0 \in \mathbb{R}^D$ initialized randomly (with zero values). 
+The cross-attention (CA) mechanism consists first of a point-wise linear layer mapping features to intermediate representations, queries $\mathbf{\hat{Q}} = \mathbf{W}_{\hat{\mathrm{q}}} \cdot \mathbf{\hat{z}} \in \mathbb{R}^D $, where $\mathbf{W}_{\hat{\mathrm{q}}} \in \mathbb{R}^{D \times D} $, and two point-wise linear layers mapping tokens to intermediate representations, keys $\mathbf{\hat{K}} \in  \mathbb{R}^{N \times D}$ and values $\mathbf{\hat{V}} \in \mathbb{R}^{N \times D}$.
+
+\begin{eqnarray}
+   \mathbf{\hat{Q}}_{i-1} &=& \mathbf{W}_{\hat{\mathrm{q}}} \cdot \mathbf{\hat{z}}_{i-1}, \\
+   \mathbf{\hat{K}}_{i-1} &=& \mathbf{W}_{\hat{\mathrm{k}}} \cdot \mathbf{z}_{i-1}, \\
+   \mathbf{\hat{V}}_{i-1} &=& \mathbf{W}_{\hat{\mathrm{v}}} \cdot \mathbf{z}_{i-1}, \\
+   \mathbf{CA}(\mathbf{\hat{Q}}_{i-1}, \mathbf{\hat{K}}_{i-1}, \mathbf{\hat{V}}_{i-1}) &=& \mathrm{softmax} \left( \frac{\mathbf{\hat{Q}}_{i-1} \mathbf{\hat{K}}_{i-1}^T}{\sqrt{D}} \right)  \mathbf{\hat{V}}_{i-1}, \\
+   \mathbf{\hat{z}}_i &=& \mathbf{LN}(\mathbf{CA}(\mathbf{\hat{z}}_{i-1}, \mathbf{z}_{i-1}) + \mathbf{\hat{z}}_{i-1})
+\end{eqnarray}
+
+\section{Format of the Paper}
+
+\subsection{Partitioning the Text}
+
+\begin{figure}[ht]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{icml_numpapers}}
+\caption{Historical locations and number of accepted papers for International
+Machine Learning Conferences (ICML 1993 -- ICML 2008) and International
+Workshops on Machine Learning (ML 1988 -- ML 1992). At the time this figure was
+produced, the number of accepted papers for ICML 2008 was unknown and instead
+estimated.}
+\label{icml-historical}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\subsection{Figures}
+
+Label all distinct components of each figure. If the figure takes the
+form of a graph, then give a name for each axis and include a legend
+that briefly describes each curve. Do not include a title inside the
+figure; instead, the caption should serve this function.
+
+\subsection{Algorithms}
+
+If you are using \LaTeX, please use the ``algorithm'' and ``algorithmic''
+environments to format pseudocode. These require
+the corresponding stylefiles, algorithm.sty and
+algorithmic.sty, which are supplied with this package.
+\cref{alg:example} shows an example.
+
+\begin{algorithm}[tb]
+   \caption{Bubble Sort}
+   \label{alg:example}
+\begin{algorithmic}
+   \STATE {\bfseries Input:} data $x_i$, size $m$
+   \REPEAT
+   \STATE Initialize $noChange = true$.
+   \FOR{$i=1$ {\bfseries to} $m-1$}
+   \IF{$x_i > x_{i+1}$}
+   \STATE Swap $x_i$ and $x_{i+1}$
+   \STATE $noChange = false$
+   \ENDIF
+   \ENDFOR
+   \UNTIL{$noChange$ is $true$}
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Tables}
+
+% Note use of \abovespace and \belowspace to get reasonable spacing
+% above and below tabular lines.
+
+\begin{table}[t]
+\caption{Classification accuracies for naive Bayes and flexible
+Bayes on various data sets.}
+\label{sample-table}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcccr}
+\toprule
+Data set & Naive & Flexible & Better? \\
+\midrule
+Breast    & 95.9$\pm$ 0.2& 96.7$\pm$ 0.2& $\surd$ \\
+Cleveland & 83.3$\pm$ 0.6& 80.0$\pm$ 0.6& $\times$\\
+Glass2    & 61.9$\pm$ 1.4& 83.8$\pm$ 0.7& $\surd$ \\
+Credit    & 74.8$\pm$ 0.5& 78.3$\pm$ 0.6&         \\
+Horse     & 73.3$\pm$ 0.9& 69.7$\pm$ 1.0& $\times$\\
+Meta      & 67.1$\pm$ 0.6& 76.5$\pm$ 0.5& $\surd$ \\
+Pima      & 75.1$\pm$ 0.6& 73.9$\pm$ 0.5&         \\
+Vehicle   & 44.9$\pm$ 0.6& 61.5$\pm$ 0.4& $\surd$ \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+Tables contain textual material, whereas figures contain graphical material.
+Specify the contents of each row and column in the table's topmost
+row. Again, you may float tables to a column's top or bottom, and set
+wide tables across both columns. Place two-column tables at the
+top or bottom of the page.
+
+\subsection{Theorems and such}
+The preferred way is to number definitions, propositions, lemmas, etc. consecutively, within sections, as shown below.
+\begin{definition}
+\label{def:inj}
+A function $f:X \to Y$ is injective if for any $x,y\in X$ different, $f(x)\ne f(y)$.
+\end{definition}
+Using \cref{def:inj} we immediate get the following result:
+\begin{proposition}
+If $f$ is injective mapping a set $X$ to another set $Y$, 
+the cardinality of $Y$ is at least as large as that of $X$
+\end{proposition}
+\begin{proof} 
+Left as an exercise to the reader. 
+\end{proof}
+\cref{lem:usefullemma} stated next will prove to be useful.
+\begin{lemma}
+\label{lem:usefullemma}
+For any $f:X \to Y$ and $g:Y\to Z$ injective functions, $f \circ g$ is injective.
+\end{lemma}
+\begin{theorem}
+\label{thm:bigtheorem}
+If $f:X\to Y$ is bijective, the cardinality of $X$ and $Y$ are the same.
+\end{theorem}
+An easy corollary of \cref{thm:bigtheorem} is the following:
+\begin{corollary}
+If $f:X\to Y$ is bijective, 
+the cardinality of $X$ is at least as large as that of $Y$.
+\end{corollary}
+\begin{assumption}
+The set $X$ is finite.
+\label{ass:xfinite}
+\end{assumption}
+\begin{remark}
+According to some, it is only the finite case (cf. \cref{ass:xfinite}) that is interesting.
+\end{remark}
+%restatable
+
+
+% In the unusual situation where you want a paper to appear in the
+% references without citing it in the main text, use \nocite
+\nocite{langley00}
+
+\bibliography{example_paper}
+\bibliographystyle{icml2024}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \newpage
+% \appendix
+% \onecolumn
+% \section{You \emph{can} have an appendix here.}
+
+% You can have as much text here as you want. The main body must be at most $8$ pages long.
+% For the final version, one more page can be added.
+% If you want, you can use an appendix like this one.  
+
+% The $\mathtt{\backslash onecolumn}$ command above can be kept in place if you prefer a one-column appendix, or can be removed if you prefer a two-column appendix.  Apart from this possible change, the style (font size, spacing, margins, page numbering, etc.) should be kept the same as the main body.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\end{document}

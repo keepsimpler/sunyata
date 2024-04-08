@@ -1,0 +1,59 @@
+\section{Related work}
+\label{sec:related}
+
+Yu \etal~\cite{yu2022metaformer} proposed MetaFormer is a general architecture abstracted from transformers by not specifying the token mixer. When using attention/spatial MLP as the token mixer, MetaFormer is instantiated as transformer/MLP-like models. The competence of transformer/MLP-like models primarily stems from the general architecture MetaFormer instead of the equipped specific token mixers. In other words, MetaFormer is what we need to achieve competitive performance rather than specific token mixers.
+
+\cite{touvron2021going} explicitly separate the transformer layers involving self-attention between patches from feature-attention layers that are devoted to extract the content of the processed patches into a feature vector.
+
+\cite{jaegle2021perceiver} Perceiver is structured with multiple cross-attend layers, which allow the latent array to iteratively extract information from the input image as it is needed.
+
+The query inputs for the first cross-attention layer (e.g. the left-most latent vector in \cref{fig:architecture}) are learned, per-element weights with the same shape as the latent vector. These function like learned position encodings in the Transformer literature or like a learned initial state in the recurrent neural network (RNN) literature. All values of the latent vector are initialized to zero.
+
+We introduce asymmetry: while $K$ and $V$ are projections of the input byte array, $Q$ is a projection of the learned latent vector.
+
+Compact Convolutional Transformer (CCT) \cite{hassani2021escaping} introduces an attention-based sequence pooling schema which pools over the output sequence of tokens to map it to a single class index.
+
+\cite{gulati2020conformer} Transformer models are good at capturing content-based global interactions, while CNNs exploit local features effectively. Conformer achieve the best of both worlds by combining convolution neural networks and transformers to model both local and global dependencies of an audio sequence in a parameter-efficient way.
+
+\cite{xiong2020layer} Post-normalization transformers have trouble with stability, prompting the move to pre-normalization even though the latter sacrifices performance.
+
+\cite{wang2022deepnet} DeepNet proposes a way to fix post-normalization stability. They achieve this by simply scaling the residual and proper initialization. They can train an one thousand layer transformer without stability issues, and achieve better results than pre-normalization.
+
+\section{Method}
+\label{sec:method}
+
+As shown in \cref{fig:architecture}, \cref{sec:intro},
+
+\Cref{eq:input_emb} is also quite important.
+
+\begin{table}
+  \centering
+  \begin{tabular}{@{}lc@{}}
+    \toprule
+    Method & Frobnability \\
+    \midrule
+    Theirs & Frumpy \\
+    Yours & Frobbly \\
+    Ours & Makes one's heart Frob\\
+    \bottomrule
+  \end{tabular}
+  \caption{Results.   Ours is better.}
+  \label{tab:example}
+\end{table}
+
+%-------------------------------------------------------------------------
+\subsection{Architecture}
+
+\begin{equation}
+  X = \text{InputEmb} (I)
+  \label{eq:input_emb}
+\end{equation}
+
+
+%-------------------------------------------------------------------------
+\subsection{Color}
+
+Please refer to the author guidelines on the \confName\ \confYear\ web page for a discussion of the use of color in your document.
+
+If you use color in your plots, please keep in mind that a significant subset of reviewers and readers may have a color vision deficiency; red-green blindness is the most frequent kind.
+Hence avoid relying only on color as the discriminative feature in plots (such as red \vs green lines), but add a second discriminative feature to ease disambiguation.
