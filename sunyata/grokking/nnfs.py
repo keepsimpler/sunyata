@@ -1,3 +1,5 @@
+# modified from https://github.com/Dev-Gaju/NNFS-book-with-Implementation
+
 from typing import Optional
 import numpy as np
 # import nnfs
