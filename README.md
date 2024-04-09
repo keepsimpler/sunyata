@@ -1,5 +1,5 @@
 # sunyata
-> Sunyata, a Buddhist concept, is what all existences arise. 
+> Sunyata, a Buddhist concept, is where all existence arise. 
 ## Models
 ### FoldNet
 FoldNet fold the chain-like architecture of ResNet to form an accordion-like neural network architecture:
