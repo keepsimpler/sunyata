@@ -86,15 +86,39 @@ The output of ViT backbone $\mathbf{z}_l$ is feed into the ViT head, who first s
 After that, a linear transformation is applied to the class encoding $\mathbf{c}_l$ to produce a logits vector. A softmax layer is then used to transform the logits into class probabilities.
 
 \subsection{The problem of the ViT architecture}
-The same learnable weights are asked to optimize two unrelated, even contradictory objectives: (1) guiding the self-attention between patches while (2) summarizing the information useful to the linear classifier.
-We argue that this may damage the performance.
-Our proposal is to explicitly separate the transformer layers involving self-attention between patches from the cross-attention layers that are devoted to extract the content of the processed patches into a feature vector.
-Therefore, the self-attention layers is dedicated to capture the attentions between patches, while the cross-attention layers is dedicated to capture the attentions of the classifier to the patches.
+
+In ViT, the input sequence of tokens for the ViT backbone, $\mathbf{z}_0$, is formed by concatenating the sequence of patch/position embedding  $\mathbf{p}_0$ and the class embedding  $\mathbf{c}_0$, where $\mathbf{c}_0$ is usually called [CLS] token.
+The design of the [CLS] token is inherited from the BERT model [ref].%, in which the [CLS] token stands for sentence-level classification.
+The ViT backbone then utilizes self-attention mechanism to learn the attention between all these tokens.
+There are therefore three parts to the attention between tokens. Firstly, attention between patch/position tokens are used to represent the image's features. Secondly, the [CLS] token's attention to patch/position tokens reflects the importance of different features of the image for classification. Thirdly, patch/position tokens pay attention to CLS tokens.
+The first part of the attention is the self-attention between patch/position tokens, the second part is the cross-attention between the class token and patch/position tokens, and the third part is actually not needed or even harmful.
+However, in ViT, these three parts are mixed and merged together, which introduces irrelevant information and increases the complexity of the model [cait].
+In fact, some authors of the ViT model proposed in a later paper \cite{beyer2022better} that using 1d Global Average Pooling (GAP) instead of [CLS] tokens could even improve performance.
+% In ViT, the same learnable weights are asked to optimize two unrelated, even contradictory objectives: (1) guiding the self-attention between patches while (2) summarizing the information useful to the linear classifier.We argue that this may damage the performance.
+
+Our proposal is to explicitly separate the [CLS] token from the patch/position tokens, use the original self-attention layers to capture the attention between patch/position tokens, and introduce new cross-attention layers to extract the attention of the [CLS] token to the patch/position tokens.
+We argue that this explicit separation avoids the contradiction and complexity of the traditional [CLS] token in ViT.
+% Our proposal is to explicitly separate the transformer layers involving self-attention between patches from the cross-attention layers that are devoted to extract the content of the processed patches into a feature vector so that it can be fed to a linear classifier.
+% Therefore, the self-attention layers is dedicated to capture the attentions between patches, while the cross-attention layers is dedicated to capture the attentions of the classifier to the patches.
+% This explicit separation avoids the contradictory objective of guiding the attention process while processing the class embedding.
+
+\section{Our proposal}
+
+Such a design is akin to an encoder-decoder architecture, where the encoder involves self-attention between patches, while the decoder extract the content of the processed patches into a feature vector.
+
+
+
+Next, we design an encoder-decoder architecture.
+The traditional encoder-decoder architecture is typically designed as following:
+The encoder takes the source tokens (image patches here) as inputs and generates a set of hidden representations for those tokens layer by layer, gradually from low level to high level. Then the decoder takes the last-layer (the highest level) representations from the encoder as inputs, generates hidden representations for target tokens (feature vector here) from low-level layers to high-level ones.
+We can see that the generation of hidden representations for target tokens, no matter high level or low level, are all based on the highest-level representations of the source tokens.
+
+Then questions come out naturally: Why should the low-level representation of target token based on the highest-level ones of source tokens? Why not attending each layer of the decoder to each corresponding layer of the encoder?
 
 % Acknowledgments---Will not appear in anonymized version
 \acks{We thank a bunch of people and funding agency.}
 
-\bibliography{yourbibfile}
+\bibliography{custom}
 
 \appendix
 
